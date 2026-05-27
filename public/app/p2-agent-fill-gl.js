@@ -21,6 +21,7 @@
     'uniform float u_intensity;',
     'uniform float u_fill;',
     'uniform float u_audio;',
+    'uniform float u_variant;',
     '',
     'float hash(vec2 p) {',
     '  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);',
@@ -73,10 +74,10 @@
     '  dist *= 1.0 - align * 0.10;',
     '  float depthIn = clamp(-sdf / max(u_radius * 2.4, 0.08), 0.0, 1.0);',
     '  float edgeProx = 1.0 - smoothstep(0.0, 0.26, depthIn);',
-    '  float wobble = (fbm(uv * 2.4 + time * 0.026) - 0.5)',
-    '    * (0.092 + early * 0.11) * max(s, 0.06);',
     '  float ripple = sin(time * 1.18 + atan(rel.y, rel.x + 0.0001) * 5.0',
     '    + fbm(rel * 3.6 + time * 0.055) * 3.0) * 0.038 * max(early, 0.28);',
+    '  float wobble = (fbm(uv * 2.4 + time * 0.026) - 0.5)',
+    '    * (0.092 + early * 0.11) * max(s, 0.06);',
     '  float edgeShimmer = (fbm(uv * 4.2 + time * 0.09) - 0.5) * 0.042 * max(s, 0.12);',
     '  dist += ripple + wobble * 0.52 + edgeShimmer;',
     '  float revealAt = s * 1.24 + early * 0.14;',
@@ -114,6 +115,39 @@
     '}',
     '',
     'vec3 meshWarmGradient(vec2 uv, float time, float audio) {',
+    '  if (u_variant > 0.5) {',
+    '    float warpAmt = 0.012 + audio * 0.005;',
+    '    vec2 warp = vec2(',
+    '      fbm(uv * 1.5 + time * 0.034) - 0.5,',
+    '      fbm(uv * 1.5 + vec2(9.0, 6.5) + time * 0.030) - 0.5',
+    '    ) * warpAmt;',
+    '    vec2 u = uv + warp;',
+    '    float x = u.x;',
+    '    float y = u.y;',
+    '    vec3 baseOrange = vec3(1.0, 0.58, 0.22);',
+    '    vec3 col = baseOrange;',
+    '    col = mix(col, vec3(1.0, 0.68, 0.30), smoothstep(0.30, 0.88, x) * 0.22);',
+    '    float distEdge = min(min(x, 1.0 - x), min(y, 1.0 - y));',
+    '    float rim = smoothstep(0.20, 0.0, distEdge);',
+    '    float rimPulse = rim * rim * (0.58 + 0.34 * sin(time * 1.28 + fbm(u * 3.2 + time * 0.048) * 2.6));',
+    '    col = mix(col, vec3(1.0, 0.86, 0.58), rimPulse * 0.78);',
+    '    float breath = 0.5 + 0.5 * sin(time * 1.35);',
+    '    float breathSoft = breath * breath * (3.0 - 2.0 * breath);',
+    '    float spreadX = mix(0.48, 0.96, 1.0 - breathSoft);',
+    '    float driftY = sin(time * 0.62) * 0.024;',
+    '    float rightFront = smoothstep(spreadX - 0.10, spreadX + 0.06, x);',
+    '    rightFront *= smoothstep(0.92, 0.38, abs(y - (0.50 + driftY)));',
+    '    float ripple = sin(x * 7.2 - time * 1.12 + fbm(u * 2.6 + time * 0.050) * 2.8) * 0.5 + 0.5;',
+    '    ripple *= sin(y * 5.8 + time * 0.86 + fbm(u * 1.9 + time * 0.036) * 1.8) * 0.5 + 0.5;',
+    '    float rightPool = rightFront * mix(0.62, 1.0, ripple);',
+    '    vec3 light = vec3(1.0, 0.97, 0.88);',
+    '    col = mix(col, light, clamp(rightPool * mix(0.52, 0.88, 1.0 - breathSoft), 0.0, 1.0));',
+    '    col += light * rightFront * mix(0.10, 0.24, 1.0 - breathSoft);',
+    '    float shimmer = (sin(x * 5.2 - time * 1.05 + fbm(u * 1.8 + time * 0.044) * 2.4) * 0.5 + 0.5)',
+    '      * (sin(y * 4.2 + time * 0.78) * 0.5 + 0.5);',
+    '    col += vec3(1.0, 0.96, 0.84) * shimmer * 0.034 * (0.35 + rightFront * 0.65);',
+    '    return col * 1.03;',
+    '  }',
     '  float warpAmt = 0.018 + audio * 0.008;',
     '  vec2 warp = vec2(',
     '    fbm(uv * 1.8 + time * 0.045) - 0.5,',
@@ -201,6 +235,11 @@
     '    : (1.0 + 0.048 * sin(u_time * 1.12 + uv.x * 5.2 + uv.y * 3.8)',
     '      + 0.022 * sin(u_time * 0.72 + fbm(uv * 2.2 + u_time * 0.04) * 6.0));',
     '  vec3 color = mesh * colorLift;',
+    '  if (u_variant > 0.5) {',
+    '    float edgeIn = smoothstep(0.42, 0.0, depth);',
+    '    float edgePulse = edgeIn * edgeIn * (0.55 + 0.32 * sin(u_time * 1.18 + fbm(uv * 2.6 + u_time * 0.046) * 2.2));',
+    '    color = mix(color, vec3(1.0, 0.84, 0.54), edgePulse * 0.68);',
+    '  }',
     '  float grain = (hash(floor(uv * 520.0) + floor(u_time * 6.0)) - 0.5) * 0.018;',
     '',
     '  float fillMask = clamp(reveal * u_intensity, 0.0, 1.0);',
@@ -346,6 +385,7 @@
     this._layoutCache = { w: 0, h: 0, aspect: 0 };
     this.resizeObserver = null;
     this.uniforms = {};
+    this._meshVariant = 0;
     this._onFrame = this._tick.bind(this);
   }
 
@@ -559,6 +599,7 @@
     gl.uniform1f(this.uniforms.intensity, this.values.intensity);
     gl.uniform1f(this.uniforms.fill, this.values.fill);
     gl.uniform1f(this.uniforms.audio, this.smoothAudio);
+    gl.uniform1f(this.uniforms.variant, this._meshVariant || 0);
 
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -669,7 +710,8 @@
       spread: gl.getUniformLocation(program, 'u_spread'),
       intensity: gl.getUniformLocation(program, 'u_intensity'),
       fill: gl.getUniformLocation(program, 'u_fill'),
-      audio: gl.getUniformLocation(program, 'u_audio')
+      audio: gl.getUniformLocation(program, 'u_audio'),
+      variant: gl.getUniformLocation(program, 'u_variant')
     };
 
     this.ready = true;
@@ -729,6 +771,7 @@
 
   function Test3MusicFillGL() {
     AgentFillGL.call(this);
+    this._meshVariant = 1;
   }
   Test3MusicFillGL.prototype = Object.create(AgentFillGL.prototype);
   Test3MusicFillGL.prototype.constructor = Test3MusicFillGL;
@@ -802,7 +845,8 @@
       spread: gl.getUniformLocation(program, 'u_spread'),
       intensity: gl.getUniformLocation(program, 'u_intensity'),
       fill: gl.getUniformLocation(program, 'u_fill'),
-      audio: gl.getUniformLocation(program, 'u_audio')
+      audio: gl.getUniformLocation(program, 'u_audio'),
+      variant: gl.getUniformLocation(program, 'u_variant')
     };
 
     this.ready = true;
