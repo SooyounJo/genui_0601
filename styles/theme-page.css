@@ -2785,6 +2785,7 @@ image.png  :root {
   }
   /* test3 row-1 — goal/map 340×245; music basic 340×218 (slightly shorter) */
   #canvas[data-test-scope="test3"] {
+    --test3-ink: #4C5B17;
     --test3-content-top: 62px;
     --test3-card-h: 245px;
     --test3-music-expand-h: 218px;
@@ -12544,11 +12545,17 @@ image.png  :root {
   }
   #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"] {
     --test3-pill-load-spin: 56px;
+    --test3-pill-text-pending: #B0BE96;
+    --test3-pill-text-settled: var(--test3-ink, #4C5B17);
     --test3-pill-text-shine-w: 52%;
     --test3-pill-text-shine-blur: 5px;
     --test3-pill-text-shine-line-core: 8%;
-    --test3-pill-text-shine-flow-ms: 3000ms;
+    --test3-pill-text-shine-pass-ms: 580ms;
+    --test3-pill-text-shine-passes: 5;
+    --test3-pill-text-shine-flow-ms: 2900ms;
     --test3-pill-text-shine-fade-ms: 520ms;
+    --test3-pill-text-settle-delay: 4400ms;
+    --test3-pill-text-settle-ms: 520ms;
   }
   @keyframes test3PillRevealBg {
     0%, 100% {
@@ -12599,7 +12606,7 @@ image.png  :root {
       visibility: visible;
     }
   }
-  /* Text glint — fast → slow line sweep (~3s), then glow opacity out. */
+  /* Text glint — fast→slow line sweep × N passes, then glow opacity out. */
   @keyframes test3PillTextShineFlow {
     0% {
       --test3-pill-text-shine-x: -130%;
@@ -12613,6 +12620,15 @@ image.png  :root {
   @keyframes test3PillTextShineGlowOut {
     0%   { opacity: 1; }
     100% { opacity: 0; }
+  }
+  /* Pending copy → confirmed black after light sweep ends. */
+  @keyframes test3PillTextColorSettle {
+    0% {
+      color: var(--test3-pill-text-pending, #B0BE96);
+    }
+    100% {
+      color: var(--test3-pill-text-settled, #4C5B17);
+    }
   }
   @keyframes test3PillRingSpin {
     from { --test3-pill-ring-angle: 0deg; }
@@ -12761,6 +12777,13 @@ image.png  :root {
     overflow: hidden;
     opacity: 1 !important;
     visibility: visible !important;
+    color: var(--test3-pill-text-pending, #B0BE96) !important;
+    animation: test3PillTextColorSettle var(--test3-pill-text-settle-ms, 520ms) cubic-bezier(0.22, 0.82, 0.24, 1)
+      var(--test3-pill-text-settle-delay, 4400ms) forwards;
+  }
+  #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"] #test3-weather .dot-w21--party-pill .dot-w21__pillSub,
+  #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"] #test3-steps .dot-steps21--pace-pill .dot-steps21__pillSub {
+    animation-delay: calc(var(--test3-pill-text-settle-delay, 4400ms) + 100ms);
   }
   #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"] #test3-weather .dot-w21--party-pill .dot-w21__pillTitle::after,
   #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"] #test3-weather .dot-w21--party-pill .dot-w21__pillSub::after,
@@ -12793,17 +12816,26 @@ image.png  :root {
     opacity: 0;
     will-change: left, opacity, filter;
     animation:
-      test3PillTextShineFlow var(--test3-pill-text-shine-flow-ms, 3000ms) cubic-bezier(0.06, 0.78, 0.14, 1) var(--test3-pill-shine-delay, 1500ms) 1 forwards,
+      test3PillTextShineFlow var(--test3-pill-text-shine-pass-ms, 580ms) cubic-bezier(0.06, 0.78, 0.14, 1) var(--test3-pill-shine-delay, 1500ms)
+        var(--test3-pill-text-shine-passes, 5) forwards,
       test3PillTextShineGlowOut var(--test3-pill-text-shine-fade-ms, 520ms) ease-out
-        calc(var(--test3-pill-shine-delay, 1500ms) + var(--test3-pill-text-shine-flow-ms, 3000ms)) 1 forwards;
+        calc(var(--test3-pill-shine-delay, 1500ms) + var(--test3-pill-text-shine-flow-ms, 2900ms)) 1 forwards;
   }
   #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"] #test3-weather .dot-w21--party-pill .dot-w21__pillSub::after,
   #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"] #test3-steps .dot-steps21--pace-pill .dot-steps21__pillSub::after {
     animation:
-      test3PillTextShineFlow var(--test3-pill-text-shine-flow-ms, 3000ms) cubic-bezier(0.06, 0.78, 0.14, 1)
-        calc(var(--test3-pill-shine-delay, 1500ms) + 120ms) 1 forwards,
+      test3PillTextShineFlow var(--test3-pill-text-shine-pass-ms, 580ms) cubic-bezier(0.06, 0.78, 0.14, 1)
+        calc(var(--test3-pill-shine-delay, 1500ms) + 100ms)
+        var(--test3-pill-text-shine-passes, 5) forwards,
       test3PillTextShineGlowOut var(--test3-pill-text-shine-fade-ms, 520ms) ease-out
-        calc(var(--test3-pill-shine-delay, 1500ms) + var(--test3-pill-text-shine-flow-ms, 3000ms) + 120ms) 1 forwards;
+        calc(var(--test3-pill-shine-delay, 1500ms) + var(--test3-pill-text-shine-flow-ms, 2900ms) + 100ms) 1 forwards;
+  }
+  #canvas[data-test-scope="test3"][data-test3-pills-revealed="1"] #test3-weather .dot-w21--party-pill .dot-w21__pillTitle,
+  #canvas[data-test-scope="test3"][data-test3-pills-revealed="1"] #test3-weather .dot-w21--party-pill .dot-w21__pillSub,
+  #canvas[data-test-scope="test3"][data-test3-pills-revealed="1"] #test3-steps .dot-steps21--pace-pill .dot-steps21__pillTitle,
+  #canvas[data-test-scope="test3"][data-test3-pills-revealed="1"] #test3-steps .dot-steps21--pace-pill .dot-steps21__pillSub {
+    color: var(--test3-pill-text-settled, #4C5B17) !important;
+    animation: none !important;
   }
   #canvas[data-test-scope="test3"][data-test3-pills-revealed="1"] #test3-weather .dot-w21--party-pill .dot-w21__pillTitle::after,
   #canvas[data-test-scope="test3"][data-test3-pills-revealed="1"] #test3-weather .dot-w21--party-pill .dot-w21__pillSub::after,
@@ -12927,7 +12959,7 @@ image.png  :root {
     font-weight: var(--test3-pill-title-fw, 600);
     line-height: var(--test3-pill-title-lh, 1.35);
     letter-spacing: 0;
-    color: #4C5B17;
+    color: var(--test3-ink, #4C5B17);
   }
   #canvas[data-test-scope="test3"] #test3-weather .dot-w21__pillSub,
   #canvas[data-test-scope="test3"] #test3-steps .dot-steps21__pillSub {
@@ -12944,21 +12976,21 @@ image.png  :root {
     font-weight: var(--test3-pill-sub-fw, 500);
     line-height: var(--test3-pill-sub-lh, 1.35);
     letter-spacing: 0;
-    color: #4C5B17;
+    color: var(--test3-ink, #4C5B17);
   }
   #canvas[data-test-scope="test3"] #test3-steps .dot-steps21--pace-pill .dot-steps21__pillTitle {
     font-size: var(--test3-pill-title-fs, 12px);
     font-weight: var(--test3-pill-title-fw, 600);
     line-height: var(--test3-pill-title-lh, 1.35);
     letter-spacing: 0;
-    color: #4C5B17;
+    color: var(--test3-ink, #4C5B17);
   }
   #canvas[data-test-scope="test3"] #test3-steps .dot-steps21--pace-pill .dot-steps21__pillSub {
     font-size: var(--test3-pill-sub-fs, 10px);
     font-weight: var(--test3-pill-sub-fw, 500);
     line-height: var(--test3-pill-sub-lh, 1.35);
     letter-spacing: 0;
-    color: #4C5B17;
+    color: var(--test3-ink, #4C5B17);
   }
   #canvas[data-test-scope="test3"] #test3-weather .dot-w21__pillBody {
     font-family: 'Pretendard', var(--font), -apple-system, BlinkMacSystemFont, sans-serif;

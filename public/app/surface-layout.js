@@ -133,8 +133,12 @@ var TEST3_PILL_PRE_EXPAND_WAIT_MS = 1500;
 var TEST3_PILL_REVEAL_ICON_HOLD_MS = TEST3_PILL_PRE_EXPAND_WAIT_MS - TEST3_PILL_REVEAL_ICON_MS;
 var TEST3_PILL_REVEAL_TEXT_MS = 2000;
 var TEST3_PILL_REVEAL_TEXT_HOLD_MS = 2000;
-var TEST3_PILL_TEXT_SHINE_FLOW_MS = 3000;
+var TEST3_PILL_TEXT_SHINE_PASS_MS = 580;
+var TEST3_PILL_TEXT_SHINE_PASSES = 5;
+var TEST3_PILL_TEXT_SHINE_FLOW_MS =
+  TEST3_PILL_TEXT_SHINE_PASS_MS * TEST3_PILL_TEXT_SHINE_PASSES;
 var TEST3_PILL_TEXT_SHINE_FADE_MS = 520;
+var TEST3_PILL_TEXT_SETTLE_MS = 520;
 var TEST3_PILL_REVEAL_EXPAND_MS = TEST3_PILL_REVEAL_TEXT_MS;
 /* Pill widen + copy + shine — after pre-expand wait. */
 var TEST3_PILL_TEXT_START_MS = TEST3_PILL_PRE_EXPAND_WAIT_MS;
@@ -8383,8 +8387,15 @@ function _armTest3PillsReveal(canvas) {
   canvas.style.setProperty('--test3-pill-text-ms', TEST3_PILL_REVEAL_TEXT_MS + 'ms');
   canvas.style.setProperty('--test3-pill-text-hold-ms', TEST3_PILL_REVEAL_TEXT_HOLD_MS + 'ms');
   canvas.style.setProperty('--test3-pill-shine-delay', TEST3_PILL_TEXT_START_MS + 'ms');
+  canvas.style.setProperty('--test3-pill-text-shine-pass-ms', TEST3_PILL_TEXT_SHINE_PASS_MS + 'ms');
+  canvas.style.setProperty('--test3-pill-text-shine-passes', String(TEST3_PILL_TEXT_SHINE_PASSES));
   canvas.style.setProperty('--test3-pill-text-shine-flow-ms', TEST3_PILL_TEXT_SHINE_FLOW_MS + 'ms');
   canvas.style.setProperty('--test3-pill-text-shine-fade-ms', TEST3_PILL_TEXT_SHINE_FADE_MS + 'ms');
+  canvas.style.setProperty(
+    '--test3-pill-text-settle-delay',
+    (TEST3_PILL_TEXT_START_MS + TEST3_PILL_TEXT_SHINE_FLOW_MS) + 'ms'
+  );
+  canvas.style.setProperty('--test3-pill-text-settle-ms', TEST3_PILL_TEXT_SETTLE_MS + 'ms');
   canvas.setAttribute('data-test3-pills-reveal', '1');
   canvas.removeAttribute('data-test3-pills-revealed');
   if (window.__mlpTest3MusicShiftTimer) {
