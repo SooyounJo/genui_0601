@@ -60,7 +60,14 @@ var TEST3_MUSIC_COMPACT_FOLD = '저녁 한강 러닝\n플레이리스트';
 var TEST3_MUSIC_LYRICS_TITLE = '저녁 한강 러닝에 어울리는\nBPM 120-140 신스팝\n플레이리스트';
 var TEST3_MUSIC_SEARCH_LINE1 = '러닝 bgm을 찾고 있어요';
 var TEST3_MUSIC_SEARCH_LINE2 = '5km 페이스에 맞는 음악 선택';
-var TEST3_MUSIC_SEARCH_LINE_MS = 2000;
+var TEST3_MUSIC_SEARCH_LINE1_IN_MS = 520;
+var TEST3_MUSIC_SEARCH_LINE2_IN_MS = 260;
+var TEST3_MUSIC_SEARCH_LINE2_HOLD_MS = 1000;
+var TEST3_MUSIC_SEARCH_LINE2_OUT_MS = 540;
+var TEST3_MUSIC_SEARCH_LINE2_MS =
+  TEST3_MUSIC_SEARCH_LINE2_IN_MS +
+  TEST3_MUSIC_SEARCH_LINE2_HOLD_MS +
+  TEST3_MUSIC_SEARCH_LINE2_OUT_MS;
 /** test2 agent orange orb — sparkle image ↔ dot grid (shared with test3 music disc). */
 var TEST2_ORB_SPARKLE_SRC = '/assets/test2-orange-orb-sparkle.png?v=1';
 var TEST2_ORB_DOTS_SVG_HTML =
@@ -121,13 +128,16 @@ var TEST3_GOAL_UNIFIED_RISE_MS = TEST3_GOAL_SHELL_MS + TEST3_GOAL_INNER_LAST_DEL
 var TEST3_GOAL_EXPAND_START_MS = 120;
 var TEST3_PILL_REVEAL_LOAD_MS = 0;
 var TEST3_PILL_REVEAL_ICON_MS = 480;
-var TEST3_PILL_REVEAL_ICON_HOLD_MS = 2000;
+/* Circle hold before horizontal widen — icon pop (480ms) + hold = 1.5s total. */
+var TEST3_PILL_PRE_EXPAND_WAIT_MS = 1500;
+var TEST3_PILL_REVEAL_ICON_HOLD_MS = TEST3_PILL_PRE_EXPAND_WAIT_MS - TEST3_PILL_REVEAL_ICON_MS;
 var TEST3_PILL_REVEAL_TEXT_MS = 2000;
 var TEST3_PILL_REVEAL_TEXT_HOLD_MS = 2000;
+var TEST3_PILL_TEXT_SHINE_FLOW_MS = 3000;
+var TEST3_PILL_TEXT_SHINE_FADE_MS = 520;
 var TEST3_PILL_REVEAL_EXPAND_MS = TEST3_PILL_REVEAL_TEXT_MS;
-/* Pill title/sub shine sweep (music row drop still uses icon+text window). */
-var TEST3_PILL_TEXT_START_MS =
-  TEST3_PILL_REVEAL_ICON_MS + TEST3_PILL_REVEAL_ICON_HOLD_MS;
+/* Pill widen + copy + shine — after pre-expand wait. */
+var TEST3_PILL_TEXT_START_MS = TEST3_PILL_PRE_EXPAND_WAIT_MS;
 var TEST3_PILL_REVEAL_TOTAL_MS =
   TEST3_PILL_REVEAL_LOAD_MS +
   TEST3_PILL_REVEAL_ICON_MS +
@@ -8373,6 +8383,8 @@ function _armTest3PillsReveal(canvas) {
   canvas.style.setProperty('--test3-pill-text-ms', TEST3_PILL_REVEAL_TEXT_MS + 'ms');
   canvas.style.setProperty('--test3-pill-text-hold-ms', TEST3_PILL_REVEAL_TEXT_HOLD_MS + 'ms');
   canvas.style.setProperty('--test3-pill-shine-delay', TEST3_PILL_TEXT_START_MS + 'ms');
+  canvas.style.setProperty('--test3-pill-text-shine-flow-ms', TEST3_PILL_TEXT_SHINE_FLOW_MS + 'ms');
+  canvas.style.setProperty('--test3-pill-text-shine-fade-ms', TEST3_PILL_TEXT_SHINE_FADE_MS + 'ms');
   canvas.setAttribute('data-test3-pills-reveal', '1');
   canvas.removeAttribute('data-test3-pills-revealed');
   if (window.__mlpTest3MusicShiftTimer) {
@@ -8527,8 +8539,8 @@ function _mountTest3MusicAfterWeatherPrep(runId) {
       }
       test3MusicEl.setAttribute('data-music-playing', '1');
       test3MusicEl.setAttribute('data-test3-music-loading', '1');
-      test3MusicEl.style.setProperty('--test3-music-search-line-ms', TEST3_MUSIC_SEARCH_LINE_MS + 'ms');
-      test3MusicEl.style.setProperty('--test3-music-search-line2-delay', TEST3_MUSIC_SEARCH_LINE_MS + 'ms');
+      test3MusicEl.style.setProperty('--test3-music-search-line1-ms', TEST3_MUSIC_SEARCH_LINE1_IN_MS + 'ms');
+      test3MusicEl.style.setProperty('--test3-music-search-line2-ms', TEST3_MUSIC_SEARCH_LINE2_MS + 'ms');
       test3MusicEl.setAttribute('data-test3-music-phase', 'spawn');
       test3MusicEl.removeAttribute('data-test3-music-pre-expand');
       test3MusicEl.removeAttribute('data-test3-music-expand-ready');
@@ -8636,6 +8648,12 @@ function _armTest3MusicWhiteShell(music) {
     requestAnimationFrame(function () {
       if (!music.isConnected || !shell.isConnected) return;
       music.setAttribute('data-test3-music-shell-white', '1');
+      var line2 = music.querySelector('.dot-music1__searchLine--2');
+      if (line2) {
+        line2.style.animation = 'none';
+        void line2.offsetWidth;
+        line2.style.removeProperty('animation');
+      }
       void shell.offsetWidth;
     });
   });
@@ -8815,9 +8833,6 @@ function _signalTest3MusicExpandReady(music) {
   if (!music.getAttribute('data-music-state')) {
     music.setAttribute('data-music-state', 'normal');
   }
-  if (typeof _armTest3MusicGlowRing === 'function') {
-    _armTest3MusicGlowRing(music);
-  }
   if (typeof _beginTest3MusicSettle === 'function') {
     _beginTest3MusicSettle(music);
   } else if (typeof _applyTest3MusicSettledLayout === 'function') {
@@ -8830,8 +8845,8 @@ function _beginTest3MusicSettle(music) {
   if (!music) return;
   if (music.getAttribute('data-test3-music-settling') === '1') return;
   music.setAttribute('data-test3-music-settling', '1');
-  if (typeof _armTest3MusicGlowRing === 'function') {
-    _armTest3MusicGlowRing(music);
+  if (typeof _clearTest3MusicGlowRing === 'function') {
+    _clearTest3MusicGlowRing(music);
   }
   if (typeof _resetTest3MusicCopy === 'function') {
     _resetTest3MusicCopy(music);

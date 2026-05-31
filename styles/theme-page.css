@@ -4272,32 +4272,34 @@ image.png  :root {
   @keyframes test3MusicPlayBtnIn {
     0%, 100% { opacity: 0; visibility: hidden; }
   }
-  @keyframes test3MusicSearchLine1 {
-    0%, 6% {
+  /* Orange pill — line 1 only; stays visible until ivory shell handoff. */
+  @keyframes test3MusicSearchLine1Hold {
+    0%, 12% {
       opacity: 0;
       visibility: hidden;
       transform: translateY(-50%) translateX(0);
     }
-    10%, 92% {
+    22%, 100% {
       opacity: 1;
       visibility: visible;
-      transform: translateY(-50%) translateX(0);
-    }
-    94%, 100% {
-      opacity: 0;
-      visibility: hidden;
       transform: translateY(-50%) translateX(0);
     }
   }
-  @keyframes test3MusicSearchLine2 {
-    0%, 6% {
+  /* Ivory shell — line 2: fade in → hold ≥1s → fade out before vertical expand. */
+  @keyframes test3MusicSearchLine2White {
+    0%, 14% {
       opacity: 0;
       visibility: hidden;
       transform: translateY(-50%) translateX(0);
     }
-    10%, 100% {
+    16%, 72% {
       opacity: 1;
       visibility: visible;
+      transform: translateY(-50%) translateX(0);
+    }
+    76%, 100% {
+      opacity: 0;
+      visibility: hidden;
       transform: translateY(-50%) translateX(0);
     }
   }
@@ -5064,7 +5066,7 @@ image.png  :root {
     background-color: var(--test3-music-shell-white, #FFFCF4) !important;
     transition: background-color var(--test3-music-fill-fade-ms, 1400ms) cubic-bezier(0.22, 0.82, 0.24, 1) !important;
   }
-  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-shell-white="0"] .dot-music1 {
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-shell-white="0"]:not([data-test3-music-expand-ready="1"]):not([data-test3-music-settling="1"]) .dot-music1 {
     background-color: rgba(255, 255, 255, 0) !important;
     transition: none !important;
   }
@@ -5149,14 +5151,23 @@ image.png  :root {
     opacity: 0;
     visibility: hidden;
   }
-  /* Loading — one centered line at a time (2s each) through horizontal ivory pill. */
-  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-loading="1"]:not([data-test3-music-pre-expand="1"]):not([data-test3-music-expand-ready="1"]) .dot-music1__searchLine--1,
-  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-resolved="1"]:not([data-test3-music-pre-expand="1"]):not([data-test3-music-expand-ready="1"]) .dot-music1__searchLine--1 {
-    animation: test3MusicSearchLine1 var(--test3-music-search-line-ms, 2000ms) ease-in-out 0s 1 forwards !important;
+  /* Orange phase — line 1 only until ivory shell (shell-white). */
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-loading="1"]:not([data-test3-music-shell-white="1"]):not([data-test3-music-pre-expand="1"]):not([data-test3-music-expand-ready="1"]) .dot-music1__searchLine--1 {
+    animation: test3MusicSearchLine1Hold var(--test3-music-search-line1-ms, 520ms) ease-out 0s 1 forwards !important;
   }
-  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-loading="1"]:not([data-test3-music-pre-expand="1"]):not([data-test3-music-expand-ready="1"]) .dot-music1__searchLine--2,
-  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-resolved="1"]:not([data-test3-music-pre-expand="1"]):not([data-test3-music-expand-ready="1"]) .dot-music1__searchLine--2 {
-    animation: test3MusicSearchLine2 var(--test3-music-search-line-ms, 2000ms) ease-in-out var(--test3-music-search-line2-delay, 2000ms) 1 forwards !important;
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-loading="1"]:not([data-test3-music-shell-white="1"]):not([data-test3-music-pre-expand="1"]):not([data-test3-music-expand-ready="1"]) .dot-music1__searchLine--2 {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    animation: none !important;
+  }
+  /* Ivory shell — line 2 only: brief in → out (line 1 suppressed). */
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-shell-white="1"]:not([data-test3-music-pre-expand="1"]):not([data-test3-music-expand-ready="1"]) .dot-music1__searchLine--1 {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    animation: none !important;
+  }
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-shell-white="1"]:not([data-test3-music-pre-expand="1"]):not([data-test3-music-expand-ready="1"]) .dot-music1__searchLine--2 {
+    animation: test3MusicSearchLine2White var(--test3-music-search-line2-ms, 1800ms) ease-in-out 0s 1 forwards !important;
   }
   /* Hide search copy only when vertical expand starts — keep through horizontal ivory pill. */
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-pre-expand="1"] .dot-music1__searchText,
@@ -9924,9 +9935,22 @@ image.png  :root {
     box-shadow: none !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-settling="1"].test3-music-settle-active .dot-music1 {
-    background-color: transparent !important;
+    background-color: #FFFCF4 !important;
     filter: none;
     box-shadow: none;
+  }
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-expand-ready="1"] .dot-music1::before,
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-settling="1"] .dot-music1::before,
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-settled="1"] .dot-music1::before {
+    opacity: 0 !important;
+    animation: none !important;
+    visibility: hidden !important;
+  }
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-settling="1"] .dot-music1.test3-music-glow-ring::after,
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-expand-ready="1"] .dot-music1.test3-music-glow-ring::after {
+    opacity: 0 !important;
+    transition: none !important;
+    visibility: hidden !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-settling="1"] .dot-music1__compact--layout {
     opacity: 1 !important;
@@ -9992,8 +10016,10 @@ image.png  :root {
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-settling="1"]:not([data-music-state="lyrics"]) .dot-music1__icon .dot-music3::before {
     visibility: visible !important;
-    opacity: 0;
-    animation: test3MusicSettleBgReveal 1040ms cubic-bezier(0.22, 0.82, 0.24, 1) 60ms forwards !important;
+    opacity: 1 !important;
+    filter: none !important;
+    transform: none !important;
+    animation: none !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-settling="1"].test3-music-settle-active .dot-music1__icon .dot-music3 {
     visibility: visible !important;
@@ -10053,12 +10079,13 @@ image.png  :root {
     inset: 0;
     border-radius: inherit;
     background: #FFFCF4 !important;
-    opacity: 0;
+    opacity: 1 !important;
     visibility: visible !important;
-    animation: test3MusicSettleBgReveal 1040ms cubic-bezier(0.22, 0.82, 0.24, 1) 60ms forwards !important;
+    filter: none !important;
+    transform: none !important;
+    animation: none !important;
     z-index: 0;
     pointer-events: none;
-    will-change: opacity, filter, transform;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-settling="1"]:not([data-music-state="lyrics"]) .dot-music1__icon .dot-music3::after {
     content: none !important;
@@ -10072,11 +10099,10 @@ image.png  :root {
     inset: 0;
     border-radius: inherit;
     background: #FFFCF4 !important;
-    opacity: 0;
+    opacity: 1 !important;
     animation: none !important;
     z-index: 0;
     pointer-events: none;
-    will-change: opacity, filter, transform;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-settling="1"][data-music-state="lyrics"] .dot-music1__icon .dot-music3::after {
     content: none !important;
@@ -12518,6 +12544,11 @@ image.png  :root {
   }
   #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"] {
     --test3-pill-load-spin: 56px;
+    --test3-pill-text-shine-w: 52%;
+    --test3-pill-text-shine-blur: 5px;
+    --test3-pill-text-shine-line-core: 8%;
+    --test3-pill-text-shine-flow-ms: 3000ms;
+    --test3-pill-text-shine-fade-ms: 520ms;
   }
   @keyframes test3PillRevealBg {
     0%, 100% {
@@ -12532,15 +12563,15 @@ image.png  :root {
     }
   }
   @keyframes test3PillRevealShell {
-    /* 0–38%: circle (icon hold). 38–48%: widen. 48%+: full pill. */
-    0%, 38% {
+    /* 0–27%: circle (~1.5s). 27–37%: widen. 37%+: full pill (sync 1500ms / 5500ms). */
+    0%, 27% {
       width: var(--test3-pill-h);
       max-width: var(--test3-pill-h);
       margin-left: 0;
       margin-right: auto;
       border-radius: calc(var(--test3-pill-h) / 2);
     }
-    48%, 100% {
+    37%, 100% {
       width: 100%;
       max-width: 100%;
       margin-left: 0;
@@ -12555,23 +12586,33 @@ image.png  :root {
         calc(10px * var(--test3-pill-sx));
     }
   }
-  /* Copy visible when shell widens (38% ≈ icon hold end / text-shine start). */
+  /* Copy visible when shell widens (27% ≈ 1.5s pre-expand wait / text-shine start). */
   @keyframes test3PillRevealCopy {
-    0%, 37% {
+    0%, 26% {
       opacity: 0;
       transform: translateX(var(--test3-pill-copy-slide-x, 8px));
       visibility: hidden;
     }
-    38%, 100% {
+    27%, 100% {
       opacity: 1;
       transform: translateX(0);
       visibility: visible;
     }
   }
-  /* Text glint — left → right across title + sub. */
-  @keyframes test3PillTextShineSweep {
-    0%   { --test3-pill-text-shine-x: -130%; }
-    100% { --test3-pill-text-shine-x: 130%; }
+  /* Text glint — fast → slow line sweep (~3s), then glow opacity out. */
+  @keyframes test3PillTextShineFlow {
+    0% {
+      --test3-pill-text-shine-x: -130%;
+      opacity: 1;
+    }
+    100% {
+      --test3-pill-text-shine-x: 130%;
+      opacity: 1;
+    }
+  }
+  @keyframes test3PillTextShineGlowOut {
+    0%   { opacity: 1; }
+    100% { opacity: 0; }
   }
   @keyframes test3PillRingSpin {
     from { --test3-pill-ring-angle: 0deg; }
@@ -12727,26 +12768,42 @@ image.png  :root {
   #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"] #test3-steps .dot-steps21--pace-pill .dot-steps21__pillSub::after {
     content: '';
     position: absolute;
-    top: -30%;
-    bottom: -30%;
+    top: -38%;
+    bottom: -38%;
     left: var(--test3-pill-text-shine-x, -130%);
-    width: 42%;
+    width: var(--test3-pill-text-shine-w, 52%);
     pointer-events: none;
+    border-radius: 2px;
+    transform: skewX(-8deg);
     background: linear-gradient(
       90deg,
       transparent 0%,
-      rgba(255, 255, 255, 0) 18%,
-      rgba(255, 255, 255, 0.92) 50%,
-      rgba(255, 255, 255, 0) 82%,
+      transparent calc(50% - var(--test3-pill-text-shine-line-core, 8%) - 10%),
+      rgba(255, 252, 235, 0.55) calc(50% - var(--test3-pill-text-shine-line-core, 8%) - 4%),
+      rgba(255, 255, 255, 1) calc(50% - var(--test3-pill-text-shine-line-core, 8%)),
+      #FFFFFF 50%,
+      rgba(255, 255, 255, 1) calc(50% + var(--test3-pill-text-shine-line-core, 8%)),
+      rgba(255, 252, 235, 0.55) calc(50% + var(--test3-pill-text-shine-line-core, 8%) + 4%),
+      transparent calc(50% + var(--test3-pill-text-shine-line-core, 8%) + 10%),
       transparent 100%
     );
-    mix-blend-mode: soft-light;
-    animation: test3PillTextShineSweep var(--test3-pill-text-ms, 2000ms) linear 1 both;
-    animation-delay: var(--test3-pill-shine-delay, 2480ms);
+    filter: blur(var(--test3-pill-text-shine-blur, 5px));
+    -webkit-filter: blur(var(--test3-pill-text-shine-blur, 5px));
+    mix-blend-mode: screen;
+    opacity: 0;
+    will-change: left, opacity, filter;
+    animation:
+      test3PillTextShineFlow var(--test3-pill-text-shine-flow-ms, 3000ms) cubic-bezier(0.06, 0.78, 0.14, 1) var(--test3-pill-shine-delay, 1500ms) 1 forwards,
+      test3PillTextShineGlowOut var(--test3-pill-text-shine-fade-ms, 520ms) ease-out
+        calc(var(--test3-pill-shine-delay, 1500ms) + var(--test3-pill-text-shine-flow-ms, 3000ms)) 1 forwards;
   }
   #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"] #test3-weather .dot-w21--party-pill .dot-w21__pillSub::after,
   #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"] #test3-steps .dot-steps21--pace-pill .dot-steps21__pillSub::after {
-    animation-delay: calc(var(--test3-pill-shine-delay, 2480ms) + 140ms);
+    animation:
+      test3PillTextShineFlow var(--test3-pill-text-shine-flow-ms, 3000ms) cubic-bezier(0.06, 0.78, 0.14, 1)
+        calc(var(--test3-pill-shine-delay, 1500ms) + 120ms) 1 forwards,
+      test3PillTextShineGlowOut var(--test3-pill-text-shine-fade-ms, 520ms) ease-out
+        calc(var(--test3-pill-shine-delay, 1500ms) + var(--test3-pill-text-shine-flow-ms, 3000ms) + 120ms) 1 forwards;
   }
   #canvas[data-test-scope="test3"][data-test3-pills-revealed="1"] #test3-weather .dot-w21--party-pill .dot-w21__pillTitle::after,
   #canvas[data-test-scope="test3"][data-test3-pills-revealed="1"] #test3-weather .dot-w21--party-pill .dot-w21__pillSub::after,
