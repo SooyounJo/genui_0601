@@ -19,29 +19,121 @@ window.SURFACE_TYPES = {
 
 window.currentSurfaceType = window.SURFACE_TYPES.FIRST_DEPTH_LIST;
 
-// test3 home card stack — Figma-tight vertical gap (4px). Horizontal
-// half-card gap stays 4px on the 340px grid.
-var TEST3_GOAL_TOP = 42;
-var TEST3_GOAL_H = 168;
-var TEST3_CARD_GAP = 4;
-var TEST3_PILL_SLOT_H = 72;
-// Music mounts as an 82px capsule on row 2; pills drop to sit 4px below it.
+// test3 home card stack — 340px row: half-card + gap + half-card.
+// Below status bar (safe.top 16 + topSystem 38 + 8 gap) — matches test2 top chrome.
+var TEST3_GOAL_TOP = 62;
+/* 340×245 — 4:3 goal/map card (tuned −10px) */
+var TEST3_GOAL_H = 245;
+/* Slightly shorter than goal card; Figma 5247:16990 base, tuned −10px */
+var TEST3_MUSIC_EXPAND_H = 218;
+var TEST3_MUSIC_LYRICS_H = TEST3_MUSIC_EXPAND_H + 112;
+/* Vertical gap between stacked home cards (goal↔music, music↔pills) — keep uniform */
+var TEST3_CARD_GAP_V = 6;
+var TEST3_CARD_GAP_H = 5;
+var TEST3_HALF_COL_W = (340 - TEST3_CARD_GAP_H) / 2;
+var TEST3_HALF_COL_X = 24 + TEST3_HALF_COL_W + TEST3_CARD_GAP_H;
+var TEST3_PILL_SLOT_H = 76;
+// Music mounts as an 82px capsule on row 2; pills drop to sit below it.
 var TEST3_MUSIC_SPAWN_H = 82;
-var TEST3_WEATHER_DROP = TEST3_MUSIC_SPAWN_H + TEST3_CARD_GAP;
-var TEST3_ROW2_TOP = TEST3_GOAL_TOP + TEST3_GOAL_H + TEST3_CARD_GAP;
+var TEST3_WEATHER_DROP = TEST3_MUSIC_SPAWN_H + TEST3_CARD_GAP_V;
+var TEST3_WEATHER_PREP_DROP_MS = 520;
+var TEST3_ROW2_TOP = TEST3_GOAL_TOP + TEST3_GOAL_H + TEST3_CARD_GAP_V;
 // Grid 1×1 half-column — outer shell must match weather/steps column (168px).
 var TEST3_MUSIC_COMPACT = 168;
-var TEST3_MUSIC_TITLE = '러닝에 어울리는 신스팝 플레이리스트 재생';
-var TEST3_MUSIC_FOLD_TITLE = '러닝에 어울리는\n신스팝 플레이리스트 재생';
-var TEST3_MUSIC_COMPACT_FOLD = '러닝에 어울리는\n신스팝 플레이리스트';
-var TEST3_MUSIC_LYRICS_TITLE = '저녁 한강 러닝에 어울리는\nBPM 120-140 신스팝 플레이리스트';
-var TEST3_MUSIC_SEARCH_LINE2 = '러닝에 어울리는 신스팝 플레이리스트 재생';
-var TEST3_GOAL_UNIFIED_RISE_MS = 520;
-var TEST3_PILL_REVEAL_LOAD_MS = 1000;
-var TEST3_PILL_REVEAL_ICON_MS = 240;
-var TEST3_PILL_REVEAL_EXPAND_MS = 520;
+/* Figma 5247:16990 — bar inset tracks --test3-music-pad-x on #canvas[test3] */
+var TEST3_MUSIC_PAD_X = 28;
+var TEST3_MUSIC_BAR_W = 340 - 2 * TEST3_MUSIC_PAD_X;
+var TEST3_MUSIC_COMPACT_PAD_X = 14;
+var TEST3_MUSIC_COMPACT_BAR_W = TEST3_MUSIC_COMPACT - 2 * TEST3_MUSIC_COMPACT_PAD_X;
+var TEST3_MUSIC_COMPACT_BAR_TRACK = Math.round(
+  TEST3_MUSIC_COMPACT_BAR_W * TEST3_MUSIC_ELAPSED_S / (TEST3_MUSIC_ELAPSED_S + TEST3_MUSIC_REMAINING_S)
+);
+/* Figma settled player — 01:35 elapsed, 02:30 remaining (95 / 245 of bar) */
+var TEST3_MUSIC_ELAPSED_S = 95;
+var TEST3_MUSIC_REMAINING_S = 150;
+var TEST3_MUSIC_BAR_TRACK = Math.round(
+  TEST3_MUSIC_BAR_W * TEST3_MUSIC_ELAPSED_S / (TEST3_MUSIC_ELAPSED_S + TEST3_MUSIC_REMAINING_S)
+);
+var TEST3_MUSIC_TITLE = '저녁 한강 러닝 플레이리스트\n5km 페이스에 맞춰 준비했어요';
+var TEST3_MUSIC_FOLD_TITLE = '저녁 한강 러닝\n플레이리스트';
+var TEST3_MUSIC_COMPACT_FOLD = '저녁 한강 러닝\n플레이리스트';
+var TEST3_MUSIC_LYRICS_TITLE = '저녁 한강 러닝에 어울리는\nBPM 120-140 신스팝\n플레이리스트';
+var TEST3_MUSIC_SEARCH_LINE1 = '러닝 bgm을 찾고 있어요';
+var TEST3_MUSIC_SEARCH_LINE2 = '5km 페이스에 맞는 음악 선택';
+var TEST3_MUSIC_SEARCH_LINE_MS = 2000;
+/** test2 agent orange orb — sparkle image ↔ dot grid (shared with test3 music disc). */
+var TEST2_ORB_SPARKLE_SRC = '/assets/test2-orange-orb-sparkle.png?v=1';
+var TEST2_ORB_DOTS_SVG_HTML =
+  '<svg class="dot-icon11__dotsSvg" width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+    '<circle class="dot-icon11__waveDot dot-icon11__waveDot--a" cx="7.5" cy="36.5" r="2.5" fill="white"/>' +
+    '<circle class="dot-icon11__waveDot dot-icon11__waveDot--b" cx="14.5" cy="36.5" r="2.5" fill="white"/>' +
+    '<circle class="dot-icon11__waveDot dot-icon11__waveDot--c" cx="21.5" cy="36.5" r="2.5" fill="white"/>' +
+    '<ellipse class="dot-icon11__waveDot dot-icon11__waveDot--d" cx="35.5" cy="36" rx="2.5" ry="5" fill="white"/>' +
+    '<ellipse class="dot-icon11__waveDot dot-icon11__waveDot--b" cx="35.5" cy="27" rx="2.5" ry="3" fill="white"/>' +
+    '<ellipse class="dot-icon11__waveDot dot-icon11__waveDot--a" cx="42.5" cy="28" rx="1.5" ry="2" fill="white"/>' +
+    '<ellipse class="dot-icon11__waveDot dot-icon11__waveDot--c" cx="49.5" cy="31" rx="1.5" ry="2" fill="white"/>' +
+    '<ellipse class="dot-icon11__waveDot dot-icon11__waveDot--d" cx="28.5" cy="28" rx="1.5" ry="2" fill="white"/>' +
+    '<ellipse class="dot-icon11__waveDot dot-icon11__waveDot--b" cx="21.5" cy="31" rx="1.5" ry="2" fill="white"/>' +
+    '<ellipse class="dot-icon11__waveDot dot-icon11__waveDot--a" cx="42.5" cy="43" rx="1.5" ry="2" fill="white"/>' +
+    '<ellipse class="dot-icon11__waveDot dot-icon11__waveDot--c" cx="28.5" cy="43" rx="1.5" ry="2" fill="white"/>' +
+    '<ellipse class="dot-icon11__waveDot dot-icon11__waveDot--d" cx="35.5" cy="45" rx="2.5" ry="3" fill="white"/>' +
+    '<ellipse class="dot-icon11__waveDot dot-icon11__waveDot--b" cx="42.5" cy="36" rx="2.5" ry="4" fill="white"/>' +
+    '<ellipse class="dot-icon11__waveDot dot-icon11__waveDot--c" cx="28.5" cy="36" rx="2.5" ry="4" fill="white"/>' +
+    '<circle class="dot-icon11__waveDot dot-icon11__waveDot--a" cx="35.5" cy="20.5" r="2.5" fill="white"/>' +
+    '<circle class="dot-icon11__waveDot dot-icon11__waveDot--d" cx="35.5" cy="15.5" r="1.5" fill="white"/>' +
+    '<circle class="dot-icon11__waveDot dot-icon11__waveDot--c" cx="35.5" cy="56.5" r="1.5" fill="white"/>' +
+    '<circle class="dot-icon11__waveDot dot-icon11__waveDot--b" cx="35.5" cy="51.5" r="2.5" fill="white"/>' +
+    '<circle class="dot-icon11__waveDot dot-icon11__waveDot--a" cx="49.5" cy="36.5" r="2.5" fill="white"/>' +
+    '<circle class="dot-icon11__waveDot dot-icon11__waveDot--b" cx="56.5" cy="36.5" r="2.5" fill="white"/>' +
+    '<circle class="dot-icon11__waveDot dot-icon11__waveDot--c" cx="63.5" cy="36.5" r="2.5" fill="white"/>' +
+  '</svg>';
+
+function renderTest2OrangeOrbInnerHtml(sparkleSrc) {
+  var src = sparkleSrc || TEST2_ORB_SPARKLE_SRC;
+  return '' +
+    '<div class="dot-icon11__grad" aria-hidden="true"></div>' +
+    '<img class="dot-icon11__layer dot-icon11__layer--from" src="' + src + '" alt="" />' +
+    '<div class="dot-icon11__layer dot-icon11__layer--to" aria-hidden="true">' +
+      TEST2_ORB_DOTS_SVG_HTML +
+    '</div>';
+}
+
+function renderTest2OrangeOrbHtml(sparkleSrc) {
+  return '<div class="dot-icon11 dot-icon11--orange dot-icon11--music-orb" aria-hidden="true">' +
+    renderTest2OrangeOrbInnerHtml(sparkleSrc) +
+  '</div>';
+}
+
+var TEST3_SPOTIFY_ICON_HTML =
+  '<svg class="dot-music3__spotifyMark" viewBox="0 0 14.1793 14.0925" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+    '<circle cx="7.08965" cy="7.04625" r="7.04625" fill="#1DB954"/>' +
+    '<path d="M9.17561 5.4186C10.0477 5.65802 10.7113 6.0071 11.5452 6.30844C11.9658 6.46038 12.4768 5.75963 12.115 5.35328C11.3943 4.5438 9.5748 4.13225 8.57048 3.96037C7.67785 3.81072 6.77431 3.73506 5.8691 3.73419C5.17369 3.77041 4.42185 3.80936 3.74863 3.92768C3.22671 4.03182 2.14159 4.14123 2.24282 4.89263C2.32879 5.53023 2.85263 5.48936 3.33523 5.3669C5.16522 4.90247 7.35771 4.9873 9.17561 5.4186Z" fill="#000000"/>' +
+    '<path d="M9.25342 7.82623C9.65653 8.00033 10.7049 8.61237 10.9907 8.42303C11.714 7.94393 11.0058 7.40954 10.5977 7.22348C8.96119 6.47759 6.87635 6.01825 5.08436 6.20696C4.62431 6.25421 3.13645 6.39568 2.84267 6.74445C2.75059 6.85224 2.70512 6.99186 2.7162 7.13284C2.78342 7.95056 3.9342 7.41623 4.4051 7.34243C5.97675 7.09606 7.76948 7.2589 9.25342 7.82623Z" fill="#000000"/>' +
+    '<path d="M8.75917 9.80906C8.98673 9.9119 9.21754 10.0181 9.43906 10.1329C9.83925 10.3401 10.0337 10.5068 10.3741 10.1144C10.5968 9.27238 8.12506 8.65416 7.48305 8.56506C6.77238 8.46643 5.71392 8.40662 5.01204 8.49677C4.39488 8.57243 3.64746 8.61305 3.11564 8.90671C2.92508 9.19821 2.97454 9.42426 3.30689 9.58505C3.63824 9.63279 4.25197 9.46203 4.61372 9.41002C6.00746 9.19975 7.4319 9.3369 8.75917 9.80906Z" fill="#000000"/>' +
+  '</svg>';
+var TEST3_GOAL_SHELL_MS = 520;
+/* Expanded chrome (map + copy) appears once after shell height finishes — not during rise. */
+var TEST3_GOAL_CONTENT_REVEAL_MS = TEST3_GOAL_SHELL_MS;
+var TEST3_GOAL_INNER_RISE_MS = 560;
+var TEST3_GOAL_INNER_LAST_DELAY_MS = 180;
+var TEST3_GOAL_UNIFIED_RISE_MS = TEST3_GOAL_SHELL_MS + TEST3_GOAL_INNER_LAST_DELAY_MS + TEST3_GOAL_INNER_RISE_MS;
+/* Goal expand + ivory overlay — do not wait for pill icon/text hold (was 2480ms freeze). */
+var TEST3_GOAL_EXPAND_START_MS = 120;
+var TEST3_PILL_REVEAL_LOAD_MS = 0;
+var TEST3_PILL_REVEAL_ICON_MS = 480;
+var TEST3_PILL_REVEAL_ICON_HOLD_MS = 2000;
+var TEST3_PILL_REVEAL_TEXT_MS = 2000;
+var TEST3_PILL_REVEAL_TEXT_HOLD_MS = 2000;
+var TEST3_PILL_REVEAL_EXPAND_MS = TEST3_PILL_REVEAL_TEXT_MS;
+/* Pill title/sub shine sweep (music row drop still uses icon+text window). */
+var TEST3_PILL_TEXT_START_MS =
+  TEST3_PILL_REVEAL_ICON_MS + TEST3_PILL_REVEAL_ICON_HOLD_MS;
 var TEST3_PILL_REVEAL_TOTAL_MS =
-  TEST3_PILL_REVEAL_LOAD_MS + TEST3_PILL_REVEAL_ICON_MS + TEST3_PILL_REVEAL_EXPAND_MS;
+  TEST3_PILL_REVEAL_LOAD_MS +
+  TEST3_PILL_REVEAL_ICON_MS +
+  TEST3_PILL_REVEAL_ICON_HOLD_MS +
+  TEST3_PILL_REVEAL_TEXT_MS +
+  TEST3_PILL_REVEAL_TEXT_HOLD_MS;
 var TEST3_MUSIC_MOTION_MS = 14000;
 var TEST3_MUSIC_PRE_DELAY_MS = Math.round(TEST3_MUSIC_MOTION_MS * 0.10);
 var TEST3_MUSIC_EXPAND_START_MS = Math.round(TEST3_MUSIC_MOTION_MS * 0.57);
@@ -49,14 +141,54 @@ var TEST3_MUSIC_EXPAND_DUR_MS = Math.round(TEST3_MUSIC_MOTION_MS * 0.11);
 var TEST3_MUSIC_EXPAND_END_MS = TEST3_MUSIC_EXPAND_START_MS + TEST3_MUSIC_EXPAND_DUR_MS;
 var TEST3_MUSIC_FILL_START_MS = Math.round(TEST3_MUSIC_MOTION_MS * 0.14);
 var TEST3_MUSIC_RESOLVE_MS = Math.round(TEST3_MUSIC_MOTION_MS * 0.43);
-var TEST3_MUSIC_IMAGE1_HOLD_MS = 640;
-var TEST3_MUSIC_ORB_ABSORB_MS = 760;
-var TEST3_MUSIC_SETTLE_REVEAL_MS = 880;
-var TEST3_MUSIC_SETTLE_MS = TEST3_MUSIC_ORB_ABSORB_MS + TEST3_MUSIC_SETTLE_REVEAL_MS;
+var TEST3_MUSIC_IMAGE1_HOLD_MS = 0;
+var TEST3_MUSIC_ORB_ABSORB_MS = 880;
+var TEST3_MUSIC_SETTLE_ACTIVE_DELAY_MS = 0;
+var TEST3_MUSIC_SETTLE_TEXT_STAGGER_MS = 0;
+var TEST3_MUSIC_SETTLE_TEXT_DUR_MS = 1000;
+var TEST3_MUSIC_SETTLE_TAIL_MS = 120;
+var TEST3_MUSIC_SETTLE_REVEAL_MS = TEST3_MUSIC_SETTLE_TEXT_DUR_MS;
+var TEST3_MUSIC_SETTLE_MS =
+  TEST3_MUSIC_SETTLE_ACTIVE_DELAY_MS +
+  TEST3_MUSIC_SETTLE_TEXT_STAGGER_MS +
+  TEST3_MUSIC_SETTLE_TEXT_DUR_MS +
+  TEST3_MUSIC_SETTLE_TAIL_MS;
 var TEST3_MUSIC_GLOW_HOLD_MS = 1000;
 var TEST3_MUSIC_GLOW_FADE_MS = 1000;
-var TEST3_MUSIC_FILL_FADE_MS = 920;
+var TEST3_MUSIC_FILL_FADE_MS = 1400;
 var TEST3_MUSIC_ENTRANCE_END_MS = TEST3_MUSIC_MOTION_MS;
+
+/** Figma 5436:15945 — test3 status bar (time + live pill + system icons). */
+function renderTest3HealthStatusBar(props) {
+  var p = props || {};
+  var asset = 'assets/test3-status/';
+  var time = p.time || '9:41';
+  var liveTimer = p.liveTimer || '1:03:59';
+  var fill = 'width:100%;height:100%;box-sizing:border-box;';
+  return '<div class="test3-status-bar" style="' + fill + '">' +
+           '<div class="test3-status-bar__left">' +
+             '<span class="test3-status-bar__time">' + time + '</span>' +
+             '<div class="test3-status-bar__live" aria-hidden="true">' +
+               '<span class="test3-status-bar__live-icon">' +
+                 '<img src="' + asset + 'phone-live.svg" alt="" />' +
+               '</span>' +
+               '<span class="test3-status-bar__live-timer">' + liveTimer + '</span>' +
+             '</div>' +
+           '</div>' +
+           '<div class="test3-status-bar__right">' +
+             '<div class="test3-status-bar__icon test3-status-bar__icon--wifi" aria-hidden="true">' +
+               '<img src="' + asset + 'wifi.svg" alt="" />' +
+             '</div>' +
+             '<div class="test3-status-bar__icon test3-status-bar__icon--cell" aria-hidden="true">' +
+               '<img src="' + asset + 'cellular.svg" alt="" />' +
+             '</div>' +
+             '<div class="test3-status-bar__battery" aria-hidden="true">' +
+               '<img class="test3-status-bar__battery-left" src="' + asset + 'battery-left.svg" alt="" />' +
+               '<img class="test3-status-bar__battery-right" src="' + asset + 'battery-right.svg" alt="" />' +
+             '</div>' +
+           '</div>' +
+         '</div>';
+}
 
 /** Themes set `--oneui-chroma: mono` (e.g. Mono · Grayscale) so skies/icons stay neutral — no chroma accents in markup. */
 function _isMonoChromaRoot() {
@@ -377,7 +509,7 @@ window.composeSurfacePlan = function composeSurfacePlan(surfaceType, layout) {
         };
       }
       if (window.__mlpTestConfig && window.__mlpTestConfig.id === 'test1') {
-        // Persona 1 — static lockscreen mock (public/Lock Screen.png via CSS)
+        // Persona 1 — home screen (clean wallpaper via CSS; lock intro optional)
         var test1RevealAll = !!(window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll);
         var test1StackGap = 16;
         var test1LotteY = test1RevealAll ? (411 + 72 + test1StackGap) : 411;
@@ -387,6 +519,23 @@ window.composeSurfacePlan = function composeSurfacePlan(surfaceType, layout) {
         var test1TransitVisH = Math.round(134 * test1TransitScale);
         var test1TransitX = Math.round((388 - test1TransitVisW) / 2) - 2;
         var test1LotteStackY = test1LotteY + 88;
+        // Home widgets — 346px column (matches now-bar width), centered sizes
+        var test1HomeColX = 21;
+        var test1HomeColW = 346;
+        var test1HomeHeaderY = 72;
+        var test1HomeHeaderH = 62;
+        var test1HomeSmallW = 163;
+        var test1HomeSmallH = 178;
+        var test1HomeSmallGap = 14;
+        var test1HomeRowY = test1HomeHeaderY + test1HomeHeaderH + 6;
+        var test1HomeRowX = test1HomeColX + Math.round((test1HomeColW - (test1HomeSmallW * 2 + test1HomeSmallGap)) / 2);
+        var test1HomeFoodW = 340;
+        var test1HomeFoodY = test1HomeRowY + test1HomeSmallH + 10;
+        var test1HomeFoodH = 662 - test1HomeFoodY - 8;
+        var test1HomeFoodX = test1HomeColX + Math.round((test1HomeColW - test1HomeFoodW) / 2);
+        // Figma 5287:13389 — lock clock + widgets stack, centered on 388 canvas
+        var test1LockStackW = 236;
+        var test1LockStackX = Math.round((388 - test1LockStackW) / 2);
         return {
           surfaceType,
           components: [
@@ -409,7 +558,23 @@ window.composeSurfacePlan = function composeSurfacePlan(surfaceType, layout) {
             { id: 'test1-r-shortcut', role: 'test1-lock-shortcut-r', zone: 'bottomNav',
               _rect: { x: 300, y: 797, w: 60, h: 59 } },
             { id: 'test1-bottom-pill', role: 'test1-bottom-pill', zone: 'bottomNav',
-              _rect: { x: 96.5, y: 797, w: 215, h: 57 } }
+              _rect: { x: Math.round((388 - 215) / 2), y: 797, w: 215, h: 57 } },
+            { id: 'test1-lock-stack', role: 'test1-lock-stack', zone: 'viewing',
+              _rect: { x: test1LockStackX, y: 114, w: test1LockStackW, h: 248 } },
+            { id: 'status-bar', role: 'status-bar', zone: 'topSystem',
+              variant: { theme: 'light', carrier: '12:45', battery: 69 } },
+            { id: 'test1-home-header', role: 'test1-home-header', zone: 'viewing',
+              _rect: { x: test1HomeColX, y: test1HomeHeaderY, w: test1HomeColW, h: test1HomeHeaderH } },
+            { id: 'test1-home-map', role: 'test1-home-map', zone: 'viewing',
+              _rect: { x: test1HomeRowX, y: test1HomeRowY, w: test1HomeSmallW, h: test1HomeSmallH } },
+            { id: 'test1-home-message', role: 'test1-home-message', zone: 'viewing',
+              _rect: { x: test1HomeRowX + test1HomeSmallW + test1HomeSmallGap, y: test1HomeRowY, w: test1HomeSmallW, h: test1HomeSmallH } },
+            { id: 'test1-home-food', role: 'test1-home-food', zone: 'viewing',
+              _rect: { x: test1HomeFoodX, y: test1HomeFoodY, w: test1HomeFoodW, h: test1HomeFoodH } },
+            { id: 'test1-page-dots', role: 'test1-page-dots', zone: 'viewing',
+              _rect: { x: 0, y: 662, w: 388, h: 24 } },
+            { id: 'test1-app-dock', role: 'test1-app-dock', zone: 'bottomNav' },
+            { id: 'gesture-bar', role: 'gestureBar', zone: 'bottomAction' }
           ]
         };
       }
@@ -431,7 +596,8 @@ window.composeSurfacePlan = function composeSurfacePlan(surfaceType, layout) {
           return {
             surfaceType,
             components: [
-              { id: 'status-bar', role: 'status-bar', zone: 'topSystem' },
+              { id: 'status-bar', role: 'status-bar', zone: 'topSystem',
+                variant: { layout: 'test3-health', theme: 'dark', time: '9:41', liveTimer: '1:03:59' } },
               { id: 'test3-intro-run', role: 'dot-running-prompt', zone: 'viewing',
                 /* Intro sequence: compact pill shows "Running Now"
                    first (see test3IntroTitleStart in theme-page.css),
@@ -443,14 +609,12 @@ window.composeSurfacePlan = function composeSurfacePlan(surfaceType, layout) {
                   titleAtEnd: 'Running Now',
                   mlpAction: 'mlp-intro-to-home'
                 },
-                /* y=42 (was 56) so the intro pill sits at the SAME y
+                /* y=TEST3_GOAL_TOP so the intro pill sits at the SAME y
                    as the goal card it morphs into. Without this match
-                   the wrapper jumped UP 14 px at the rename moment
-                   (when finishTransition sets the goal's plan top of
-                   42 px), which the user saw as the card "popping up"
-                   after the morph. Now the y is identical from start
-                   to end — only the height changes (82 → 168). */
-                _rect: { x: 24, y: 42, w: 340, h: 82 } },
+                   the wrapper jumps at the rename moment (when
+                   finishTransition pins the goal rect), which reads as
+                   the card "popping" after the morph. */
+                _rect: { x: 24, y: TEST3_GOAL_TOP, w: 340, h: 82 } },
               { id: 'test3-page-dots', role: 'test3-page-dots', zone: 'viewing',
                 _rect: { x: 0, y: 714, w: 388, h: 24 } },
               { id: 'app-dock', role: 'app-dock', zone: 'bottomNav',
@@ -462,7 +626,8 @@ window.composeSurfacePlan = function composeSurfacePlan(surfaceType, layout) {
         return {
           surfaceType,
           components: [
-            { id: 'status-bar', role: 'status-bar', zone: 'topSystem' },
+            { id: 'status-bar', role: 'status-bar', zone: 'topSystem',
+              variant: { layout: 'test3-health', theme: 'dark', time: '9:41', liveTimer: '1:03:59' } },
             { id: 'test3-goal', role: 'dot-goal', zone: 'viewing',
               /* Title was "Today's Goal" but the card actually appears
                  AFTER the user accepts the workout prompt — so it's a
@@ -480,8 +645,16 @@ window.composeSurfacePlan = function composeSurfacePlan(surfaceType, layout) {
                  time once per second; _startTest3GoalDistanceTicker
                  advances the distance at ~3.33 m/s (5:00 min/km pace),
                  formatted as "Xm" under 1000 and "X.Y km" past that. */
-              variant: { title: "Running Now", time: '00:01:42', timeSuffix: 'Within', distance: '180m', useRealMap: true },
-              _rect: { x: 24, y: 42, w: 340, h: 168 } },
+              variant: {
+                title: "Running Now",
+                time: '00:01:42',
+                timeSuffix: 'Within',
+                distance: '180m',
+                useRealMap: true,
+                mapStatus: '러닝 장소에 도달했습니다.',
+                mapLocation: '반포 한강공원'
+              },
+              _rect: { x: 24, y: TEST3_GOAL_TOP, w: 340, h: TEST3_GOAL_H } },
             musicShifted ? { id: 'test3-music', role: 'dot-music-1x1', zone: 'viewing',
               variant: {
                 compactTitle: '러닝을 위한 음악을 찾고 있어요',
@@ -490,7 +663,7 @@ window.composeSurfacePlan = function composeSurfacePlan(surfaceType, layout) {
                 expandedBarFull: 246,
                 expandedBarTrack: 188
               },
-              _rect: { x: 24, y: test3Row2Y, w: 340, h: 168 } } : null,
+              _rect: { x: 24, y: test3Row2Y, w: 340, h: TEST3_MUSIC_EXPAND_H } } : null,
             { id: 'test3-weather', role: 'dot-weather-2x1-v1-1', zone: 'viewing',
               variant: {
                 partyPill: {
@@ -503,7 +676,7 @@ window.composeSurfacePlan = function composeSurfacePlan(surfaceType, layout) {
                   ]
                 }
               },
-              _rect: { x: 24, y: test3Row2Y, w: 168, h: TEST3_PILL_SLOT_H } },
+              _rect: { x: 24, y: test3Row2Y, w: TEST3_HALF_COL_W, h: TEST3_PILL_SLOT_H } },
             { id: 'test3-steps', role: 'dot-total-steps-2x1', zone: 'viewing',
               variant: {
                 pacePill: {
@@ -512,7 +685,7 @@ window.composeSurfacePlan = function composeSurfacePlan(surfaceType, layout) {
                   expandBody: '실시간 혼잡도를 분석해 러닝 경로를 최적화했어요'
                 }
               },
-              _rect: { x: 196, y: test3Row2Y, w: 168, h: TEST3_PILL_SLOT_H } },
+              _rect: { x: TEST3_HALF_COL_X, y: test3Row2Y, w: TEST3_HALF_COL_W, h: TEST3_PILL_SLOT_H } },
             { id: 'test3-page-dots', role: 'test3-page-dots', zone: 'viewing',
               _rect: { x: 0, y: 714, w: 388, h: 24 } },
             { id: 'app-dock', role: 'app-dock', zone: 'bottomNav',
@@ -1072,6 +1245,7 @@ window.resolveComponentRect = function resolveComponentRect(comp, layout, plan) 
 
     case 'bottom-navigation':
     case 'app-dock':
+    case 'test1-app-dock':
       return {
         x: z.bottomNav.x,
         y: z.bottomNav.y,
@@ -1880,9 +2054,15 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
     }
     case 'status-bar':
       var sbv = (comp && comp.variant) || {};
+      if (sbv.layout === 'test3-health' || (window.__mlpTestConfig && window.__mlpTestConfig.id === 'test3')) {
+        return renderTest3HealthStatusBar({
+          time: sbv.time || '9:41',
+          liveTimer: sbv.liveTimer || '1:03:59'
+        });
+      }
       var sbTheme = sbv.theme || (window.currentSurfaceType === window.SURFACE_TYPES.HEALTH_MLP ? 'light' : 'dark');
       return A.StatusBar
-        ? A.StatusBar({ theme: sbTheme, battery: 69, carrier: 'TJG' })
+        ? A.StatusBar({ theme: sbTheme, battery: 69, carrier: sbv.carrier || 'TJG' })
         : '<div style="height:100%;display:flex;align-items:center;justify-content:space-between;' +
             _T('caption', { color: 'statusBar' }) +
           '"><span>12:45</span><span>69%</span></div>';
@@ -3891,16 +4071,6 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
       var gDist = gv.distance || '15km';
       var gMap = gv.mapSrc || '/prototype-assets/goal-map.png';
 
-      // Two map render modes:
-      //   useRealMap (test3): empty Leaflet container, init post-mount
-      //   default            : the static PNG asset
-      var mapInnerHtml;
-      if (gv.useRealMap) {
-        mapInnerHtml = '<div class="dot-goal__map-leaflet" data-map-init="0"></div>';
-      } else {
-        mapInnerHtml = '<img src="' + gMap + '" alt="" />';
-      }
-
       var gTitleHtml = gTitle;
       if (gv.titleWave) {
         var _charIdx = 0;
@@ -3919,9 +4089,53 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
         }).join('');
       }
 
+      // Two map render modes:
+      //   useRealMap (test3): empty Leaflet container, init post-mount
+      //   default            : the static PNG asset
+      var mapInnerHtml;
+      var mapLightMainHtml = '';
+      if (gv.useRealMap) {
+        var gMapStatus = gv.mapStatus || '러닝 장소에 도달했습니다.';
+        var gMapLocation = gv.mapLocation || '반포 한강공원';
+        var gLocIconHtml =
+          '<span class="dot-goal__location-icon" aria-hidden="true">' +
+            '<svg viewBox="0 0 7.2155 8.97319" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+              '<path fill-rule="evenodd" clip-rule="evenodd" d="M3.6075 5.071C2.7795 5.071 2.1075 4.3995 2.1075 3.57C2.1075 2.7425 2.7795 2.071 3.6075 2.071C4.436 2.071 5.1075 2.7425 5.1075 3.57C5.1075 4.3995 4.436 5.071 3.6075 5.071ZM3.607 0C1.618 0 0 1.618 0 3.6065C0 4.984 1.0475 6.144 1.0885 6.188L3.038 8.7115C3.3375 9.0605 3.8775 9.0605 4.177 8.711L6.122 6.1925C6.167 6.144 7.2155 4.984 7.2155 3.6065C7.2155 1.618 5.597 0 3.607 0Z" fill="#4C5B17"/>' +
+            '</svg>' +
+          '</span>';
+        mapInnerHtml =
+          '<div class="dot-goal__map-dark">' +
+            '<div class="dot-goal__map-leaflet" data-map-init="0"></div>' +
+          '</div>' +
+          '<div class="dot-goal__map-light" aria-hidden="true">' +
+            '<img class="dot-goal__map-photo" src="/assets/test3-goal-map-expanded.png" alt="" />' +
+            '<img class="dot-goal__map-pin" src="/assets/test3-goal-map-pin.svg" alt="" />' +
+          '</div>';
+        mapLightMainHtml =
+          '<div class="dot-goal__main dot-goal__main--light" aria-hidden="true">' +
+            '<div class="dot-goal__title">' + gTitleHtml + '</div>' +
+            '<div class="dot-goal__unit dot-goal__unit--expanded">' +
+              '<div class="dot-goal__status">' + gMapStatus + '</div>' +
+              '<div class="dot-goal__location">' +
+                gLocIconHtml +
+                '<span>' + gMapLocation + '</span>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+      } else {
+        mapInnerHtml = '<img src="' + gMap + '" alt="" />';
+      }
+
       return '' +
         '<div class="dot-card dot-goal" data-state="' + (gv.state || 'idle') + '">' +
-          '<div class="dot-goal__main">' +
+          (gv.useRealMap ? '<div class="dot-goal__theme-overlay" aria-hidden="true"></div>' : '') +
+          (gv.useRealMap
+            ? '<div class="dot-goal__map-slot" aria-hidden="true">' +
+                '<div class="dot-goal__map-seed" aria-hidden="true"></div>' +
+                '<div class="dot-goal__map">' + mapInnerHtml + '</div>' +
+              '</div>'
+            : '') +
+          '<div class="dot-goal__main' + (gv.useRealMap ? ' dot-goal__main--dark' : '') + '">' +
             '<div class="dot-goal__title">' + gTitleHtml + '</div>' +
             '<div class="dot-goal__unit">' +
               '<div class="dot-goal__timeRow">' +
@@ -3930,12 +4144,10 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
               '<div class="dot-goal__distance">' + gDist + '</div>' +
             '</div>' +
           '</div>' +
-          (gv.useRealMap
-            ? '<div class="dot-goal__map-slot" aria-hidden="true">' +
-                '<div class="dot-goal__map-seed" aria-hidden="true"></div>' +
-                '<div class="dot-goal__map">' + mapInnerHtml + '</div>' +
-              '</div>'
-            : '<div class="dot-goal__map" aria-hidden="true">' + mapInnerHtml + '</div>') +
+          mapLightMainHtml +
+          (!gv.useRealMap
+            ? '<div class="dot-goal__map" aria-hidden="true">' + mapInnerHtml + '</div>'
+            : '') +
         '</div>';
     }
 
@@ -4293,8 +4505,8 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
       var isTest3Music =
         (window.__mlpTestConfig && window.__mlpTestConfig.id === 'test3') ||
         (document.body && document.body.dataset && document.body.dataset.mlpTest === 'test3');
-      var expandedBarW = mv.expandedBarFull != null ? mv.expandedBarFull : 292;
-      var expandedBarTrack = mv.expandedBarTrack != null ? mv.expandedBarTrack : 77;
+      var expandedBarW = mv.expandedBarFull != null ? mv.expandedBarFull : (isTest3Music ? TEST3_MUSIC_BAR_W : 292);
+      var expandedBarTrack = mv.expandedBarTrack != null ? mv.expandedBarTrack : (isTest3Music ? TEST3_MUSIC_BAR_TRACK : 77);
       var iconTitle = mv.iconTitle || '가벼운 러닝에는 부드럽고 상쾌한\nConcierto가 좋을거같아요!';
       var iconSubtitle = mv.iconSubtitle || 'Jim Hall - Concierto';
       if (isTest3Music) {
@@ -4329,13 +4541,12 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
           '<circle cx="3.49" cy="53.32" r="3.5" fill="#000000"/><circle cx="11.62" cy="53.32" r="3.5" fill="#000000"/><circle cx="19.85" cy="53.32" r="3.5" fill="#000000"/><circle cx="44.25" cy="53.32" r="3.5" fill="#000000"/><circle cx="52.39" cy="53.32" r="3.5" fill="#000000"/><circle cx="60.52" cy="53.32" r="3.5" fill="#000000"/>' +
           '<circle cx="3.49" cy="61.45" r="3.5" fill="#000000"/><circle cx="11.62" cy="61.45" r="3.5" fill="#000000"/><circle cx="44.25" cy="61.45" r="3.5" fill="#000000"/><circle cx="52.39" cy="61.45" r="3.5" fill="#000000"/>' +
         '</svg>';
+      var test3OrbHtml = isTest3Music ? renderTest2OrangeOrbHtml() : '';
       var compactHtml = isTest3Music
         ? ('<div class="dot-music1__player" aria-hidden="true">' +
-            '<div class="dot-music1__iconBg">' +
-              '<div class="dot-music1__musicIcon">' + compactIconHtml + '</div>' +
-            '</div>' +
+            '<div class="dot-music1__iconBg">' + test3OrbHtml + '</div>' +
             '<div class="dot-music1__searchText">' +
-              '<span class="dot-music1__searchLine dot-music1__searchLine--1">러닝 bgm을 찾고 있어요</span>' +
+              '<span class="dot-music1__searchLine dot-music1__searchLine--1">' + TEST3_MUSIC_SEARCH_LINE1 + '</span>' +
               '<span class="dot-music1__searchLine dot-music1__searchLine--2">' + TEST3_MUSIC_SEARCH_LINE2 + '</span>' +
             '</div>' +
           '</div>')
@@ -4466,28 +4677,29 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
 
     case 'dot-music-1x2-icon': {
       var mv3 = (comp && comp.variant) || {};
-      var isTest3Lyrics =
+      var isTest3Music =
         (window.__mlpTestConfig && window.__mlpTestConfig.id === 'test3') ||
         (document.body && document.body.dataset && document.body.dataset.mlpTest === 'test3');
-      var title3 = mv3.title || (isTest3Lyrics
+      var isTest3Lyrics = isTest3Music;
+      var title3 = mv3.title || (isTest3Music
         ? TEST3_MUSIC_TITLE
         : '오늘 날씨에 딱 맞는\n플레이리스트');
-      var subtitle3 = mv3.subtitle || (isTest3Lyrics ? 'M83 - Midnight City' : 'Jim Hall - Concierto');
-      if (isTest3Lyrics) {
+      var subtitle3 = mv3.subtitle || (isTest3Music ? 'M83 - Midnight City' : 'Jim Hall - Concierto');
+      if (isTest3Music) {
         title3 = TEST3_MUSIC_TITLE;
         subtitle3 = 'M83 - Midnight City';
       }
       var foldTitle3 = mv3.foldTitle;
       if (!foldTitle3) {
-        foldTitle3 = isTest3Lyrics
+        foldTitle3 = isTest3Music
           ? TEST3_MUSIC_FOLD_TITLE
           : (function () {
               var foldDash = subtitle3.indexOf(' - ');
               return foldDash >= 0 ? subtitle3.slice(foldDash + 3).trim() : subtitle3;
             })();
       }
-      var barW3 = mv3.barFull != null ? mv3.barFull : (isTest3Lyrics ? 246 : 292);
-      var barTrack3 = mv3.barTrack != null ? mv3.barTrack : (isTest3Lyrics ? 188 : 77);
+      var barW3 = mv3.barFull != null ? mv3.barFull : (isTest3Music ? TEST3_MUSIC_BAR_W : 292);
+      var barTrack3 = mv3.barTrack != null ? mv3.barTrack : (isTest3Music ? TEST3_MUSIC_BAR_TRACK : 77);
       var safeTitle = String(title3).replace(/\n/g, '<br/>');
       // Placeholder lyrics block — visible only when the user taps the
       // card to enter the `lyrics` state. The LLM endpoint can supply
@@ -4536,17 +4748,18 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
             '<path d="M9 6.5 L21 14 L9 21.5 Z" fill="#FFFFFF"/>' +
           '</svg>' +
         '</button>';
-      var compactHeaderHtml = isTest3Lyrics
-        ? ('<span class="dot-music3__spotify" aria-hidden="true"></span>' +
-            '<div class="dot-music3__compactHeader" aria-hidden="true">' +
-              '<span class="dot-music3__mediaPill">미디어 출력</span>' +
-            '</div>')
+      var compactHeaderHtml = isTest3Music
+        ? ('<div class="dot-music3__headerRow dot-music3__compactHeader" aria-hidden="true">' +
+            '<span class="dot-music3__spotify" aria-hidden="true">' + TEST3_SPOTIFY_ICON_HTML + '</span>' +
+            '<span class="dot-music3__mediaPill">미디어 출력</span>' +
+          '</div>')
         : '';
       return '' +
         '<div class="dot-card dot-music dot-music3 dot-music3--icon" data-state="' + (mv3.state || 'idle') + '">' +
           compactHeaderHtml +
           '<div class="dot-music3__top">' +
             '<div class="dot-music3__icon">' +
+              (isTest3Music ? renderTest2OrangeOrbHtml() : '') +
               '<span class="dot-music3__iconBg"></span>' +
               playPauseBtnHtml +
               // Original decorative music-note SVG retained but hidden
@@ -4605,7 +4818,9 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
           // normal (tap 3). Cycle handler lives in surface-layout.js.
           lyricsBlockHtml +
           '<div class="dot-music3__playlistPill" aria-hidden="true">' +
-            '<span class="dot-music3__playlistThumb" aria-hidden="true"></span>' +
+            '<span class="dot-music3__playlistThumb" aria-hidden="true">' +
+              '<span class="dot-music3__playlistThumbBadge" aria-hidden="true">' + TEST3_SPOTIFY_ICON_HTML + '</span>' +
+            '</span>' +
             '<div class="dot-music3__playlistCopy">' +
               '<span class="dot-music3__playlistTitle">3,2,1 러닝 시작</span>' +
               '<span class="dot-music3__playlistMeta">10곡 · 38분 34초</span>' +
@@ -4633,9 +4848,9 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
               // 180s playback animation; current is a placeholder for
               // now and can be ticked live later.
               '<div class="dot-music3__times" aria-hidden="true">' +
-                '<span class="dot-music3__time--current">' + (isTest3Lyrics ? '01:35' : '0:00') + '</span>' +
+                '<span class="dot-music3__time--current">' + (isTest3Music ? '01:35' : '0:00') + '</span>' +
                 '<span class="dot-music3__time--sep"> / </span>' +
-                '<span class="dot-music3__time--total">' + (isTest3Lyrics ? '02:30' : '3:00') + '</span>' +
+                '<span class="dot-music3__time--total">' + (isTest3Music ? '02:30' : '3:00') + '</span>' +
               '</div>' +
             '</div>' +
             '<div class="dot-music__bar dot-music__bar--wide dot-music3__bar" style="--bar-w:' + barW3 + 'px;--bar-track:' + barTrack3 + 'px;">' +
@@ -5090,36 +5305,10 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
 
     case 'dot-icon-orange-badge-1x1': {
       var iv = (comp && comp.variant) || {};
-      var src = iv.src || '/assets/dot-icons/orange-badge.svg';
+      var src = iv.src || TEST2_ORB_SPARKLE_SRC;
       return '' +
         '<div class="dot-card dot-icon11 dot-icon11--orange" data-state="' + (iv.state || 'idle') + '">' +
-          '<div class="dot-icon11__grad" aria-hidden="true"></div>' +
-          '<img class="dot-icon11__layer dot-icon11__layer--from" src="' + src + '" alt="" />' +
-          '<div class="dot-icon11__layer dot-icon11__layer--to" aria-hidden="true">' +
-            '<svg class="dot-icon11__dotsSvg" width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-              '<circle class="dot-icon11__waveDot dot-icon11__waveDot--a" cx="7.5" cy="36.5" r="2.5" fill="white"/>' +
-              '<circle class="dot-icon11__waveDot dot-icon11__waveDot--b" cx="14.5" cy="36.5" r="2.5" fill="white"/>' +
-              '<circle class="dot-icon11__waveDot dot-icon11__waveDot--c" cx="21.5" cy="36.5" r="2.5" fill="white"/>' +
-              '<ellipse class="dot-icon11__waveDot dot-icon11__waveDot--d" cx="35.5" cy="36" rx="2.5" ry="5" fill="white"/>' +
-              '<ellipse class="dot-icon11__waveDot dot-icon11__waveDot--b" cx="35.5" cy="27" rx="2.5" ry="3" fill="white"/>' +
-              '<ellipse class="dot-icon11__waveDot dot-icon11__waveDot--a" cx="42.5" cy="28" rx="1.5" ry="2" fill="white"/>' +
-              '<ellipse class="dot-icon11__waveDot dot-icon11__waveDot--c" cx="49.5" cy="31" rx="1.5" ry="2" fill="white"/>' +
-              '<ellipse class="dot-icon11__waveDot dot-icon11__waveDot--d" cx="28.5" cy="28" rx="1.5" ry="2" fill="white"/>' +
-              '<ellipse class="dot-icon11__waveDot dot-icon11__waveDot--b" cx="21.5" cy="31" rx="1.5" ry="2" fill="white"/>' +
-              '<ellipse class="dot-icon11__waveDot dot-icon11__waveDot--a" cx="42.5" cy="43" rx="1.5" ry="2" fill="white"/>' +
-              '<ellipse class="dot-icon11__waveDot dot-icon11__waveDot--c" cx="28.5" cy="43" rx="1.5" ry="2" fill="white"/>' +
-              '<ellipse class="dot-icon11__waveDot dot-icon11__waveDot--d" cx="35.5" cy="45" rx="2.5" ry="3" fill="white"/>' +
-              '<ellipse class="dot-icon11__waveDot dot-icon11__waveDot--b" cx="42.5" cy="36" rx="2.5" ry="4" fill="white"/>' +
-              '<ellipse class="dot-icon11__waveDot dot-icon11__waveDot--c" cx="28.5" cy="36" rx="2.5" ry="4" fill="white"/>' +
-              '<circle class="dot-icon11__waveDot dot-icon11__waveDot--a" cx="35.5" cy="20.5" r="2.5" fill="white"/>' +
-              '<circle class="dot-icon11__waveDot dot-icon11__waveDot--d" cx="35.5" cy="15.5" r="1.5" fill="white"/>' +
-              '<circle class="dot-icon11__waveDot dot-icon11__waveDot--c" cx="35.5" cy="56.5" r="1.5" fill="white"/>' +
-              '<circle class="dot-icon11__waveDot dot-icon11__waveDot--b" cx="35.5" cy="51.5" r="2.5" fill="white"/>' +
-              '<circle class="dot-icon11__waveDot dot-icon11__waveDot--a" cx="49.5" cy="36.5" r="2.5" fill="white"/>' +
-              '<circle class="dot-icon11__waveDot dot-icon11__waveDot--b" cx="56.5" cy="36.5" r="2.5" fill="white"/>' +
-              '<circle class="dot-icon11__waveDot dot-icon11__waveDot--c" cx="63.5" cy="36.5" r="2.5" fill="white"/>' +
-            '</svg>' +
-          '</div>' +
+          renderTest2OrangeOrbInnerHtml(src) +
         '</div>';
     }
 
@@ -5853,19 +6042,29 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
 
     case 'test1-lock-shortcut-l': {
       return '<div class="test1-lock-shortcut-l">' +
-        '<div class="test1-lock-shortcut-l__ellipse" aria-hidden="true"></div>' +
-        '<div class="test1-lock-shortcut-l__phone">' +
-          '<img class="test1-lock-shortcut-l__icon" src="/Phone.png" alt="" draggable="false" />' +
-        '</div>' +
+        '<img class="test1-lock-shortcut-l__icon" src="/assets/test1/lock-shortcut-camera.png" alt="" draggable="false" />' +
       '</div>';
     }
 
     case 'test1-lock-shortcut-r': {
       return '<div class="test1-lock-shortcut-r">' +
-        '<div class="test1-lock-shortcut-r__ellipse" aria-hidden="true"></div>' +
-        '<div class="test1-lock-shortcut-r__camera">' +
-          '<img class="test1-lock-shortcut-r__icon" src="/assets/figma/lock-screen/camera-icon.svg" alt="" draggable="false" />' +
-        '</div>' +
+        '<img class="test1-lock-shortcut-r__icon" src="/assets/test1/lock-shortcut-phone.png" alt="" draggable="false" />' +
+      '</div>';
+    }
+
+    case 'test1-lock-stack': {
+      var tlsWeather = window.renderAtomicForRole(
+        { role: 'weatherDate', variant: { date: 'Sat, May 3', temp: 24, condition: 'moon' } },
+        { w: 173, h: 20 }
+      );
+      var tlsClock = window.renderAtomicForRole(
+        { role: 'clock', variant: { HH: '12', MM: '45', fontSize: 73, lineHeight: 54, gap: 10 } },
+        { w: 173, h: 120 }
+      );
+      var tlsWidgets = window.renderAtomicForRole({ role: 'lock-widgets' }, { w: 236, h: 50 });
+      return '<div class="test1-lock-stack">' +
+        '<div class="test1-lock-stack__clock">' + tlsWeather + tlsClock + '</div>' +
+        '<div class="test1-lock-stack__widgets">' + tlsWidgets + '</div>' +
       '</div>';
     }
 
@@ -5935,6 +6134,108 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
           '<div class="test1-bottom-pill__text-sweep-track test1-bottom-pill__text-sweep-track--2"></div>' +
           '<div class="test1-bottom-pill__text-sweep-track test1-bottom-pill__text-sweep-track--3"></div>' +
         '</div>' +
+      '</div>';
+    }
+
+    case 'test1-app-dock': {
+      var test1DockIcons = [
+        { src: '/assets/test1/home/dock/messages.png', label: 'Messages' },
+        { src: '/assets/test1/home/dock/camera.png', label: 'Camera' },
+        { src: '/assets/test1/home/dock/notes.png', label: 'Notes' },
+        { src: '/assets/test1/home/dock/maps.png', label: 'Maps' }
+      ];
+      return '<div class="test1-app-dock" aria-hidden="true">' +
+        test1DockIcons.map(function (icon) {
+          return '<img class="test1-app-dock__icon" src="' + icon.src + '" alt="" draggable="false" />';
+        }).join('') +
+      '</div>';
+    }
+
+    case 'test1-home-header': {
+      return '<div class="test1-home-header">' +
+        '<div class="test1-home-header__title">장 보고 돌아오는 중이에요</div>' +
+        '<div class="test1-home-header__sub">저녁 준비를 돕는 화면을 구성했습니다</div>' +
+      '</div>';
+    }
+
+    case 'test1-home-map': {
+      return '<div class="test1-home-widget test1-home-map">' +
+        '<div class="test1-home-widget__bg" aria-hidden="true"></div>' +
+        '<div class="test1-home-widget__inner">' +
+          '<div class="test1-home-map__top">' +
+            '<span class="test1-home-widget__chip test1-home-widget__chip--map">네이버지도</span>' +
+            '<img class="test1-home-map__bus" src="/assets/test1/home/naver-map-chip-icon.png" alt="" draggable="false" />' +
+          '</div>' +
+          '<div class="test1-home-map__time"><span class="test1-home-map__time-num">5</span><span class="test1-home-map__time-unit">분 뒤</span></div>' +
+          '<p class="test1-home-map__sub">진천청구타운 앞 하차</p>' +
+          '<div class="test1-home-map__progress">' +
+            '<div class="test1-home-map__track"></div>' +
+            '<div class="test1-home-map__fill"></div>' +
+            '<div class="test1-home-map__thumb"><img src="/assets/test1/home/send-arrow.png" alt="" draggable="false" /></div>' +
+          '</div>' +
+          '<p class="test1-home-widget__action">안내 종료</p>' +
+        '</div>' +
+      '</div>';
+    }
+
+    case 'test1-home-message': {
+      return '<div class="test1-home-widget test1-home-message">' +
+        '<div class="test1-home-widget__bg" aria-hidden="true"></div>' +
+        '<div class="test1-home-widget__inner">' +
+          '<div class="test1-home-message__top">' +
+            '<span class="test1-home-widget__chip"><img class="test1-home-widget__chip-icon" src="/assets/test1/home/message-icon.png" alt="" draggable="false" />메시지</span>' +
+            '<img class="test1-home-message__avatar" src="/assets/test1/home/daughter-avatar.png" alt="" draggable="false" />' +
+          '</div>' +
+          '<div class="test1-home-message__copy">' +
+            '<p class="test1-home-message__title">우리 딸에게 답장</p>' +
+            '<p class="test1-home-message__sub">AI 제안 메시지</p>' +
+          '</div>' +
+          '<div class="test1-home-message__bubble">' +
+            '<p>I\'m on my way.</p><p>Dinner in 20 min?</p>' +
+          '</div>' +
+          '<p class="test1-home-widget__action">보내기</p>' +
+        '</div>' +
+      '</div>';
+    }
+
+    case 'test1-home-food': {
+      var foodRow = function (iconClass, title, sub) {
+        return '<div class="test1-home-food__row">' +
+          '<span class="test1-home-food__icon ' + iconClass + '" aria-hidden="true"></span>' +
+          '<div class="test1-home-food__copy">' +
+            '<p class="test1-home-food__title">' + title + '</p>' +
+            '<p class="test1-home-food__sub">' + sub + '</p>' +
+          '</div>' +
+          '<span class="test1-home-food__chev" aria-hidden="true"></span>' +
+        '</div>';
+      };
+      return '<div class="test1-home-widget test1-home-food">' +
+        '<div class="test1-home-widget__bg" aria-hidden="true"></div>' +
+        '<div class="test1-home-widget__inner">' +
+          '<span class="test1-home-widget__chip test1-home-widget__chip--food"><img class="test1-home-widget__chip-icon" src="/assets/test1/home/smartthings-icon.png" alt="" draggable="false" />SmartThings Food</span>' +
+          '<div class="test1-home-food__head">' +
+            '<p class="test1-home-food__headline">구수한 두부 된장찌개</p>' +
+            '<p class="test1-home-food__desc">냉장고 속 식재료로 저녁 메뉴를 추천합니다</p>' +
+          '</div>' +
+          '<div class="test1-home-food__rows">' +
+            foodRow('test1-home-food__icon--tofu', '두부', '오늘 구매한 식재료') +
+            foodRow('test1-home-food__icon--zucchini', '애호박', '보관 4일째 · 우선 사용') +
+            foodRow('test1-home-food__icon--onion', '대파', '신선칸 보관 중') +
+          '</div>' +
+          '<div class="test1-home-food__actions">' +
+            '<button type="button" class="test1-home-food__btn">다른 메뉴 추천</button>' +
+            '<button type="button" class="test1-home-food__btn">레시피 보기</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }
+
+    case 'test1-page-dots': {
+      return '<div class="test1-page-dots">' +
+        '<span class="test1-page-dots__dot"></span>' +
+        '<span class="test1-page-dots__dot test1-page-dots__dot--active"></span>' +
+        '<span class="test1-page-dots__dot"></span>' +
+        '<span class="test1-page-dots__dot"></span>' +
       '</div>';
     }
 
@@ -6772,88 +7073,272 @@ function _upgradeTest3GoalMapSeed(soft) {
   _pinTest3GoalMapPulseCenter(seedEl);
   return seedEl;
 }
-function _triggerTest3GoalUnifiedEnter(goalEl) {
+function   _triggerTest3GoalUnifiedEnter(goalEl) {
   if (!goalEl || !goalEl.isConnected) return;
   if (goalEl.classList.contains('test3-goal-copy-enter')) return;
   if (!goalEl.classList.contains('test3-goal-enter-ready')) return;
 
-  goalEl.removeAttribute('data-test3-goal-map-hold');
+  goalEl.style.borderRadius = '35px';
+  var goalShell = goalEl.querySelector('.dot-goal');
+  if (goalShell) {
+    goalShell.style.borderRadius = '35px';
+  }
 
-  if (typeof _upgradeTest3GoalMapSeed === 'function') {
-    _upgradeTest3GoalMapSeed(true);
+  goalEl.removeAttribute('data-test3-goal-map-hold');
+  goalEl.removeAttribute('data-test3-goal-copy-reveal');
+  goalEl.removeAttribute('data-test3-goal-content-ready');
+  if (goalEl.__test3GoalContentRevealTimer) {
+    clearTimeout(goalEl.__test3GoalContentRevealTimer);
+    goalEl.__test3GoalContentRevealTimer = null;
+  }
+  var themeOverlay = goalEl.querySelector('.dot-goal__theme-overlay');
+  if (themeOverlay) {
+    themeOverlay.style.removeProperty('opacity');
+    themeOverlay.style.removeProperty('animation');
+    themeOverlay.style.removeProperty('transition');
   }
 
   var mapEl = goalEl.querySelector('.dot-goal__map');
   if (mapEl) {
-    if (typeof _revealTest3GoalMapContentDuringBloom === 'function') {
-      _revealTest3GoalMapContentDuringBloom(goalEl, mapEl);
-    }
     mapEl.style.removeProperty('transform');
     mapEl.style.removeProperty('clip-path');
     mapEl.style.removeProperty('will-change');
+    var leafletEl = mapEl.querySelector('.dot-goal__map-leaflet');
+    if (leafletEl) {
+      leafletEl.style.opacity = '0';
+      leafletEl.style.visibility = 'hidden';
+    }
   }
 
-  var mapSlot = goalEl.querySelector('.dot-goal__map-slot');
-  if (mapSlot) {
-    mapSlot.style.removeProperty('opacity');
-    mapSlot.style.removeProperty('visibility');
-    mapSlot.style.removeProperty('transform');
-    mapSlot.style.removeProperty('animation');
-  }
-
-  var copies = goalEl.querySelectorAll('.dot-goal__title, .dot-goal__time, .dot-goal__distance');
-  copies.forEach(function (el) {
+  var innerEls = goalEl.querySelectorAll(
+    '.dot-goal__title, .dot-goal__time, .dot-goal__distance, .dot-goal__status, .dot-goal__location, .dot-goal__location-icon, .dot-goal__map-photo, .dot-goal__map-pin'
+  );
+  innerEls.forEach(function (el) {
     el.style.removeProperty('opacity');
     el.style.removeProperty('visibility');
     el.style.removeProperty('transform');
     el.style.removeProperty('animation');
   });
 
-  goalEl.classList.add('test3-goal-copy-enter');
+  var mapSlot = goalEl.querySelector('.dot-goal__map-slot');
+  if (mapSlot) {
+    mapSlot.style.removeProperty('opacity');
+    mapSlot.style.removeProperty('visibility');
+    mapSlot.style.removeProperty('transform');
+    mapSlot.style.removeProperty('transition');
+    mapSlot.style.removeProperty('animation');
+  }
+
+  /* Height + ivory shell expand together with map/copy (no empty shell hold). */
+  goalEl.classList.add('test3-goal-copy-enter', 'test3-goal-inner-rise');
+  if (typeof _showTest3GoalExpandedContent === 'function') {
+    _showTest3GoalExpandedContent(goalEl);
+  }
+  var darkMainEarly = goalEl.querySelector('.dot-goal__main--dark');
+  if (darkMainEarly) {
+    darkMainEarly.style.opacity = '0';
+    darkMainEarly.style.visibility = 'hidden';
+    darkMainEarly.style.pointerEvents = 'none';
+  }
   void goalEl.offsetWidth;
-  copies.forEach(function (el) { void el.offsetWidth; });
+  innerEls.forEach(function (el) { void el.offsetWidth; });
   if (mapSlot) void mapSlot.offsetWidth;
+  goalEl.style.height = TEST3_GOAL_H + 'px';
+  void goalEl.offsetWidth;
+  goalEl.__test3GoalContentRevealTimer = setTimeout(function () {
+    goalEl.__test3GoalContentRevealTimer = null;
+    try {
+      if (!goalEl.isConnected) return;
+      if (typeof _snapTest3GoalIvoryShell === 'function') {
+        _snapTest3GoalIvoryShell(goalEl);
+      }
+      requestAnimationFrame(function () {
+        try {
+          if (!goalEl.isConnected) return;
+          if (typeof _finalizeTest3GoalEntrance === 'function') {
+            _finalizeTest3GoalEntrance(goalEl);
+          }
+        } catch (_) {}
+      });
+    } catch (_) {}
+  }, TEST3_GOAL_CONTENT_REVEAL_MS);
+}
+function _snapTest3GoalIvoryShell(goalEl) {
+  if (!goalEl || !goalEl.isConnected) return;
+  var shell = goalEl.querySelector('.dot-goal');
+  if (shell) {
+    shell.style.setProperty('background-color', '#FFFCF4', 'important');
+    shell.style.setProperty('transition', 'none', 'important');
+    shell.style.setProperty('animation', 'none', 'important');
+  }
+  var themeOverlay = goalEl.querySelector('.dot-goal__theme-overlay');
+  if (themeOverlay) {
+    themeOverlay.style.setProperty('opacity', '0', 'important');
+    themeOverlay.style.setProperty('visibility', 'hidden', 'important');
+    themeOverlay.style.setProperty('animation', 'none', 'important');
+    themeOverlay.style.setProperty('transition', 'none', 'important');
+  }
+}
+function _showTest3GoalExpandedContent(goalEl) {
+  if (!goalEl || !goalEl.isConnected) return;
+  if (goalEl.getAttribute('data-test3-goal-content-ready') === '1') return;
+  goalEl.setAttribute('data-test3-goal-content-ready', '1');
+  goalEl.setAttribute('data-test3-goal-copy-reveal', '1');
+  var mapEl = goalEl.querySelector('.dot-goal__map');
+  if (mapEl) {
+    var leafletEl = mapEl.querySelector('.dot-goal__map-leaflet');
+    if (leafletEl) {
+      leafletEl.style.opacity = '0';
+      leafletEl.style.visibility = 'hidden';
+    }
+  }
+  goalEl.querySelectorAll(
+    '.dot-goal__map-seed, .dot-goal__map-seed--handoff, .mlp-position-pulse, .mlp-map-compass'
+  ).forEach(function (el) {
+    el.style.opacity = '0';
+    el.style.visibility = 'hidden';
+    el.style.pointerEvents = 'none';
+  });
+  var revealEls = goalEl.querySelectorAll(
+    '.dot-goal__map-photo, .dot-goal__map-pin, .dot-goal__main--light .dot-goal__title, .dot-goal__main--light .dot-goal__status, .dot-goal__main--light .dot-goal__location, .dot-goal__main--light .dot-goal__location-icon, .dot-goal__main--light .dot-goal__location span'
+  );
+  revealEls.forEach(function (el) {
+    el.style.opacity = '1';
+    el.style.visibility = 'visible';
+    el.style.transform = 'none';
+    el.style.animation = 'none';
+    el.style.transition = 'none';
+  });
+}
+function _bindTest3GoalExpandClick() {
+  if (window.__mlpTest3GoalExpandClickBound) return;
+  window.__mlpTest3GoalExpandClickBound = true;
+  document.addEventListener('click', function (e) {
+    try {
+      var canvas = document.getElementById('canvas');
+      if (!canvas || canvas.getAttribute('data-test-scope') !== 'test3') return;
+      var goalEl = e.target && e.target.closest ? e.target.closest('#test3-goal') : null;
+      if (!goalEl) return;
+      if (goalEl.classList.contains('test3-goal-copy-enter') ||
+          goalEl.classList.contains('test3-goal-map-expanded') ||
+          goalEl.getAttribute('data-test3-goal-expanded') === '1') return;
+      if (!goalEl.classList.contains('test3-goal-enter-ready')) return;
+      if (typeof _triggerTest3GoalUnifiedEnter === 'function') {
+        _triggerTest3GoalUnifiedEnter(goalEl);
+      }
+    } catch (_) {}
+  }, true);
+}
+_bindTest3GoalExpandClick();
+function _lockTest3GoalExpandedState(goalEl) {
+  if (!goalEl || !goalEl.isConnected) return;
+  if (goalEl.classList.contains('test3-goal-entrance-settled') &&
+      goalEl.getAttribute('data-test3-goal-expanded') === '1') {
+    return;
+  }
+  if (typeof _snapTest3GoalIvoryShell === 'function') {
+    _snapTest3GoalIvoryShell(goalEl);
+  }
+  goalEl.setAttribute('data-test3-goal-map-ready', '1');
+  goalEl.setAttribute('data-test3-goal-expanded', '1');
+  goalEl.style.height = TEST3_GOAL_H + 'px';
+  /* Drop entrance classes before settled — copy-enter:hidden beats settled:visible at equal !important. */
+  goalEl.classList.remove('test3-goal-enter', 'test3-goal-enter-ready', 'test3-goal-copy-enter', 'test3-goal-inner-rise');
+  goalEl.removeAttribute('data-test3-goal-copy-reveal');
+  var themeOverlayLock = goalEl.querySelector('.dot-goal__theme-overlay');
+  if (themeOverlayLock) {
+    themeOverlayLock.style.removeProperty('opacity');
+    themeOverlayLock.style.removeProperty('animation');
+    themeOverlayLock.style.removeProperty('transition');
+    themeOverlayLock.style.removeProperty('z-index');
+  }
+  goalEl.classList.add('test3-goal-map-ready', 'test3-goal-entrance-settled', 'test3-goal-map-expanded');
+  var canvas = document.getElementById('canvas');
+  if (canvas) {
+    canvas.removeAttribute('data-test3-goal-fresh');
+    canvas.setAttribute('data-test3-goal-expanded', '1');
+  }
+  var mapSlot = goalEl.querySelector('.dot-goal__map-slot');
+  var lightMain = goalEl.querySelector('.dot-goal__main--light');
+  var darkMain = goalEl.querySelector('.dot-goal__main--dark');
+  if (mapSlot) {
+    mapSlot.style.opacity = '1';
+    mapSlot.style.visibility = 'visible';
+    mapSlot.style.transform = 'none';
+    mapSlot.style.removeProperty('animation');
+  }
+  if (lightMain) {
+    lightMain.style.opacity = '1';
+    lightMain.style.visibility = 'visible';
+    lightMain.style.removeProperty('animation');
+  }
+  if (darkMain) {
+    darkMain.style.opacity = '0';
+    darkMain.style.visibility = 'hidden';
+    darkMain.style.display = 'none';
+  }
+  var mapElLock = goalEl.querySelector('.dot-goal__map');
+  if (mapElLock) {
+    mapElLock.style.removeProperty('background');
+    mapElLock.style.removeProperty('background-color');
+  }
+  var mapPhotoLock = goalEl.querySelector('.dot-goal__map-photo');
+  if (mapPhotoLock) {
+    mapPhotoLock.style.opacity = '1';
+    mapPhotoLock.style.visibility = 'visible';
+    mapPhotoLock.style.removeProperty('transform');
+  }
+  var leafletLock = goalEl.querySelector('.dot-goal__map-leaflet');
+  if (leafletLock) {
+    leafletLock.style.opacity = '0';
+    leafletLock.style.visibility = 'hidden';
+  }
+  var mapDarkLock = goalEl.querySelector('.dot-goal__map-dark');
+  if (mapDarkLock) {
+    mapDarkLock.style.opacity = '0';
+    mapDarkLock.style.visibility = 'hidden';
+  }
+  var mapLightLock = goalEl.querySelector('.dot-goal__map-light');
+  if (mapLightLock) {
+    mapLightLock.style.opacity = '1';
+    mapLightLock.style.visibility = 'visible';
+  }
 }
 function _finalizeTest3GoalEntrance(goalEl) {
   if (!goalEl || !goalEl.isConnected) return;
-  var titleEl = goalEl.querySelector('.dot-goal__title');
+  if (typeof _showTest3GoalExpandedContent === 'function') {
+    _showTest3GoalExpandedContent(goalEl);
+  }
+  var darkMain = goalEl.querySelector('.dot-goal__main--dark');
+  var lightMain = goalEl.querySelector('.dot-goal__main--light');
+  var titleEl = (lightMain || darkMain || goalEl).querySelector('.dot-goal__title');
   var timeEl = goalEl.querySelector('.dot-goal__time');
   var distEl = goalEl.querySelector('.dot-goal__distance');
   var mapEl = goalEl.querySelector('.dot-goal__map');
   var mapSlot = goalEl.querySelector('.dot-goal__map-slot');
-  [titleEl, timeEl, distEl].forEach(function (el) {
-    if (!el) return;
-    el.style.opacity = '1';
-    el.style.visibility = 'visible';
-    el.style.transform = 'translateY(0)';
-    el.style.removeProperty('animation');
-  });
-  if (mapSlot) {
-    mapSlot.style.opacity = '1';
-    mapSlot.style.visibility = 'visible';
-    mapSlot.style.transform = 'translateY(0)';
-    mapSlot.style.removeProperty('animation');
+  if (lightMain) {
+    lightMain.style.opacity = '1';
+    lightMain.style.visibility = 'visible';
+    lightMain.style.removeProperty('animation');
+    if (darkMain) {
+      darkMain.style.opacity = '0';
+      darkMain.style.visibility = 'hidden';
+      darkMain.style.removeProperty('animation');
+    }
+  } else if (titleEl) {
+    titleEl.style.removeProperty('opacity');
+    titleEl.style.removeProperty('visibility');
+    titleEl.style.removeProperty('transform');
+    titleEl.style.removeProperty('animation');
   }
   if (mapEl) {
     mapEl.style.transform = 'none';
-    mapEl.style.removeProperty('animation');
     mapEl.style.removeProperty('clip-path');
     mapEl.style.removeProperty('will-change');
   }
   goalEl.removeAttribute('data-test3-goal-map-hold');
   goalEl.removeAttribute('data-test3-goal-map-bloomed');
-  goalEl.setAttribute('data-test3-goal-map-ready', '1');
-  goalEl.classList.add('test3-goal-map-ready');
-  goalEl.classList.remove('test3-goal-enter', 'test3-goal-enter-ready', 'test3-goal-copy-enter');
-  goalEl.classList.add('test3-goal-entrance-settled');
-  var canvas = document.getElementById('canvas');
-  if (canvas) canvas.removeAttribute('data-test3-goal-fresh');
-  if (typeof _upgradeTest3GoalMapSeed === 'function') _upgradeTest3GoalMapSeed(true);
-  try {
-    if (typeof window.generateSurfaceScenario === 'function') {
-      window.generateSurfaceScenario('tab-root');
-    }
-  } catch (_) {}
+  _lockTest3GoalExpandedState(goalEl);
 }
 function _orchestrateTest3GoalEntrance(goalEl) {
   if (!goalEl || goalEl.dataset.test3GoalEntrance === '1') return;
@@ -6869,22 +7354,14 @@ function _orchestrateTest3GoalEntrance(goalEl) {
             if (!goalEl.isConnected) return;
             goalEl.classList.add('test3-goal-enter-ready');
             void goalEl.offsetWidth;
-            try {
-              if (typeof _initTest3GoalMap === 'function') _initTest3GoalMap();
-            } catch (_) {}
             setTimeout(function () {
               try {
                 if (!goalEl.isConnected) return;
                 if (typeof _triggerTest3GoalUnifiedEnter === 'function') {
                   _triggerTest3GoalUnifiedEnter(goalEl);
                 }
-                setTimeout(function () {
-                  if (typeof _finalizeTest3GoalEntrance === 'function') {
-                    _finalizeTest3GoalEntrance(goalEl);
-                  }
-                }, TEST3_GOAL_UNIFIED_RISE_MS + 80);
               } catch (_) {}
-            }, 360);
+            }, TEST3_GOAL_EXPAND_START_MS);
           } catch (_) {}
         });
       } catch (_) {}
@@ -6899,10 +7376,22 @@ function _revealTest3GoalMapContentDuringBloom(goalEl, mapEl) {
     leafletEl.style.removeProperty('visibility');
     leafletEl.style.removeProperty('animation');
   }
-  mapEl.style.background = '#0F1F3D';
+  mapEl.style.removeProperty('background');
+  mapEl.style.removeProperty('background-color');
 }
 function _signalTest3GoalMapReady() {
   /* Unified slide-up entrance handles map reveal in _triggerTest3GoalUnifiedEnter. */
+}
+// Expanded Running Now — flat light tiles (no PNG road strokes).
+function _applyTest3GoalMapExpandedTiles() {
+  var st = window.__mlpTest3MapState;
+  var tiles = window.__mlpTest3GoalMapTiles;
+  if (!st || !st.map || !tiles || !tiles.dark || !tiles.light) return;
+  try {
+    if (st.map.hasLayer(tiles.dark)) st.map.removeLayer(tiles.dark);
+    if (!st.map.hasLayer(tiles.light)) tiles.light.addTo(st.map);
+    st.map.invalidateSize();
+  } catch (_) {}
 }
 function _initTest3GoalMap() {
   if (typeof window.L !== 'function' && typeof window.L !== 'object') return;
@@ -6926,10 +7415,15 @@ function _initTest3GoalMap() {
       keyboard: false,
       tap: false,
     }).setView([37.5219, 126.9248], 16);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
+    var tileOpts = {
       subdomains: 'abcd',
       maxZoom: 19,
-    }).addTo(map);
+      detectRetina: true,
+    };
+    var darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', tileOpts);
+    var lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', tileOpts);
+    darkTiles.addTo(map);
+    window.__mlpTest3GoalMapTiles = { dark: darkTiles, light: lightTiles };
     // Per user direction the running ROUTE and START marker are no
     // longer rendered — the map only carries the runner's CURRENT
     // POSITION as a constantly blinking marker. routeCoords is still
@@ -7258,15 +7752,8 @@ function _stopTest3MusicAudio() {
   } catch (_) {}
   window.__mlpTest3MusicAudio = null;
 }
-// full width over 180s (= 3:00) via the CSS animation
-// `dotMusicBarProgress`; this ticker tracks the same 180s window and
-// updates the .dot-music3__time--current text once per second so the
-// "0:00 / 3:00" readout stays in sync with the bar's visible fill.
-// Pauses + resumes with the play/pause button: each tick checks the
-// `data-music-playing` attribute on #test3-music and skips the
-// increment when it's "0" (paused). Caps at 180s so the readout never
-// exceeds the total. Stored elapsed time on window so the value
-// persists across renders.
+// During entrance only — caps at Figma settled elapsed (01:35). Settled
+// layout freezes bar + times via _freezeTest3MusicSettledProgress.
 function _startTest3MusicTimeTicker() {
   if (window.__mlpTest3MusicTimeId) {
     clearInterval(window.__mlpTest3MusicTimeId);
@@ -7279,21 +7766,36 @@ function _startTest3MusicTimeTicker() {
     return (m < 10 ? '0' + m : String(m)) + ':' + (ss < 10 ? '0' + ss : String(ss));
   }
   function paint() {
+    var card = document.querySelector('#test3-music');
+    if (card && card.getAttribute('data-test3-music-settled') === '1') return;
     var el = document.querySelector('#test3-music .dot-music3__time--current');
-    if (el) el.textContent = fmt(Math.min(180, window.__mlpTest3MusicElapsed));
+    if (el) el.textContent = fmt(Math.min(TEST3_MUSIC_ELAPSED_S, window.__mlpTest3MusicElapsed));
   }
   paint();
   window.__mlpTest3MusicTimeId = setInterval(function () {
     var card = document.querySelector('#test3-music');
-    // No card / paused → freeze the readout. The CSS rule below sets
-    // animation-play-state: paused on the bar when the same attribute
-    // flips to "0", so the bar and the time advance/pause together.
     if (!card) return;
+    if (card.getAttribute('data-test3-music-settled') === '1') return;
     if (card.getAttribute('data-music-playing') === '0') return;
-    if (window.__mlpTest3MusicElapsed >= 180) return;
+    if (window.__mlpTest3MusicElapsed >= TEST3_MUSIC_ELAPSED_S) return;
     window.__mlpTest3MusicElapsed += 1;
     paint();
   }, 1000);
+}
+function _freezeTest3MusicSettledProgress(music) {
+  music = music || document.querySelector('#test3-music');
+  if (!music) return;
+  window.__mlpTest3MusicElapsed = TEST3_MUSIC_ELAPSED_S;
+  var bar = music.querySelector('.dot-music1__icon .dot-music3__bar');
+  if (bar) {
+    bar.style.setProperty('--bar-w', TEST3_MUSIC_BAR_W + 'px');
+    bar.style.setProperty('--bar-track', TEST3_MUSIC_BAR_TRACK + 'px');
+    var track = bar.querySelector('.dot-music__barTrack');
+    if (track) {
+      track.style.setProperty('animation', 'none', 'important');
+      track.style.setProperty('width', TEST3_MUSIC_BAR_TRACK + 'px', 'important');
+    }
+  }
 }
 function _stopTest3MusicTimeTicker() {
   if (window.__mlpTest3MusicTimeId) {
@@ -7397,13 +7899,15 @@ function _layoutTest3Cards() {
   // During entrance: 82 px capsule until vertical expand; 168 px once
   // phase-2 starts so weather/steps glide below the growing player.
   var musicH = inMusicEntrance
-    ? (inExpand ? 168 : 82)
-    : ((musicState === 'lyrics') ? 280 : 168);
+    ? (inExpand ? TEST3_MUSIC_EXPAND_H : 82)
+    : ((musicState === 'lyrics') ? TEST3_MUSIC_LYRICS_H : TEST3_MUSIC_EXPAND_H);
   var weatherExp = weather.classList.contains('is-expanded');
   var stepsExp   = steps.classList.contains('is-expanded');
   var musicCompact = (musicState === 'compact');
   var musicBottom  = TEST3_ROW2_TOP + musicH;
-  var FULL = 340, HALF = 168, ROW_H = TEST3_PILL_SLOT_H, GAP = TEST3_CARD_GAP;
+  var FULL = 340, HALF = TEST3_HALF_COL_W, ROW_H = TEST3_PILL_SLOT_H, GAP_V = TEST3_CARD_GAP_V;
+  var HALF_X = TEST3_HALF_COL_X;
+  var pillH = TEST3_PILL_SLOT_H;
   var wX, wY, wW, sX, sY, sW;
   if (musicCompact) {
     // Music is 168×168 in the LEFT column at row2 (y=214). Right column
@@ -7414,24 +7918,24 @@ function _layoutTest3Cards() {
     // the right column. Without this override the user got the weird
     // "cards drop to the bottom even though there's empty space next
     // to the square music card" behaviour.
-    wX = 196; wY = TEST3_ROW2_TOP;              wW = HALF;
-    sX = 196; sY = TEST3_ROW2_TOP + ROW_H + GAP; sW = HALF;
+    wX = HALF_X; wY = TEST3_ROW2_TOP;              wW = HALF;
+    sX = HALF_X; sY = TEST3_ROW2_TOP + pillH + GAP_V; sW = HALF;
   } else {
     // Music is 340 wide (normal or lyrics). Below-music row starts
     // right after the music card's bottom edge.
-    var baseY = musicBottom + GAP;
+    var baseY = musicBottom + TEST3_CARD_GAP_V;
     if (!weatherExp && !stepsExp) {
       wX = 24;  wY = baseY;                 wW = HALF;
-      sX = 196; sY = baseY;                 sW = HALF;
+      sX = HALF_X; sY = baseY;              sW = HALF;
     } else if (weatherExp && !stepsExp) {
       wX = 24;  wY = baseY;                 wW = FULL;
-      sX = 24;  sY = baseY + ROW_H + GAP;   sW = HALF;
+      sX = 24;  sY = baseY + ROW_H + GAP_V;   sW = HALF;
     } else if (!weatherExp && stepsExp) {
       sX = 24;  sY = baseY;                 sW = FULL;
-      wX = 24;  wY = baseY + ROW_H + GAP;   wW = HALF;
+      wX = 24;  wY = baseY + ROW_H + GAP_V;   wW = HALF;
     } else {
       wX = 24; wY = baseY;                  wW = FULL;
-      sX = 24; sY = baseY + ROW_H + GAP;    sW = FULL;
+      sX = 24; sY = baseY + ROW_H + GAP_V;    sW = FULL;
     }
   }
   function apply(el, x, y, w, h) {
@@ -7452,8 +7956,8 @@ function _layoutTest3Cards() {
     if (h != null) el.style.setProperty('height', h + 'px', 'important');
     el.style.setProperty('animation', 'none', 'important');
   }
-  apply(weather, wX, wY, wW, TEST3_PILL_SLOT_H);
-  apply(steps,   sX, sY, sW, TEST3_PILL_SLOT_H);
+  apply(weather, wX, wY, wW, pillH);
+  apply(steps,   sX, sY, sW, pillH);
   // Resize the music wrapper to match the inner card's current state —
   // otherwise the canvas-item box stays 340×168 while the inner card
   // can be 168×168 (compact) or 340×280 (lyrics), causing clicks on
@@ -7462,9 +7966,7 @@ function _layoutTest3Cards() {
   if (music && !inMusicEntrance) {
     var mW = musicCompact ? TEST3_MUSIC_COMPACT : 340;
     apply(music, 24, TEST3_ROW2_TOP, mW, musicH);
-    if (musicCompact) {
-      music.style.setProperty('animation', 'none', 'important');
-    }
+    music.style.setProperty('animation', 'none', 'important');
     var shell = music.querySelector('.dot-music1');
     if (shell) {
       shell.style.setProperty('width', mW + 'px', 'important');
@@ -7475,7 +7977,7 @@ function _layoutTest3Cards() {
     if (iconWrap) {
       if (musicState === 'lyrics') {
         iconWrap.style.setProperty('width', '340px', 'important');
-        iconWrap.style.setProperty('height', '280px', 'important');
+        iconWrap.style.setProperty('height', TEST3_MUSIC_LYRICS_H + 'px', 'important');
       } else if (musicCompact) {
         iconWrap.style.setProperty('width', TEST3_MUSIC_COMPACT + 'px', 'important');
         iconWrap.style.setProperty('height', TEST3_MUSIC_COMPACT + 'px', 'important');
@@ -7483,7 +7985,13 @@ function _layoutTest3Cards() {
         iconWrap.style.setProperty('right', 'auto', 'important');
       } else {
         iconWrap.style.setProperty('width', '340px', 'important');
-        iconWrap.style.removeProperty('height');
+        iconWrap.style.setProperty('height', musicH + 'px', 'important');
+        var playerEl = music.querySelector('.dot-music1__icon .dot-music3');
+        if (playerEl) {
+          playerEl.style.removeProperty('height');
+          playerEl.style.removeProperty('min-height');
+          playerEl.style.removeProperty('max-height');
+        }
       }
       iconWrap.style.setProperty('animation', 'none', 'important');
     }
@@ -7535,26 +8043,52 @@ function _resetTest3MusicCopy(music) {
   if (albumEl) {
     albumEl.textContent = "Hurry Up, We're Dreaming.";
   }
-  window.__mlpTest3MusicElapsed = 95;
+  window.__mlpTest3MusicElapsed = TEST3_MUSIC_ELAPSED_S;
   var bar = music.querySelector('.dot-music1__icon .dot-music3__bar');
   if (bar) {
     if (state === 'compact') {
-      bar.style.setProperty('--bar-w', '140px');
-      bar.style.setProperty('--bar-track', '107px');
+      bar.style.setProperty('--bar-w', TEST3_MUSIC_COMPACT_BAR_W + 'px');
+      bar.style.setProperty('--bar-track', TEST3_MUSIC_COMPACT_BAR_TRACK + 'px');
     } else if (state === 'lyrics') {
-      bar.style.setProperty('--bar-w', '300px');
-      bar.style.setProperty('--bar-track', '228px');
+      bar.style.setProperty('--bar-w', TEST3_MUSIC_BAR_W + 'px');
+      bar.style.setProperty('--bar-track', TEST3_MUSIC_BAR_TRACK + 'px');
     } else {
-      bar.style.setProperty('--bar-w', '246px');
-      bar.style.setProperty('--bar-track', '188px');
+      bar.style.setProperty('--bar-w', TEST3_MUSIC_BAR_W + 'px');
+      bar.style.setProperty('--bar-track', TEST3_MUSIC_BAR_TRACK + 'px');
+    }
+  }
+  if (state === 'normal' || music.getAttribute('data-test3-music-settled') === '1') {
+    if (typeof _freezeTest3MusicSettledProgress === 'function') {
+      _freezeTest3MusicSettledProgress(music);
     }
   }
 }
 // Post-entrance settled chrome — dark-photo normal player (4423:17126).
 // Applied at vertical expand end (~68 % / expand-ready), not at 14 s.
+function _clearTest3MusicLayoutOverrides(music) {
+  music = music || document.querySelector('#test3-music');
+  if (!music) return;
+  var shell = music.querySelector('.dot-music1');
+  var icon = music.querySelector('.dot-music1__icon');
+  var player = music.querySelector('.dot-music1__icon .dot-music3');
+  var layoutProps = [
+    'width', 'height', 'min-height', 'max-height', 'left', 'right', 'top', 'bottom',
+    'display', 'flex-direction', 'background', 'background-color', 'padding', 'gap',
+    'justify-content', 'align-items', 'overflow', 'border-radius', 'animation'
+  ];
+  [music, shell, icon, player].forEach(function (el) {
+    if (!el) return;
+    layoutProps.forEach(function (prop) {
+      el.style.removeProperty(prop);
+    });
+  });
+}
 function _applyTest3MusicCompactLayout(music) {
   music = music || document.querySelector('#test3-music');
   if (!music) return;
+  if (typeof _clearTest3MusicLayoutOverrides === 'function') {
+    _clearTest3MusicLayoutOverrides(music);
+  }
   var c = TEST3_MUSIC_COMPACT + 'px';
   music.style.setProperty('width', c, 'important');
   music.style.setProperty('height', c, 'important');
@@ -7598,19 +8132,36 @@ function _applyTest3MusicCompactLayout(music) {
 function _applyTest3MusicNormalLayout(music) {
   music = music || document.querySelector('#test3-music');
   if (!music) return;
+  if (typeof _clearTest3MusicLayoutOverrides === 'function') {
+    _clearTest3MusicLayoutOverrides(music);
+  }
+  var expandH = TEST3_MUSIC_EXPAND_H + 'px';
   music.style.setProperty('width', '340px', 'important');
-  music.style.setProperty('height', '168px', 'important');
+  music.style.setProperty('height', expandH, 'important');
+  music.style.setProperty('animation', 'none', 'important');
   var shell = music.querySelector('.dot-music1');
   if (shell) {
     shell.style.setProperty('width', '340px', 'important');
-    shell.style.setProperty('height', '168px', 'important');
+    shell.style.setProperty('height', expandH, 'important');
+    shell.style.setProperty('animation', 'none', 'important');
   }
   var icon = music.querySelector('.dot-music1__icon');
   if (icon) {
     icon.style.setProperty('width', '340px', 'important');
-    icon.style.setProperty('height', '168px', 'important');
+    icon.style.setProperty('height', expandH, 'important');
+    icon.style.setProperty('animation', 'none', 'important');
     icon.style.removeProperty('left');
     icon.style.removeProperty('right');
+  }
+  var player = music.querySelector('.dot-music1__icon .dot-music3');
+  if (player) {
+    player.style.setProperty('width', '100%', 'important');
+    player.style.setProperty('height', '100%', 'important');
+    player.style.setProperty('min-height', '0', 'important');
+    player.style.removeProperty('max-height');
+    player.style.removeProperty('display');
+    player.style.removeProperty('flex-direction');
+    player.style.setProperty('animation', 'none', 'important');
   }
   var titleEl = music.querySelector('.dot-music1__icon .dot-music3__title');
   var topEl = music.querySelector('.dot-music1__icon .dot-music3__top');
@@ -7618,6 +8169,15 @@ function _applyTest3MusicNormalLayout(music) {
   if (topEl) topEl.style.removeProperty('display');
   var foldEl = music.querySelector('.dot-music1__icon .dot-music3__foldTitle');
   if (foldEl) foldEl.style.removeProperty('display');
+  music.querySelectorAll(
+    '.dot-music3__compactHeader, .dot-music3__playlistPill, .dot-music3__playlistThumb, .dot-music3__playlistChevron, .dot-music3__albumCredit'
+  ).forEach(function (el) {
+    el.style.removeProperty('opacity');
+    el.style.removeProperty('visibility');
+    el.style.removeProperty('display');
+    el.style.removeProperty('height');
+    el.style.removeProperty('animation');
+  });
   music.querySelectorAll('.dot-music3__bottom, .dot-music3__transport').forEach(function (el) {
     el.style.removeProperty('opacity');
     el.style.removeProperty('visibility');
@@ -7629,26 +8189,31 @@ function _applyTest3MusicNormalLayout(music) {
 function _applyTest3MusicLyricsLayout(music) {
   music = music || document.querySelector('#test3-music');
   if (!music) return;
+  if (typeof _clearTest3MusicLayoutOverrides === 'function') {
+    _clearTest3MusicLayoutOverrides(music);
+  }
+  var lyricsH = TEST3_MUSIC_LYRICS_H + 'px';
+  music.style.setProperty('animation', 'none', 'important');
   music.style.setProperty('width', '340px', 'important');
-  music.style.setProperty('height', '280px', 'important');
+  music.style.setProperty('height', lyricsH, 'important');
   var shell = music.querySelector('.dot-music1');
   if (shell) {
     shell.style.setProperty('width', '340px', 'important');
-    shell.style.setProperty('height', '280px', 'important');
+    shell.style.setProperty('height', lyricsH, 'important');
     shell.style.setProperty('background-color', 'transparent', 'important');
     shell.style.setProperty('animation', 'none', 'important');
   }
   var icon = music.querySelector('.dot-music1__icon');
   if (icon) {
-    icon.style.setProperty('height', '280px', 'important');
+    icon.style.setProperty('height', lyricsH, 'important');
     icon.style.setProperty('opacity', '1', 'important');
     icon.style.setProperty('visibility', 'visible', 'important');
     icon.style.setProperty('animation', 'none', 'important');
   }
   var player = music.querySelector('.dot-music1__icon .dot-music3');
   if (player) {
-    player.style.setProperty('height', '280px', 'important');
-    player.style.setProperty('min-height', '280px', 'important');
+    player.style.setProperty('height', lyricsH, 'important');
+    player.style.setProperty('min-height', lyricsH, 'important');
     player.style.setProperty('background', 'transparent', 'important');
     player.style.setProperty('animation', 'none', 'important');
     player.style.setProperty('display', 'flex', 'important');
@@ -7670,8 +8235,8 @@ function _applyTest3MusicLyricsLayout(music) {
   if (albumEl) albumEl.style.setProperty('display', 'none', 'important');
   var bar = music.querySelector('.dot-music1__icon .dot-music3__bar');
   if (bar) {
-    bar.style.setProperty('--bar-w', '300px');
-    bar.style.setProperty('--bar-track', '228px');
+    bar.style.setProperty('--bar-w', TEST3_MUSIC_BAR_W + 'px');
+    bar.style.setProperty('--bar-track', TEST3_MUSIC_BAR_TRACK + 'px');
   }
   if (typeof _resetTest3MusicCopy === 'function') {
     _resetTest3MusicCopy(music);
@@ -7700,6 +8265,12 @@ function _applyTest3MusicSettledLayout(music) {
   music.setAttribute('data-test3-music-orb-handoff', '1');
   if (typeof _resetTest3MusicCopy === 'function') {
     _resetTest3MusicCopy(music);
+  }
+  if (typeof _freezeTest3MusicSettledProgress === 'function') {
+    _freezeTest3MusicSettledProgress(music);
+  }
+  if (typeof _stopTest3MusicTimeTicker === 'function') {
+    _stopTest3MusicTimeTicker();
   }
   var icon = music.querySelector('.dot-music1__icon');
   if (icon) {
@@ -7742,7 +8313,7 @@ function _clearTest3MusicEntranceInlineStyles(music) {
     });
   }
   var clearSel = settled
-    ? '.dot-music1__icon .dot-music3__title, .dot-music1__icon .dot-music3__bottom, .dot-music1__compact--layout'
+    ? '.dot-music1__icon .dot-music3__title, .dot-music1__icon .dot-music3__bottom, .dot-music1__icon .dot-music3__headerRow, .dot-music1__icon .dot-music3__headerRow .dot-music3__spotify, .dot-music1__compact--layout'
     : '.dot-music1__icon .dot-music3__title, .dot-music1__icon .dot-music3__bottom, .dot-music1__icon .dot-music3__iconBg, .dot-music1__icon .dot-music3__playBtn, .dot-music1__icon .dot-music3__icon, .dot-music1__compact--layout';
   music.querySelectorAll(clearSel).forEach(function (el) {
     ['opacity', 'visibility', 'pointer-events', 'animation', 'display', 'transform', 'width', 'height', 'left', 'top', 'margin', 'border-radius'].forEach(function (prop) {
@@ -7764,13 +8335,13 @@ function _settleTest3MusicPlayerImmediately(music) {
   music.removeAttribute('data-test3-music-resolved');
   music.classList.remove('is-motion-phase2');
   music.style.setProperty('animation', 'none', 'important');
-  music.style.height = '168px';
+  music.style.height = TEST3_MUSIC_EXPAND_H + 'px';
   music.style.opacity = '1';
   music.style.visibility = 'visible';
   var shell = music.querySelector('.dot-music1');
   if (shell) {
     shell.style.width = '340px';
-    shell.style.height = '168px';
+    shell.style.height = TEST3_MUSIC_EXPAND_H + 'px';
     shell.style.borderRadius = '32px';
     shell.style.clipPath = 'inset(0 0 0 0 round 32px)';
     shell.style.setProperty('animation', 'none', 'important');
@@ -7780,17 +8351,38 @@ function _settleTest3MusicPlayerImmediately(music) {
   }
   if (typeof _layoutTest3Cards === 'function') _layoutTest3Cards();
 }
-// Circle → 1 s hold → expand-right reveal for party/pace pills.
+// Party/pace pills: icon pop → 2 s hold → R→L shine + text → 2 s hold → row drop.
+function _snapTest3PillsPostShine(canvas) {
+  if (!canvas) return;
+  window.__mlpTest3PillsRevealed = true;
+  canvas.setAttribute('data-test3-pills-revealed', '1');
+  canvas.removeAttribute('data-test3-pills-reveal');
+}
 function _armTest3PillsReveal(canvas) {
   if (!canvas) return;
   if (window.__mlpTest3PillsRevealed) {
-    canvas.setAttribute('data-test3-pills-revealed', '1');
-    canvas.removeAttribute('data-test3-pills-reveal');
+    _snapTest3PillsPostShine(canvas);
     return;
   }
+  if (canvas.getAttribute('data-test3-pills-reveal') === '1') {
+    return;
+  }
+  canvas.style.setProperty('--test3-pill-reveal-ms', TEST3_PILL_REVEAL_TOTAL_MS + 'ms');
+  canvas.style.setProperty('--test3-pill-icon-ms', TEST3_PILL_REVEAL_ICON_MS + 'ms');
+  canvas.style.setProperty('--test3-pill-icon-hold-ms', TEST3_PILL_REVEAL_ICON_HOLD_MS + 'ms');
+  canvas.style.setProperty('--test3-pill-text-ms', TEST3_PILL_REVEAL_TEXT_MS + 'ms');
+  canvas.style.setProperty('--test3-pill-text-hold-ms', TEST3_PILL_REVEAL_TEXT_HOLD_MS + 'ms');
+  canvas.style.setProperty('--test3-pill-shine-delay', TEST3_PILL_TEXT_START_MS + 'ms');
   canvas.setAttribute('data-test3-pills-reveal', '1');
   canvas.removeAttribute('data-test3-pills-revealed');
+  if (window.__mlpTest3MusicShiftTimer) {
+    clearTimeout(window.__mlpTest3MusicShiftTimer);
+    window.__mlpTest3MusicShiftTimer = null;
+  }
   if (window.__mlpTest3PillsRevealTimer) return;
+  /* Capsule drop + music spawn when pill copy/shine finishes; reveal class ends after hold. */
+  var pillDropAtMs = TEST3_PILL_TEXT_START_MS + TEST3_PILL_REVEAL_TEXT_MS;
+  var pillRevealEndMs = TEST3_PILL_REVEAL_TOTAL_MS;
   window.__mlpTest3PillsRevealTimer = setTimeout(function () {
     window.__mlpTest3PillsRevealTimer = null;
     try {
@@ -7801,18 +8393,39 @@ function _armTest3PillsReveal(canvas) {
       if (!window.__mlpTestConfig || window.__mlpTestConfig.homeStage !== 'home') return;
       var c = document.getElementById('canvas');
       if (!c || c.getAttribute('data-test-scope') !== 'test3') return;
-      window.__mlpTest3PillsRevealed = true;
-      c.setAttribute('data-test3-pills-revealed', '1');
-      c.removeAttribute('data-test3-pills-reveal');
+      if (typeof _snapTest3PillsPostShine === 'function') {
+        _snapTest3PillsPostShine(c);
+      }
       if (window.__mlpTest3WeatherPrepPending ||
           (!window.__mlpTest3MusicShiftPrep && !window.__mlpTest3MusicShifted)) {
         window.__mlpTest3WeatherPrepPending = false;
-        setTimeout(function () {
-          _beginTest3WeatherPrep(window.__mlpTest3MusicShiftRunId || 0);
-        }, 320);
+        window.__mlpTest3PillsDropArmed = true;
+        _beginTest3WeatherPrep(window.__mlpTest3MusicShiftRunId || 0);
       }
     } catch (_) {}
-  }, TEST3_PILL_REVEAL_TOTAL_MS);
+  }, pillDropAtMs);
+  if (pillRevealEndMs > pillDropAtMs) {
+    if (window.__mlpTest3PillsRevealEndTimer) {
+      clearTimeout(window.__mlpTest3PillsRevealEndTimer);
+    }
+    window.__mlpTest3PillsRevealEndTimer = setTimeout(function () {
+      window.__mlpTest3PillsRevealEndTimer = null;
+      try {
+        var stillTest3 =
+          (window.__mlpTestConfig && window.__mlpTestConfig.id === 'test3') ||
+          (document.body && document.body.dataset && document.body.dataset.mlpTest === 'test3');
+        if (!stillTest3) return;
+        if (!window.__mlpTestConfig || window.__mlpTestConfig.homeStage !== 'home') return;
+        var c = document.getElementById('canvas');
+        if (!c || c.getAttribute('data-test-scope') !== 'test3') return;
+        if (typeof _snapTest3PillsPostShine === 'function') {
+          _snapTest3PillsPostShine(c);
+        }
+      } catch (_) {}
+    }, pillRevealEndMs);
+  } else if (typeof _snapTest3PillsPostShine === 'function') {
+    _snapTest3PillsPostShine(canvas);
+  }
 }
 function _beginTest3WeatherPrep(runId) {
   try {
@@ -7823,10 +8436,11 @@ function _beginTest3WeatherPrep(runId) {
     if ((window.__mlpTest3MusicShiftRunId || 0) !== runId) return;
     if (!window.__mlpTestConfig || window.__mlpTestConfig.homeStage !== 'home') return;
     if (window.__mlpTest3MusicShifted || window.__mlpTest3MusicShiftPrep) return;
-    if (!window.__mlpTest3PillsRevealed) {
+    if (!window.__mlpTest3PillsRevealed && !window.__mlpTest3PillsDropArmed) {
       window.__mlpTest3WeatherPrepPending = true;
       return;
     }
+    window.__mlpTest3PillsDropArmed = false;
     var c = document.getElementById('canvas');
     if (!c || c.getAttribute('data-test-scope') !== 'test3') return;
     window.__mlpTest3MusicShiftPrep = true;
@@ -7835,7 +8449,14 @@ function _beginTest3WeatherPrep(runId) {
     var stepsEl   = c.querySelector('#test3-steps');
     if (weatherEl) weatherEl.classList.remove('test3-intro-prefade');
     if (stepsEl)   stepsEl.classList.remove('test3-intro-prefade');
+    [weatherEl, stepsEl].forEach(function (el) {
+      if (!el) return;
+      el.classList.remove('test3-card-flow', 'is-motion-phase2');
+      el.style.removeProperty('transform');
+      el.style.removeProperty('animation');
+    });
     c.setAttribute('data-test3-weather-prep', '1');
+    c.style.setProperty('--test3-weather-prep-drop-ms', TEST3_WEATHER_PREP_DROP_MS + 'ms');
     if (typeof window.__mountTest3WeatherRainMotion === 'function') {
       window.__mountTest3WeatherRainMotion(1020);
     }
@@ -7843,12 +8464,40 @@ function _beginTest3WeatherPrep(runId) {
       clearTimeout(window.__mlpTest3MusicMountTimer);
       window.__mlpTest3MusicMountTimer = null;
     }
+    if (window.__mlpTest3WeatherDropCompleteTimer) {
+      clearTimeout(window.__mlpTest3WeatherDropCompleteTimer);
+      window.__mlpTest3WeatherDropCompleteTimer = null;
+    }
+    /* Music spawns as weather/steps begin their prep drop; prep stays until drop ends. */
     window.__mlpTest3MusicMountTimer = setTimeout(function () {
+      window.__mlpTest3MusicMountTimer = null;
       _mountTest3MusicAfterWeatherPrep(runId);
-    }, TEST3_MUSIC_PRE_DELAY_MS);
+    }, 0);
+    window.__mlpTest3WeatherDropCompleteTimer = setTimeout(function () {
+      window.__mlpTest3WeatherDropCompleteTimer = null;
+      _completeTest3WeatherPrepDrop(runId);
+    }, TEST3_WEATHER_PREP_DROP_MS);
   } catch (_) {}
 }
-// Mount the music card AFTER weather/steps have cleared row 2.
+function _completeTest3WeatherPrepDrop(runId) {
+  try {
+    var stillTest3 =
+      (window.__mlpTestConfig && window.__mlpTestConfig.id === 'test3') ||
+      (document.body && document.body.dataset && document.body.dataset.mlpTest === 'test3');
+    if (!stillTest3) return;
+    if ((window.__mlpTest3MusicShiftRunId || 0) !== runId) return;
+    if (!window.__mlpTestConfig || window.__mlpTestConfig.homeStage !== 'home') return;
+    var c = document.getElementById('canvas');
+    if (!c || c.getAttribute('data-test-scope') !== 'test3') return;
+    if (!window.__mlpTest3MusicShifted) return;
+    _freezeTest3WeatherDropState();
+    window.__mlpTest3WeatherDropped = true;
+    c.setAttribute('data-test3-weather-dropped', '1');
+    c.removeAttribute('data-test3-weather-prep');
+    _freezeTest3WeatherDropState();
+  } catch (_) {}
+}
+// Mount music while weather/steps are still animating down (prep gate stays on).
 function _mountTest3MusicAfterWeatherPrep(runId) {
   try {
     var stillTest3 =
@@ -7860,16 +8509,15 @@ function _mountTest3MusicAfterWeatherPrep(runId) {
     var c = document.getElementById('canvas');
     if (!c || c.getAttribute('data-test-scope') !== 'test3') return;
     window.__mlpTest3MusicShiftPrep = false;
-    window.__mlpTest3WeatherDropped = true;
     window.__mlpTest3MusicShifted = true;
-    _freezeTest3WeatherDropState();
-    c.setAttribute('data-test3-weather-dropped', '1');
     c.setAttribute('data-test3-music-shift', '1');
     if (typeof window.generateSurfaceScenario === 'function') {
       window.generateSurfaceScenario('tab-root');
     }
-    c.removeAttribute('data-test3-weather-prep');
-    _freezeTest3WeatherDropState();
+    /* Diff render must not strip the prep gate — re-arm if something cleared it mid-mount. */
+    if (!window.__mlpTest3WeatherDropped && window.__mlpTest3WeatherDropCompleteTimer) {
+      c.setAttribute('data-test3-weather-prep', '1');
+    }
     window.__mlpTest3MusicElapsed = 0;
     if (typeof _stopTest3MusicAudio === 'function') _stopTest3MusicAudio();
     var test3MusicEl = document.querySelector('#test3-music');
@@ -7879,14 +8527,19 @@ function _mountTest3MusicAfterWeatherPrep(runId) {
       }
       test3MusicEl.setAttribute('data-music-playing', '1');
       test3MusicEl.setAttribute('data-test3-music-loading', '1');
+      test3MusicEl.style.setProperty('--test3-music-search-line-ms', TEST3_MUSIC_SEARCH_LINE_MS + 'ms');
+      test3MusicEl.style.setProperty('--test3-music-search-line2-delay', TEST3_MUSIC_SEARCH_LINE_MS + 'ms');
       test3MusicEl.setAttribute('data-test3-music-phase', 'spawn');
       test3MusicEl.removeAttribute('data-test3-music-pre-expand');
       test3MusicEl.removeAttribute('data-test3-music-expand-ready');
+      test3MusicEl.removeAttribute('data-test3-music-chrome-reveal');
+      test3MusicEl.removeAttribute('data-test3-music-shell-white');
       test3MusicEl.removeAttribute('data-music-state');
       test3MusicEl.removeAttribute('data-test3-music-orb-handoff');
       test3MusicEl.removeAttribute('data-test3-music-settled');
       test3MusicEl.removeAttribute('data-test3-music-settling');
       test3MusicEl.removeAttribute('data-test3-music-resolved');
+      test3MusicEl.removeAttribute('data-test3-music-stroke-ready');
       if (typeof _clearTest3MusicEntranceInlineStyles === 'function') {
         _clearTest3MusicEntranceInlineStyles(test3MusicEl);
       }
@@ -7934,8 +8587,6 @@ function _mountTest3MusicAfterWeatherPrep(runId) {
       if (typeof _endTest3MusicFill === 'function') {
         _endTest3MusicFill();
       }
-    }, TEST3_MUSIC_EXPAND_END_MS);
-    setTimeout(function () {
       if (typeof _signalTest3MusicExpandReady === 'function') {
         _signalTest3MusicExpandReady();
       }
@@ -7957,6 +8608,7 @@ function _mountTest3MusicAfterWeatherPrep(runId) {
 function _beginTest3MusicFill(music) {
   music = music || document.querySelector('#test3-music');
   if (!music) return;
+  music.setAttribute('data-test3-music-stroke-ready', '1');
   var shell = music.querySelector('.dot-music1');
   if (shell) {
     shell.classList.add('test3-music-shell--fill-active');
@@ -7971,11 +8623,39 @@ function _beginTest3MusicFill(music) {
     window.Test3MusicFillGL.setPhase('generating');
   }
 }
+function _armTest3MusicWhiteShell(music) {
+  music = music || document.querySelector('#test3-music');
+  if (!music) return;
+  var shell = music.querySelector('.dot-music1');
+  if (!shell) return;
+  music.setAttribute('data-test3-music-shell-white', '0');
+  shell.style.removeProperty('background-color');
+  shell.style.removeProperty('transition');
+  void shell.offsetWidth;
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      if (!music.isConnected || !shell.isConnected) return;
+      music.setAttribute('data-test3-music-shell-white', '1');
+      void shell.offsetWidth;
+    });
+  });
+}
 function _beginTest3MusicResolve(music) {
   music = music || document.querySelector('#test3-music');
   if (!music) return;
   if (music.getAttribute('data-test3-music-resolved') === '1') return;
   music.setAttribute('data-test3-music-resolved', '1');
+  var fill = music.querySelector('.test3-music-fill');
+  if (fill && fill.classList.contains('test3-music-fill--active')) {
+    fill.classList.remove('test3-music-fill--active');
+    fill.classList.add('test3-music-fill--fading');
+  }
+  if (typeof _armTest3MusicWhiteShell === 'function') {
+    _armTest3MusicWhiteShell(music);
+  }
+  if (window.Test3MusicFillGL) {
+    window.Test3MusicFillGL.setPhase('idle');
+  }
 }
 function _endTest3MusicFill(music) {
   music = music || document.querySelector('#test3-music');
@@ -7992,7 +8672,9 @@ function _endTest3MusicFill(music) {
   var fill = music.querySelector('.test3-music-fill');
   if (fill) {
     fill.classList.remove('test3-music-fill--active');
-    fill.classList.add('test3-music-fill--fading');
+    if (!fill.classList.contains('test3-music-fill--fading')) {
+      fill.classList.add('test3-music-fill--fading');
+    }
   }
   if (window.Test3MusicFillGL) {
     window.__mlpTest3MusicFillFadeTimer = setTimeout(function () {
@@ -8102,30 +8784,46 @@ function _armTest3MusicGlowRing(music) {
 function _finishTest3MusicSettle(music) {
   music = music || document.querySelector('#test3-music');
   if (!music) return;
-  music.removeAttribute('data-test3-music-settling');
-  music.removeAttribute('data-test3-music-resolved');
   music.classList.remove('test3-music-settle-active', 'test3-music-content-enter');
-  if (typeof _applyTest3MusicSettledLayout === 'function') {
-    _applyTest3MusicSettledLayout(music);
-  }
-  if (typeof _clearTest3MusicEntranceInlineStyles === 'function') {
-    _clearTest3MusicEntranceInlineStyles(music);
-  }
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      if (!music.isConnected) return;
+      music.removeAttribute('data-test3-music-settling');
+  music.removeAttribute('data-test3-music-resolved');
+  music.removeAttribute('data-test3-music-chrome-reveal');
+  music.removeAttribute('data-test3-music-shell-white');
+  music.removeAttribute('data-test3-music-stroke-ready');
+      if (typeof _applyTest3MusicSettledLayout === 'function') {
+        _applyTest3MusicSettledLayout(music);
+      }
+      if (typeof _clearTest3MusicEntranceInlineStyles === 'function') {
+        _clearTest3MusicEntranceInlineStyles(music);
+      }
+    });
+  });
 }
+// Vertical expand end (~68 %) — ivory shell, then 1 s player copy fade-in via _beginTest3MusicSettle.
 function _signalTest3MusicExpandReady(music) {
   music = music || document.querySelector('#test3-music');
   if (!music) return;
-  if (music.getAttribute('data-test3-music-expand-ready') === '1') return;
+  if (music.getAttribute('data-test3-music-settled') === '1') return;
   music.setAttribute('data-test3-music-expand-ready', '1');
+  music.removeAttribute('data-test3-music-shell-white');
+  music.removeAttribute('data-test3-music-chrome-reveal');
+  music.removeAttribute('data-test3-music-resolved');
+  music.removeAttribute('data-test3-music-pre-expand');
   if (!music.getAttribute('data-music-state')) {
     music.setAttribute('data-music-state', 'normal');
   }
-  setTimeout(function () {
-    if (!music.isConnected) return;
-    if (typeof _beginTest3MusicSettle === 'function') {
-      _beginTest3MusicSettle(music);
-    }
-  }, TEST3_MUSIC_IMAGE1_HOLD_MS);
+  if (typeof _armTest3MusicGlowRing === 'function') {
+    _armTest3MusicGlowRing(music);
+  }
+  if (typeof _beginTest3MusicSettle === 'function') {
+    _beginTest3MusicSettle(music);
+  } else if (typeof _applyTest3MusicSettledLayout === 'function') {
+    _applyTest3MusicSettledLayout(music);
+  }
+  void music.offsetWidth;
 }
 function _beginTest3MusicSettle(music) {
   music = music || document.querySelector('#test3-music');
@@ -8138,10 +8836,7 @@ function _beginTest3MusicSettle(music) {
   if (typeof _resetTest3MusicCopy === 'function') {
     _resetTest3MusicCopy(music);
   }
-  setTimeout(function () {
-    if (!music.isConnected) return;
-    music.classList.add('test3-music-settle-active', 'test3-music-content-enter');
-  }, TEST3_MUSIC_ORB_ABSORB_MS);
+  music.classList.add('test3-music-settle-active', 'test3-music-content-enter');
   setTimeout(function () {
     if (typeof _finishTest3MusicSettle === 'function') {
       _finishTest3MusicSettle(music);
@@ -8183,13 +8878,22 @@ function _restartTest3MusicEntranceAnimations(music) {
   if (window.Test3MusicFillGL) {
     window.Test3MusicFillGL.destroy();
   }
-  var targets = [music].concat(Array.prototype.slice.call(music.querySelectorAll('*')));
+  var targets = [music].concat(
+    Array.prototype.slice.call(music.querySelectorAll('*')).filter(function (el) {
+      return !el.classList.contains('dot-music1__searchLine') &&
+        !el.classList.contains('dot-music1__searchText');
+    })
+  );
   targets.forEach(function (el) {
     el.style.animation = 'none';
   });
   void music.offsetWidth;
   targets.forEach(function (el) {
     el.style.removeProperty('animation');
+  });
+  music.querySelectorAll('.dot-music1__searchLine').forEach(function (line) {
+    line.style.removeProperty('animation');
+    void line.offsetWidth;
   });
   music.style.removeProperty('height');
   var shell = music.querySelector('.dot-music1');
@@ -8409,14 +9113,23 @@ window.__mlpTest3GoHome = function __mlpTest3GoHome() {
     window.__mlpTest3MusicShiftRunId = (window.__mlpTest3MusicShiftRunId || 0) + 1;
     window.__mlpTest3WeatherRainArmed = false;
     window.__mlpTest3PillsRevealed = false;
+    window.__mlpTest3PillsDropArmed = false;
     window.__mlpTest3WeatherPrepPending = false;
     if (window.__mlpTest3WeatherRainTimer) {
       clearTimeout(window.__mlpTest3WeatherRainTimer);
       window.__mlpTest3WeatherRainTimer = null;
     }
+    if (window.__mlpTest3WeatherDropCompleteTimer) {
+      clearTimeout(window.__mlpTest3WeatherDropCompleteTimer);
+      window.__mlpTest3WeatherDropCompleteTimer = null;
+    }
     if (window.__mlpTest3PillsRevealTimer) {
       clearTimeout(window.__mlpTest3PillsRevealTimer);
       window.__mlpTest3PillsRevealTimer = null;
+    }
+    if (window.__mlpTest3PillsRevealEndTimer) {
+      clearTimeout(window.__mlpTest3PillsRevealEndTimer);
+      window.__mlpTest3PillsRevealEndTimer = null;
     }
     // No more home-enter slide-in/fade-in. Weather + Steps were
     // pre-rendered + faded in during the morph (see prefade code in
@@ -8493,6 +9206,7 @@ window.__mlpTest3GoHome = function __mlpTest3GoHome() {
             'test3-goal-enter',
             'test3-goal-enter-ready',
             'test3-goal-copy-enter',
+            'test3-goal-inner-rise',
             'test3-goal-map-ready',
             'test3-goal-entrance-settled'
           );
@@ -8532,6 +9246,12 @@ window.__mlpTest3GoHome = function __mlpTest3GoHome() {
           introRunEl.style.height = goalRect.h + 'px';
           introRunEl.style.opacity = '1';
           introRunEl.style.overflow = '';
+          introRunEl.style.borderRadius = '35px';
+          introRunEl.style.animation = 'none';
+          var goalCardShell = introRunEl.querySelector('.dot-goal');
+          if (goalCardShell) {
+            goalCardShell.style.borderRadius = '35px';
+          }
           goalEnterRebuildScheduled = true;
           if (typeof _orchestrateTest3GoalEntrance === 'function') {
             _orchestrateTest3GoalEntrance(introRunEl);
@@ -9462,20 +10182,21 @@ function installTest2P2TransitionBridge(canvas) {
   }).observe(canvas, { attributes: true, attributeFilter: ['class'] });
 }
 
-var TEST1_INTRO_DELAY_MS = 3000;
-var TEST1_LOTTE_INTRO_MS = 720;
-var TEST1_PILL_AFTER_LOTTE_MS = 1300;
-var TEST1_PILL_ANIM_MS = 3800;
-var TEST1_GREEN_AFTER_PILL_MS = 1500;
-var TEST1_SHORTCUTS_FADE_MS = 480;
-var TEST1_STACK_AFTER_GREEN_MS = 3500;
-var TEST1_STACK_INTRO_MS = 720;
+var TEST1_INTRO_DELAY_MS = 1300;
+var TEST1_LOTTE_INTRO_MS = 400;
+var TEST1_PILL_AFTER_LOTTE_MS = 550;
+var TEST1_PILL_ANIM_MS = 2000;
+var TEST1_GREEN_AFTER_PILL_MS = 650;
+var TEST1_SHORTCUTS_FADE_MS = 320;
+var TEST1_STACK_AFTER_GREEN_MS = 1600;
+var TEST1_STACK_INTRO_MS = 480;
 var TEST1_AFTER_STACK_MS = 3000;
 var TEST1_PILL_OUT_FADE_MS = 800;
-var TEST1_PILL_OUT_GAP_MS = 420;
-var TEST1_GRADIENT_FLOW_MS = 4721;
-var TEST1_GRADIENT_OUT_FADE_MS = 3400;
-var TEST1_AFTER_GRADIENT_CODA_MS = 1500;
+var TEST1_PILL_OUT_GAP_MS = 200;
+var TEST1_CODA_STACK_OUT_MS = 500;
+var TEST1_GRADIENT_HOLD_MS = 3000;
+var TEST1_GRADIENT_OUT_FADE_MS = 1000;
+var TEST1_AFTER_GRADIENT_CODA_MS = 0;
 var TEST1_PILL_BG_DELAY_MS = 550;
 var TEST1_PILL_BG_IN_MS = 950;
 var TEST1_PILL_ICON_TEXT_DELAY_MS = TEST1_PILL_BG_DELAY_MS;
@@ -9484,6 +10205,7 @@ var TEST1_PILL_TEXT_HOLD_MS = 3000;
 var TEST1_PASS_DUR_MS = 1667;
 var TEST1_PASS_OVERLAP_MS = 240;
 var TEST1_PASS_STEP_MS = TEST1_PASS_DUR_MS - TEST1_PASS_OVERLAP_MS;
+var TEST1_GRADIENT_SWEEP_MS = 200 + TEST1_PASS_STEP_MS * 2 + TEST1_PASS_DUR_MS;
 var TEST1_PILL_GRAD_PASS_OVERLAP_MS = 620;
 var TEST1_PILL_GRAD_PASS_STEP_MS = TEST1_PASS_DUR_MS - TEST1_PILL_GRAD_PASS_OVERLAP_MS;
 var TEST1_PILL_TEXT_SWEEP_MS = TEST1_PASS_DUR_MS + TEST1_PASS_STEP_MS * 2;
@@ -9502,6 +10224,9 @@ var TEST1_PILL_PINK_FLOW_DELAY_MS = TEST1_PILL_TEXT_A_SHIMMER_START_MS + TEST1_P
 var TEST1_PILL_PINK_SWEEP_START_MS = TEST1_PILL_PINK_FLOW_DELAY_MS;
 var TEST1_PILL_TEXT_B_DELAY_MS = TEST1_PILL_PINK_FLOW_DELAY_MS + TEST1_PILL_PINK_FLOW_MS - TEST1_PILL_TEXT_B_LEAD_MS;
 var TEST1_CODA_FADE_IN_MS = TEST1_PILL_TEXT_B_DELAY_MS + TEST1_PILL_TEXT_B_DUR_MS + 500;
+var TEST1_HOME_AFTER_CODA_MS = 1600;
+var TEST1_HOME_EXIT_MS = 560;
+var TEST1_HOME_FADE_MS = 720;
 var TEST1_STACK_ITEM_GAP_PX = 16;
 var TEST1_STACK_SHIFT_PX = 72 + TEST1_STACK_ITEM_GAP_PX;
 
@@ -9554,6 +10279,14 @@ function _clearTest1IntroTimer() {
     clearTimeout(window.__mlpTest1CodaEndTimer);
     window.__mlpTest1CodaEndTimer = null;
   }
+  if (window.__mlpTest1CodaAnimateTimer) {
+    clearTimeout(window.__mlpTest1CodaAnimateTimer);
+    window.__mlpTest1CodaAnimateTimer = null;
+  }
+  if (window.__mlpTest1CodaInnerRiseTimer) {
+    clearTimeout(window.__mlpTest1CodaInnerRiseTimer);
+    window.__mlpTest1CodaInnerRiseTimer = null;
+  }
   if (window.__mlpTest1PinkFlowTimer) {
     clearTimeout(window.__mlpTest1PinkFlowTimer);
     window.__mlpTest1PinkFlowTimer = null;
@@ -9573,6 +10306,14 @@ function _clearTest1IntroTimer() {
   if (window.__mlpTest1PinkFlowStopTimer) {
     clearTimeout(window.__mlpTest1PinkFlowStopTimer);
     window.__mlpTest1PinkFlowStopTimer = null;
+  }
+  if (window.__mlpTest1HomeTimer) {
+    clearTimeout(window.__mlpTest1HomeTimer);
+    window.__mlpTest1HomeTimer = null;
+  }
+  if (window.__mlpTest1HomeExitTimer) {
+    clearTimeout(window.__mlpTest1HomeExitTimer);
+    window.__mlpTest1HomeExitTimer = null;
   }
 }
 
@@ -9627,9 +10368,20 @@ function _runTest1StackIntro() {
     if (!c || c.getAttribute('data-test-scope') !== 'test1') return;
     if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
     c.setAttribute('data-test1-stack-run', '1');
-    c.setAttribute('data-test1-stack-animate', '1');
     if (window.__mlpTestConfig) window.__mlpTestConfig.test1StackRun = true;
-    _armTest1PillOutDelay(c);
+    void c.offsetWidth;
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        try {
+          var canvas = document.getElementById('canvas');
+          if (!canvas || canvas.getAttribute('data-test-scope') !== 'test1') return;
+          if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
+          if (!canvas.getAttribute('data-test1-stack-run')) return;
+          canvas.setAttribute('data-test1-stack-animate', '1');
+          _armTest1PillOutDelay(canvas);
+        } catch (_) {}
+      });
+    });
   } catch (_) {}
 }
 
@@ -9637,7 +10389,7 @@ function _armTest1PillOutDelay(canvas) {
   if (!canvas || canvas.getAttribute('data-test-scope') !== 'test1') return;
   if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
   if (!canvas.getAttribute('data-test1-stack-run')) return;
-  if (canvas.getAttribute('data-test1-pill-out')) return;
+  if (canvas.getAttribute('data-test1-pill-out') || canvas.getAttribute('data-test1-pill-out-animate')) return;
   if (window.__mlpTest1PillOutDelayTimer) return;
   window.__mlpTest1PillOutDelayTimer = setTimeout(function () {
     window.__mlpTest1PillOutDelayTimer = null;
@@ -9650,10 +10402,19 @@ function _runTest1PillOut() {
     var c = document.getElementById('canvas');
     if (!c || c.getAttribute('data-test-scope') !== 'test1') return;
     if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
-    if (c.getAttribute('data-test1-pill-out')) return;
-    c.setAttribute('data-test1-pill-out', '1');
-    c.setAttribute('data-test1-pill-out-animate', '1');
+    if (c.getAttribute('data-test1-pill-out') || c.getAttribute('data-test1-pill-out-animate')) return;
     if (window.__mlpTestConfig) window.__mlpTestConfig.test1PillOut = true;
+    void c.offsetWidth;
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        try {
+          var c2 = document.getElementById('canvas');
+          if (!c2 || c2.getAttribute('data-test-scope') !== 'test1') return;
+          if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
+          c2.setAttribute('data-test1-pill-out-animate', '1');
+        } catch (_) {}
+      });
+    });
     if (window.__mlpTest1PillOutEndTimer) clearTimeout(window.__mlpTest1PillOutEndTimer);
     window.__mlpTest1PillOutEndTimer = setTimeout(function () {
       window.__mlpTest1PillOutEndTimer = null;
@@ -9661,6 +10422,7 @@ function _runTest1PillOut() {
         var pillCanvas = document.getElementById('canvas');
         if (pillCanvas && pillCanvas.getAttribute('data-test-scope') === 'test1') {
           pillCanvas.removeAttribute('data-test1-pill-out-animate');
+          pillCanvas.setAttribute('data-test1-pill-out', '1');
         }
       } catch (_) {}
     }, TEST1_PILL_OUT_FADE_MS);
@@ -9697,6 +10459,7 @@ function _runTest1GradientSweep() {
                   if (!c2 || c2.getAttribute('data-test-scope') !== 'test1') return;
                   if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
                   c2.setAttribute('data-test1-gradient-out-animate', '1');
+                  _runTest1CodaIntro();
                 } catch (_) {}
               });
             });
@@ -9710,7 +10473,7 @@ function _runTest1GradientSweep() {
               if (window.__mlpTestConfig) window.__mlpTestConfig.test1GradientDone = true;
               _armTest1CodaDelay(canvas);
             }, TEST1_GRADIENT_OUT_FADE_MS);
-          }, TEST1_GRADIENT_FLOW_MS);
+          }, TEST1_GRADIENT_SWEEP_MS + TEST1_GRADIENT_HOLD_MS);
         } catch (_) {}
       });
     });
@@ -9728,6 +10491,22 @@ function _armTest1CodaDelay(canvas) {
   }, TEST1_AFTER_GRADIENT_CODA_MS);
 }
 
+function _beginTest1CodaChromeRise() {
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      try {
+        var cRise = document.getElementById('canvas');
+        if (!cRise || cRise.getAttribute('data-test-scope') !== 'test1') return;
+        if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
+        if (!cRise.getAttribute('data-test1-coda-run')) return;
+        cRise.setAttribute('data-test1-coda-animate', '1');
+        cRise.setAttribute('data-test1-coda-inner-rise', '1');
+        void cRise.offsetWidth;
+      } catch (_) {}
+    });
+  });
+}
+
 function _runTest1CodaIntro() {
   try {
     var c = document.getElementById('canvas');
@@ -9736,21 +10515,29 @@ function _runTest1CodaIntro() {
     if (c.getAttribute('data-test1-coda-run')) return;
     c.removeAttribute('data-test1-shortcuts-out');
     c.removeAttribute('data-test1-shortcuts-animate');
+    c.removeAttribute('data-test1-coda-inner-rise');
+    c.removeAttribute('data-test1-coda-animate');
+    if (c.getAttribute('data-test1-stack-run') && !c.getAttribute('data-test1-gradient-out-animate')) {
+      c.setAttribute('data-test1-gradient-run', '1');
+      c.setAttribute('data-test1-gradient-out-animate', '1');
+      if (window.__mlpTestConfig) window.__mlpTestConfig.test1GradientRun = true;
+    }
     c.setAttribute('data-test1-coda-run', '1');
+    void c.offsetWidth;
     if (window.__mlpTestConfig) {
       window.__mlpTestConfig.test1ShortcutsOut = false;
       window.__mlpTestConfig.test1CodaRun = true;
     }
-    requestAnimationFrame(function () {
-      requestAnimationFrame(function () {
-        try {
-          var c2 = document.getElementById('canvas');
-          if (!c2 || c2.getAttribute('data-test-scope') !== 'test1') return;
-          if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
-          c2.setAttribute('data-test1-coda-animate', '1');
-        } catch (_) {}
-      });
-    });
+    _beginTest1CodaChromeRise();
+    setTimeout(function () {
+      try {
+        var cOut = document.getElementById('canvas');
+        if (!cOut || cOut.getAttribute('data-test-scope') !== 'test1') return;
+        cOut.setAttribute('data-test1-gradient-out', '1');
+        cOut.removeAttribute('data-test1-gradient-out-animate');
+        if (window.__mlpTestConfig) window.__mlpTestConfig.test1GradientOut = true;
+      } catch (_) {}
+    }, TEST1_CODA_STACK_OUT_MS);
     if (window.__mlpTest1CodaEndTimer) clearTimeout(window.__mlpTest1CodaEndTimer);
     window.__mlpTest1CodaEndTimer = setTimeout(function () {
       window.__mlpTest1CodaEndTimer = null;
@@ -9759,9 +10546,70 @@ function _runTest1CodaIntro() {
           if (!c2 || c2.getAttribute('data-test-scope') !== 'test1') return;
           c2.setAttribute('data-test1-coda-done', '1');
           c2.removeAttribute('data-test1-coda-animate');
+          c2.removeAttribute('data-test1-coda-inner-rise');
           if (window.__mlpTestConfig) window.__mlpTestConfig.test1CodaDone = true;
+          if (typeof _armTest1HomeDelay === 'function') {
+            _armTest1HomeDelay(c2);
+          }
         } catch (_) {}
     }, TEST1_CODA_FADE_IN_MS);
+  } catch (_) {}
+}
+
+function _armTest1HomeDelay(canvas) {
+  if (!canvas || canvas.getAttribute('data-test-scope') !== 'test1') return;
+  if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
+  if (canvas.getAttribute('data-test1-home-run')) return;
+  if (window.__mlpTest1HomeTimer) return;
+  window.__mlpTest1HomeTimer = setTimeout(function () {
+    window.__mlpTest1HomeTimer = null;
+    _runTest1HomeIntro();
+  }, TEST1_HOME_AFTER_CODA_MS);
+}
+
+function _runTest1HomeIntro() {
+  try {
+    var c = document.getElementById('canvas');
+    if (!c || c.getAttribute('data-test-scope') !== 'test1') return;
+    if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
+    if (c.getAttribute('data-test1-home-run')) return;
+    c.setAttribute('data-test1-home-prep', '1');
+    c.setAttribute('data-test1-home-exit', '1');
+    c.removeAttribute('data-test1-coda-run');
+    if (window.__mlpTestConfig) {
+      window.__mlpTestConfig.test1HomePrep = true;
+      window.__mlpTestConfig.test1CodaRun = false;
+    }
+    if (window.__mlpTest1HomeExitTimer) clearTimeout(window.__mlpTest1HomeExitTimer);
+    window.__mlpTest1HomeExitTimer = setTimeout(function () {
+      window.__mlpTest1HomeExitTimer = null;
+      try {
+        var c2 = document.getElementById('canvas');
+        if (!c2 || c2.getAttribute('data-test-scope') !== 'test1') return;
+        if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
+        c2.removeAttribute('data-test1-home-exit');
+        c2.setAttribute('data-test1-home-run', '1');
+        c2.setAttribute('data-test1-home-animate', '1');
+        void c2.offsetWidth;
+        if (window.__mlpTestConfig) {
+          window.__mlpTestConfig.test1HomeRun = true;
+        }
+        var homeShellMs = 520;
+        setTimeout(function () {
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+              try {
+                var c3 = document.getElementById('canvas');
+                if (!c3 || c3.getAttribute('data-test-scope') !== 'test1') return;
+                if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
+                if (!c3.getAttribute('data-test1-home-animate')) return;
+                c3.setAttribute('data-test1-home-inner-rise', '1');
+              } catch (_) {}
+            });
+          });
+        }, homeShellMs);
+      } catch (_) {}
+    }, TEST1_HOME_EXIT_MS);
   } catch (_) {}
 }
 
@@ -9830,6 +10678,9 @@ window.test1RevealAllComponents = function test1RevealAllComponents() {
   if (!window.__mlpTestConfig || window.__mlpTestConfig.id !== 'test1') return;
   _clearTest1IntroTimer();
   window.__mlpTestConfig.test1RevealAll = true;
+  window.__mlpTestConfig.test1HomeRun = true;
+  window.__mlpTestConfig.test1HomePrep = true;
+  window.__mlpTestConfig.test1CodaDone = true;
   if (typeof window.generateSurfaceScenario === 'function') {
     window.generateSurfaceScenario(window.currentSurfaceType || 'tab-root');
   }
@@ -9858,9 +10709,15 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
       if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll == null) {
         window.__mlpTestConfig.test1RevealAll = false;
       }
+      if (window.__mlpTestConfig && window.__mlpTestConfig.test1HomeRun == null) {
+        window.__mlpTestConfig.test1HomeRun = false;
+        window.__mlpTestConfig.test1HomePrep = false;
+      }
       if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) {
         _clearTest1IntroTimer();
         canvas.setAttribute('data-test1-reveal-all', '1');
+        canvas.setAttribute('data-test1-home-run', '1');
+        canvas.setAttribute('data-test1-home-prep', '1');
         canvas.removeAttribute('data-test1-intro');
         canvas.removeAttribute('data-test1-intro-run');
         canvas.removeAttribute('data-test1-pill-prep');
@@ -9877,7 +10734,10 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
         canvas.removeAttribute('data-test1-gradient-out');
         canvas.removeAttribute('data-test1-coda-run');
         canvas.removeAttribute('data-test1-coda-animate');
+        canvas.removeAttribute('data-test1-coda-inner-rise');
         canvas.removeAttribute('data-test1-coda-done');
+        canvas.removeAttribute('data-test1-home-animate');
+        canvas.removeAttribute('data-test1-home-inner-rise');
         if (window.__mlpTestConfig) {
           window.__mlpTestConfig.test1GreenRun = false;
           window.__mlpTestConfig.test1StackRun = false;
@@ -9887,10 +10747,23 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
           window.__mlpTestConfig.test1GradientOut = false;
           window.__mlpTestConfig.test1GradientDone = false;
           window.__mlpTestConfig.test1CodaRun = false;
-          window.__mlpTestConfig.test1CodaDone = false;
+          window.__mlpTestConfig.test1CodaDone = true;
+          window.__mlpTestConfig.test1HomePrep = true;
+          window.__mlpTestConfig.test1HomeRun = true;
         }
       } else {
         canvas.removeAttribute('data-test1-reveal-all');
+        canvas.removeAttribute('data-test1-home-run');
+        canvas.removeAttribute('data-test1-home-prep');
+        canvas.removeAttribute('data-test1-home-exit');
+        canvas.removeAttribute('data-test1-home-animate');
+        canvas.removeAttribute('data-test1-home-inner-rise');
+        if (window.__mlpTestConfig && window.__mlpTestConfig.test1HomeRun) {
+          canvas.setAttribute('data-test1-home-run', '1');
+          if (window.__mlpTestConfig.test1HomePrep) {
+            canvas.setAttribute('data-test1-home-prep', '1');
+          }
+        }
         canvas.removeAttribute('data-test1-intro');
         canvas.removeAttribute('data-test1-intro-run');
         canvas.removeAttribute('data-test1-pill-prep');
@@ -9937,6 +10810,7 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
         } else {
           canvas.removeAttribute('data-test1-coda-run');
           canvas.removeAttribute('data-test1-coda-animate');
+          canvas.removeAttribute('data-test1-coda-inner-rise');
           canvas.removeAttribute('data-test1-coda-done');
         }
       }
@@ -9966,7 +10840,10 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
         } else {
           canvas.removeAttribute('data-test3-weather-dropped');
         }
-        canvas.removeAttribute('data-test3-weather-prep');
+        /* Keep prep gate during music mount diff — dropping capsules + spawning music share one beat. */
+        if (canvas.getAttribute('data-test3-weather-prep') !== '1') {
+          canvas.removeAttribute('data-test3-weather-prep');
+        }
       } else {
         window.__mlpTest3MusicShifted = false;
         window.__mlpTest3MusicShiftPrep = false;
@@ -9974,6 +10851,7 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
         window.__mlpTest3MusicShiftRunId = (window.__mlpTest3MusicShiftRunId || 0) + 1;
         window.__mlpTest3WeatherRainArmed = false;
         window.__mlpTest3PillsRevealed = false;
+        window.__mlpTest3PillsDropArmed = false;
         window.__mlpTest3WeatherPrepPending = false;
         if (window.__mlpTest3WeatherRainTimer) {
           clearTimeout(window.__mlpTest3WeatherRainTimer);
@@ -9990,6 +10868,14 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
         if (window.__mlpTest3PillsRevealTimer) {
           clearTimeout(window.__mlpTest3PillsRevealTimer);
           window.__mlpTest3PillsRevealTimer = null;
+        }
+        if (window.__mlpTest3PillsRevealEndTimer) {
+          clearTimeout(window.__mlpTest3PillsRevealEndTimer);
+          window.__mlpTest3PillsRevealEndTimer = null;
+        }
+        if (window.__mlpTest3WeatherDropCompleteTimer) {
+          clearTimeout(window.__mlpTest3WeatherDropCompleteTimer);
+          window.__mlpTest3WeatherDropCompleteTimer = null;
         }
         if (window.__mlpTest3MusicGlowHoldTimer) {
           clearTimeout(window.__mlpTest3MusicGlowHoldTimer);
@@ -10051,6 +10937,7 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
     canvas.removeAttribute('data-test1-gradient-out');
     canvas.removeAttribute('data-test1-coda-run');
     canvas.removeAttribute('data-test1-coda-animate');
+    canvas.removeAttribute('data-test1-coda-inner-rise');
     canvas.removeAttribute('data-test1-coda-done');
   }
   window.renderSurfacePlan(canvas, plan, layout);
@@ -10066,7 +10953,7 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
           }
         }
       }
-      if (window.__mlpTestConfig && !window.__mlpTestConfig.test1RevealAll) {
+      if (window.__mlpTestConfig && !window.__mlpTestConfig.test1RevealAll && !window.__mlpTestConfig.test1HomeRun) {
         _armTest1IntroDelay(canvas);
         if (canvas.getAttribute('data-test1-pill-run')) {
           _armTest1GreenDelay(canvas);
@@ -10126,8 +11013,25 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
       if (typeof _initTest3GoalMap !== 'function') return;
       // finishTransition defers map init while goal-fresh entrance runs.
       if (canvas.getAttribute('data-test3-goal-fresh') === '1') return;
+      var goalForMap = document.getElementById('test3-goal');
+      /* PNG expanded card — skip leaflet init until settled (avoids tile flash under photo). */
+      if (!goalForMap || !goalForMap.classList.contains('test3-goal-entrance-settled')) {
+        return;
+      }
       _initTest3GoalMap();
     });
+    if (canvas.getAttribute('data-test3-goal-expanded') === '1') {
+      requestAnimationFrame(function () {
+        try {
+          var expandedGoal = document.getElementById('test3-goal');
+          if (expandedGoal &&
+              !expandedGoal.classList.contains('test3-goal-entrance-settled') &&
+              typeof _lockTest3GoalExpandedState === 'function') {
+            _lockTest3GoalExpandedState(expandedGoal);
+          }
+        } catch (_) {}
+      });
+    }
   } else if (testScope === 'test3') {
     // Left home stage — clear all home flags.
     canvas.removeAttribute('data-test3-home');

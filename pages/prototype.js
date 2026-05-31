@@ -307,7 +307,7 @@ export default function PrototypePage() {
             border-radius: 50% !important;
             overflow: hidden !important;
             border: 2px solid rgba(255,255,255,0.1) !important;
-            box-shadow: 0 6px 16px rgba(0,0,0,0.4) !important;
+            box-shadow: none !important;
             transition: all 0.3s ease !important;
             background: #1a1a1e !important;
             display: block !important;

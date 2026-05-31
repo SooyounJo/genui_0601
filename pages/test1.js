@@ -16,6 +16,8 @@ export default function Test1Page() {
       window.__mlpTestConfig.test1GradientDone = false;
       window.__mlpTestConfig.test1CodaRun = false;
       window.__mlpTestConfig.test1CodaDone = false;
+      window.__mlpTestConfig.test1HomeRun = false;
+      window.__mlpTestConfig.test1HomePrep = false;
     }
 
     var tries = 0;
@@ -40,7 +42,13 @@ export default function Test1Page() {
         canvas.removeAttribute("data-test1-gradient-out-animate");
         canvas.removeAttribute("data-test1-coda-run");
         canvas.removeAttribute("data-test1-coda-animate");
+        canvas.removeAttribute("data-test1-coda-inner-rise");
         canvas.removeAttribute("data-test1-coda-done");
+        canvas.removeAttribute("data-test1-home-prep");
+        canvas.removeAttribute("data-test1-home-exit");
+        canvas.removeAttribute("data-test1-home-run");
+        canvas.removeAttribute("data-test1-home-animate");
+        canvas.removeAttribute("data-test1-home-inner-rise");
         if (typeof window.__armTest1IntroDelay === "function") {
           window.__armTest1IntroDelay(canvas);
         }

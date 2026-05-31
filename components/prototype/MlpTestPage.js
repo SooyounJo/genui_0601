@@ -8,8 +8,24 @@ const PHONE_W = 388;
 const PHONE_H = 880;
 const PHONE_RADIUS = 30;
 const HOME_BG = "/assets/bg-new.png?v=2";
+/** Phone canvas backdrop per test (not full-viewport workspace bg). */
+const PHONE_BG_BY_TEST = {
+  test1: "/assets/test1-wallpaper.png?v=1",
+  test2: "/assets/test2-wallpaper.png?v=1",
+  test3: "/assets/test3-wallpaper.png?v=4",
+};
+/** Full-viewport workspace backdrop per test page (not the phone canvas). */
+const WORKSPACE_BGS = {
+  test1: "/assets/test1-workspace-bg.png",
+  test2: "/assets/test2-workspace-bg.png",
+  test3: "/assets/test3-workspace-bg.png",
+};
 
-// Persona 1 ring uses the same stroke palette as Persona 2 (test2).
+/** White conic ring — shared by test1/test2/test3 persona badges. */
+const PERSONA_RING_WHITE_GRADIENT =
+  "conic-gradient(from 0deg, rgba(255,255,255,0.18) 0deg, rgba(255,255,255,0.55) 55deg, rgba(255,255,255,1) 110deg, rgba(255,255,255,0.72) 175deg, rgba(255,255,255,0.22) 250deg, rgba(255,255,255,0.12) 310deg, rgba(255,255,255,0.18) 360deg)";
+
+// Persona 1 ring mirrors test2 custom gradient when the editor is open.
 function syncTest1RingFromTest2() {
   if (typeof document === "undefined") return;
   var test2El = document.querySelector('.persona-circle[data-avatar-key="test2"]');
@@ -26,12 +42,60 @@ function syncTest1RingFromTest2() {
   else test1El.style.removeProperty("--persona-custom-gradient");
 }
 
+/** Persona badge video — first frame at rest; hover plays once to last frame; active page freezes end. */
+const PERSONA_VIDEO_END_EPS = 0.04;
+
+function queryPersonaVideo(avatarKey) {
+  if (typeof document === "undefined" || !avatarKey) return null;
+  return document.querySelector(
+    '.persona-circle[data-avatar-key="' + avatarKey + '"] .persona-video'
+  );
+}
+
+function whenPersonaVideoReady(video, fn) {
+  if (!video) return;
+  if (video.readyState >= 1) fn();
+  else video.addEventListener("loadedmetadata", fn, { once: true });
+}
+
+function setPersonaVideoFrame(avatarKey, frame) {
+  var video = queryPersonaVideo(avatarKey);
+  if (!video) return;
+  whenPersonaVideoReady(video, function () {
+    video.pause();
+    try {
+      if (frame === "end" && video.duration && isFinite(video.duration)) {
+        video.currentTime = Math.max(0, video.duration - PERSONA_VIDEO_END_EPS);
+      } else {
+        video.currentTime = 0;
+      }
+    } catch (_) {}
+  });
+}
+
+function playPersonaVideoToEnd(avatarKey) {
+  var video = queryPersonaVideo(avatarKey);
+  if (!video) return;
+  whenPersonaVideoReady(video, function () {
+    try { video.currentTime = 0; } catch (_) {}
+    var p = video.play();
+    if (p && typeof p.catch === "function") p.catch(function () {});
+  });
+}
+
+function syncAllPersonaVideoFrames(activeId) {
+  TESTS.forEach(function (t) {
+    if (!t.video || t.disabled) return;
+    setPersonaVideoFrame(t.id, t.id === activeId ? "end" : "start");
+  });
+}
+
 const TESTS = [
   {
     id: "test1", href: "/test1", label: "Persona 1", img: "/assets/persona01.png",
+    video: "/mp4/t1.mp4",
     name: "지수",
-    age: "45",
-    role: "Teacher",
+    age: "45, Teacher",
     bioLines: [
       "중학교 국어 교사, 매일 오후 6시 퇴근하며 딸과 둘이 거주.",
       "냉장고 재료 기반으로 직접 저녁 준비, 식단을 계획적으로 관리.",
@@ -40,16 +104,24 @@ const TESTS = [
   },
   {
     id: "test2", href: "/test2", label: "Persona 2", img: "/assets/persona-2.png?v=3",
+    video: "/mp4/t2.mp4",
     name: "박서현",
     age: "28, Product Designer",
-    bio: "6일간 휴가 후 복귀. 분석적이고 계획적인 성격, 데이터 기반 의사결정과 체계적인 업무 진행 선호",
+    bioLines: [
+      "6일간 휴가 후 복귀. 분석적이고 계획적인 성격,",
+      "데이터 기반 의사결정과 체계적인 업무 진행 선호",
+    ],
     interests: ["Design reviews", "Dev collaboration", "Figma expert"],
   },
   {
     id: "test3", href: "/test3", label: "Persona 3", img: "/assets/persona-3.png?v=3",
+    video: "/mp4/t3.mp4",
     name: "유진",
     age: "31, Backend Developer",
-    bio: "주 4-5회 한강 조깅, 인디 음악과 함께 혼자만의 시간을 즐김. 기록보다 꾸준함을 중시하는 데이터 기반 러너",
+    bioLines: [
+      "주 4-5회 한강 조깅, 인디 음악과 함께 혼자만의 시간을 즐김.",
+      "기록보다 꾸준함을 중시하는 데이터 기반 러너",
+    ],
     interests: ["Evening runner", "Indie music lover", "Data-driven fitness"],
   },
 ];
@@ -91,8 +163,6 @@ export default function MlpTestPage({
   initialSurfaceType = "tab-root",
 }) {
   const [mounted, setMounted] = useState(false);
-  const [genInput, setGenInput] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
   const [scale, setScale] = useState(1);
   // `hoveredId` drives the persona profile card: when a non-disabled
   // badge is being pointed at, the card slides in to its right and
@@ -127,18 +197,18 @@ export default function MlpTestPage({
   // ─────────────────────────────────────────────────────────────────
   const TIMELINE_SECONDS = [0, 2, 4, 6, 8];
   const DEFAULT_STOPS_TEST2 = [
-    { c: "#FF66FF", p: 0 },
-    { c: "#FF6666", p: 90 },
-    { c: "#FFFFFF", p: 180 },
-    { c: "#F1F158", p: 270 },
-    { c: "#FF66FF", p: 360 },
+    { c: "rgba(255,255,255,0.18)", p: 0 },
+    { c: "rgba(255,255,255,0.55)", p: 55 },
+    { c: "rgba(255,255,255,1)", p: 110 },
+    { c: "rgba(255,255,255,0.72)", p: 175 },
+    { c: "rgba(255,255,255,0.18)", p: 360 },
   ];
   const DEFAULT_STOPS_TEST3 = [
-    { c: "#66FFFF", p: 0 },
-    { c: "#EE2B2B", p: 90 },
-    { c: "#FFFFFF", p: 180 },
-    { c: "#4A77FF", p: 270 },
-    { c: "#66FFFF", p: 360 },
+    { c: "rgba(255,255,255,0.18)", p: 0 },
+    { c: "rgba(255,255,255,0.55)", p: 55 },
+    { c: "rgba(255,255,255,1)", p: 110 },
+    { c: "rgba(255,255,255,0.72)", p: 175 },
+    { c: "rgba(255,255,255,0.18)", p: 360 },
   ];
   function buildDefaultConfig(stops) {
     const o = {};
@@ -304,18 +374,70 @@ export default function MlpTestPage({
   const focusIdx    = hoveredIdx >= 0 ? hoveredIdx : activeIdx;
   // Badge stack spacing stays on flex gap: 24px — never shift on hover.
   const shouldOffsetStack = false;
+  const workspaceBg = WORKSPACE_BGS[testId] || WORKSPACE_BGS.test1;
 
   const renderPersonaAvatar = (test) => {
+    var videoEl = test.video ? (
+      <video
+        className="persona-video"
+        src={test.video}
+        muted
+        playsInline
+        preload="auto"
+        aria-hidden="true"
+      />
+    ) : null;
+    /* Hidden — palette ring extraction only; visible media is .persona-video */
+    var paletteImg = test.img ? (
+      <img
+        src={test.img}
+        alt=""
+        className={"persona-img persona-img--palette" + (test.id === "test1" ? " persona-img--test1" : "")}
+        aria-hidden="true"
+      />
+    ) : null;
     if (test.id === "test1") {
       return (
         <span className="persona-avatar-fill" aria-hidden="true">
           <span className="persona-avatar-fill__ellipse" />
-          <img src={test.img} alt={test.label} className="persona-img persona-img--test1" />
+          {paletteImg}
+          {videoEl}
         </span>
       );
     }
-    return <img src={test.img} alt={test.label} className="persona-img" />;
+    return (
+      <span className="persona-avatar-media" aria-hidden="true">
+        {paletteImg}
+        {videoEl}
+      </span>
+    );
   };
+
+  useEffect(() => {
+    if (!mounted) return undefined;
+    syncAllPersonaVideoFrames(testId);
+    var cleanups = [];
+    TESTS.forEach(function (t) {
+      if (!t.video) return;
+      var video = queryPersonaVideo(t.id);
+      if (!video) return;
+      var onEnded = function () {
+        video.pause();
+        try {
+          if (video.duration && isFinite(video.duration)) {
+            video.currentTime = Math.max(0, video.duration - PERSONA_VIDEO_END_EPS);
+          }
+        } catch (_) {}
+      };
+      video.addEventListener("ended", onEnded);
+      cleanups.push(function () {
+        video.removeEventListener("ended", onEnded);
+      });
+    });
+    return function () {
+      cleanups.forEach(function (fn) { fn(); });
+    };
+  }, [mounted, testId]);
 
   // Per-badge palette extracted from each avatar image. Colors stay
   // close to the portrait (background, skin, clothing) — no forced
@@ -494,84 +616,6 @@ export default function MlpTestPage({
     };
   }, [initialSurfaceType, testId]);
 
-  const handleGenSubmit = async (e) => {
-    if (e) e.preventDefault();
-    if (!genInput.trim() || isGenerating || testId !== "test1") return;
-    setIsGenerating(true);
-
-    let genInterval;
-    if (typeof window !== "undefined") {
-      const texts = [
-        { time: "AI:  ", meta: "PLAN  ", color: "#FF7F24" },
-        { time: "NEW: ", meta: "UI    ", color: "#A78BFA" },
-        { time: "UP:  ", meta: "DATE  ", color: "#5CE1D6" },
-        { time: "ON:  ", meta: "IT    ", color: "#FFB01C" },
-      ];
-      let tIdx = 0;
-      let currentWidgets = window.__p1_custom_widgets ? [...window.__p1_custom_widgets] : [];
-      currentWidgets = currentWidgets.filter((w) => w.role !== "dot-time-matrix");
-
-      const updateGenUI = () => {
-        const textObj = texts[tIdx % texts.length];
-        window.__p1_custom_widgets = [
-          { role: "dot-time-matrix", variant: { time: textObj.time, meta: textObj.meta, dotColor: textObj.color } },
-          ...currentWidgets,
-        ];
-        if (typeof window.generateSurfaceScenario === "function") {
-          window.generateSurfaceScenario("tab-root");
-        }
-        tIdx += 1;
-      };
-
-      updateGenUI();
-      genInterval = setInterval(updateGenUI, 500);
-    }
-
-    try {
-      const res = await fetch("/api/p1/resolve", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: genInput }),
-      });
-      if (!res.ok) throw new Error("Failed to resolve");
-      const data = await res.json();
-
-      if (data.components && data.components.length > 0) {
-        let widgets = data.components;
-        let hasTimeMatrix = widgets.find((w) => w.role === "dot-time-matrix");
-        if (hasTimeMatrix) {
-          widgets = widgets.filter((w) => w.role !== "dot-time-matrix");
-          hasTimeMatrix.variant = { ...hasTimeMatrix.variant };
-          delete hasTimeMatrix.variant.time;
-          delete hasTimeMatrix.variant.meta;
-          delete hasTimeMatrix.variant.dotColor;
-          widgets.unshift(hasTimeMatrix);
-        } else {
-          widgets.unshift({ role: "dot-time-matrix", variant: {} });
-        }
-        window.__p1_custom_widgets = widgets;
-      }
-    } catch (err) {
-      console.error(err);
-      alert("생성 중 오류가 발생했습니다.");
-    } finally {
-      if (genInterval) clearInterval(genInterval);
-      setIsGenerating(false);
-      setGenInput("");
-      setTimeout(() => {
-        if (window.__p1_custom_widgets && typeof window.generateSurfaceScenario === "function") {
-          window.generateSurfaceScenario("tab-root");
-        }
-      }, 100);
-    }
-  };
-
-  const handleP2StarClick = () => {
-    if (typeof window.startP2VoiceInput === "function") {
-      window.startP2VoiceInput();
-    }
-  };
-
   return (
     <>
       <Head>
@@ -600,7 +644,12 @@ export default function MlpTestPage({
           }
 
           body {
-            background: #0b0b0e !important;
+            background-color: #0b0b0e !important;
+            background-image: url(${workspaceBg}) !important;
+            background-size: cover !important;
+            background-position: center center !important;
+            background-repeat: no-repeat !important;
+            background-attachment: fixed !important;
             overflow: hidden !important;
             margin: 0 !important;
           }
@@ -611,7 +660,11 @@ export default function MlpTestPage({
             margin: 0 !important;
             position: relative !important;
             height: 100vh !important;
-            background: #0b0b0e !important;
+            background-color: transparent !important;
+            background-image: url(${workspaceBg}) !important;
+            background-size: cover !important;
+            background-position: center center !important;
+            background-repeat: no-repeat !important;
           }
           .page-nav {
             position: absolute !important;
@@ -671,7 +724,11 @@ export default function MlpTestPage({
             height: 100vh !important;
             box-sizing: border-box !important;
             overflow: hidden !important;
-            background: #0b0b0e !important;
+            background-color: transparent !important;
+            background-image: url(${workspaceBg}) !important;
+            background-size: cover !important;
+            background-position: center center !important;
+            background-repeat: no-repeat !important;
             position: relative !important;
           }
           .mlp-left {
@@ -724,7 +781,7 @@ export default function MlpTestPage({
                gradient on hover only; the user wanted the gradient to
                REPLACE that stroke, not stack outside it. */
             border: none !important;
-            box-shadow: 0 6px 16px rgba(0,0,0,0.4) !important;
+            box-shadow: none !important;
             /* Transform now uses a back-easeOut curve with slight
                overshoot so the 1× → 1.8× hover jump has visible spring
                — the badge surges past its target, then settles back.
@@ -760,20 +817,9 @@ export default function MlpTestPage({
             inset: 0;
             border-radius: 50%;
             padding: 2px;
-            /* Image-picked palette (--persona-c1..c4 set per badge in
-               the mount effect above). Four stops sorted by hue from
-               the avatar — no forced white/rainbow peak. */
-            background: var(
-              --persona-custom-gradient,
-              conic-gradient(
-                from 0deg,
-                var(--persona-c1, #8a8a92)   0deg,
-                var(--persona-c2, #a8a8b0)  90deg,
-                var(--persona-c3, #c0c0c8) 180deg,
-                var(--persona-c4, #b0b0b8) 270deg,
-                var(--persona-c1, #8a8a92) 360deg
-              )
-            );
+            /* White swirl ring (test1/2/3); editor may override via
+               --persona-custom-gradient. */
+            background: var(--persona-custom-gradient, ${PERSONA_RING_WHITE_GRADIENT});
             -webkit-mask:
               linear-gradient(#000 0 0) content-box,
               linear-gradient(#000 0 0);
@@ -839,19 +885,10 @@ export default function MlpTestPage({
           .persona-circle[data-avatar-key="test1"] {
             background: #E0F2C4 !important;
           }
-          /* test1 stroke matches test2 palette + spin (synced in JS). */
-          .persona-circle[data-avatar-key="test1"]::before {
-            background: var(
-              --persona-custom-gradient,
-              conic-gradient(
-                from 0deg,
-                var(--persona-c1, #FF66FF)   0deg,
-                var(--persona-c2, #FF6666)  90deg,
-                var(--persona-c3, #FFFFFF) 180deg,
-                var(--persona-c4, #F1F158) 270deg,
-                var(--persona-c1, #FF66FF) 360deg
-              )
-            );
+          .persona-circle[data-avatar-key="test1"]::before,
+          .persona-circle[data-avatar-key="test2"]::before,
+          .persona-circle[data-avatar-key="test3"]::before {
+            background: var(--persona-custom-gradient, ${PERSONA_RING_WHITE_GRADIENT});
           }
           .persona-circle[data-avatar-key="test1"] .persona-avatar-fill {
             position: absolute;
@@ -864,26 +901,38 @@ export default function MlpTestPage({
           .persona-circle[data-avatar-key="test1"] .persona-avatar-fill__ellipse {
             display: none;
           }
-          .persona-circle[data-avatar-key="test1"] .persona-img--test1 {
+          .persona-circle .persona-avatar-media {
             position: absolute;
-            width: 100% !important;
-            height: 100% !important;
-            left: 0 !important;
-            top: 0 !important;
-            object-fit: cover !important;
-            object-position: center center !important;
+            inset: 0;
             border-radius: 50%;
-            /* Slight overfill hides sub-pixel gaps at the circle edge. */
+            overflow: hidden;
+            z-index: 0;
+            pointer-events: none;
+          }
+          .persona-circle .persona-img,
+          .persona-circle .persona-img--palette {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+          }
+          .persona-circle .persona-video {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center center;
+            border-radius: 50%;
+            opacity: 1;
+            z-index: 1;
+            pointer-events: none;
+          }
+          .persona-circle[data-avatar-key="test1"] .persona-video {
             transform: scale(1.04);
           }
           .persona-circle[data-avatar-key="test1"]:not(:hover):not(.is-hovered)::before {
-            animation: none !important;
-            opacity: 0 !important;
-            padding: 2px !important;
-            filter: none !important;
-            transform: none !important;
-          }
-          .persona-circle[data-avatar-key="test2"]:not(:hover):not(.is-hovered)::before {
             animation: none !important;
             opacity: 0 !important;
             padding: 2px !important;
@@ -919,7 +968,7 @@ export default function MlpTestPage({
               personaCircleHoverSpin 8s linear 1 forwards,
               personaCircleHoverRotate 1.6s linear 5 forwards;
           }
-          .persona-circle:not(.is-disabled).is-active:not([data-avatar-key="test1"]):not([data-avatar-key="test2"])::before {
+          .persona-circle:not(.is-disabled).is-active:not([data-avatar-key="test1"])::before {
             /* INITIAL state of active badge — rotates on page load as
                a "look here, this scenario is yours" signal. Same
                animation as hover (infinite spin + rotate). The
@@ -939,7 +988,7 @@ export default function MlpTestPage({
               personaCircleHoverSpin 8s linear infinite,
               personaCircleHoverRotate 1.6s linear infinite;
           }
-          .mlp-left.has-interacted .persona-circle:not(.is-disabled).is-active:not([data-avatar-key="test1"]):not([data-avatar-key="test2"])::before {
+          .mlp-left.has-interacted .persona-circle:not(.is-disabled).is-active:not([data-avatar-key="test1"])::before {
             /* AFTER the user has hovered any badge at least once, the
                active badge falls back to a quiet STATIC state when
                un-hovered. User has demonstrated awareness of the badge
@@ -984,6 +1033,31 @@ export default function MlpTestPage({
           .persona-circle:not(.is-disabled).is-hovered::after {
             animation: none;
             opacity: 0;
+          }
+          .persona-circle[data-avatar-key="test2"],
+          .persona-circle[data-avatar-key="test3"] {
+            overflow: hidden !important;
+          }
+          /* test2/test3 — match portrait fill (test1 uses #E0F2C4 + video scale).
+             Dark default #1a1a1e + unscaled video leaves a grey/black baked-in
+             rim visible at the clip edge; scale crops it like test1. */
+          .persona-circle[data-avatar-key="test2"] {
+            background: #c8d1ff !important;
+          }
+          .persona-circle[data-avatar-key="test3"] {
+            background: #ebffa4 !important;
+          }
+          .persona-circle[data-avatar-key="test2"] .persona-video,
+          .persona-circle[data-avatar-key="test3"] .persona-video {
+            transform: scale(1.08);
+            border: none !important;
+            outline: none !important;
+          }
+          /* test2/test3 — white ring uses same hover/active spin as other badges */
+          .persona-circle[data-avatar-key="test2"]::after,
+          .persona-circle[data-avatar-key="test3"]::after {
+            display: none !important;
+            opacity: 0 !important;
           }
           @keyframes personaCircleHoverSpin {
             /* Ring lifecycle while hovered, 8s total. Behaviour broken
@@ -1095,9 +1169,9 @@ export default function MlpTestPage({
                hugging it — gives the rotating glow on the hovered badge
                room to breathe without bumping the card edge. */
             left: calc(100% + 38px);
-            width: 308px;
-            padding: 18px 20px 20px;
-            border-radius: 18px;
+            width: 276px;
+            padding: 16px 18px 18px;
+            border-radius: 16px;
             /* Container background uses LOW-alpha rgba so the panel itself
                reads as half-transparent, while the text/tags inside stay
                at full opacity (per user direction "the container can be
@@ -1157,7 +1231,7 @@ export default function MlpTestPage({
              inside the card was redundant. Layout collapses to just the
              name+age heading block flowing left-aligned. */
           .persona-profile-card__head {
-            margin-bottom: 12px;
+            margin-bottom: 10px;
           }
           .persona-profile-card__heading {
             display: flex;
@@ -1168,24 +1242,24 @@ export default function MlpTestPage({
           .persona-profile-card__name {
             font-family: 'Inter', var(--font), sans-serif;
             font-weight: 600;
-            font-size: 16px;
+            font-size: 14px;
             line-height: 1.2;
             color: #ffffff;
           }
           .persona-profile-card__age {
             font-family: 'Inter', var(--font), sans-serif;
             font-weight: 400;
-            font-size: 12px;
+            font-size: 11px;
             line-height: 1.3;
             color: rgba(255, 255, 255, 0.55);
           }
           .persona-profile-card__bio {
             font-family: 'Inter', var(--font), sans-serif;
             font-weight: 400;
-            font-size: 13px;
+            font-size: 12px;
             line-height: 1.55;
             color: rgba(255, 255, 255, 0.78);
-            margin: 0 0 14px;
+            margin: 0 0 12px;
             white-space: pre-line;
           }
           .persona-profile-card__interests {
@@ -1199,179 +1273,244 @@ export default function MlpTestPage({
           .persona-profile-card__tag {
             font-family: 'Inter', var(--font), sans-serif;
             font-weight: 500;
-            font-size: 11px;
-            letter-spacing: 0.2px;
-            line-height: 1.4;
+            font-size: 9px;
+            letter-spacing: 0.1px;
+            line-height: 1.3;
             color: #64e9e3;
             background: rgba(100, 233, 227, 0.08);
             border: 1px solid rgba(100, 233, 227, 0.18);
-            padding: 4px 9px;
+            padding: 2px 6px;
             border-radius: 99px;
           }
-          /* test2 (박서현) — solid card, cream tags, bio below tags */
+          /* Persona hover cards — slightly smaller than Figma (≈92%). */
+          .persona-profile-card--test1,
+          .persona-profile-card--test2,
+          .persona-profile-card--test3 {
+            --persona-card-scale: 0.92;
+            transform: scale(var(--persona-card-scale));
+            transform-origin: left center;
+          }
+          /* test2 (박서현) — Figma 5502:16910 */
           .persona-profile-card--test2 {
             display: flex;
             flex-direction: column;
             align-items: flex-start;
-            width: 409px;
-            padding: 22px 30px;
+            width: 371px;
+            padding: 21.733px 29.635px;
             gap: 0;
-            border-radius: 24.882px;
-            background: rgba(40, 42, 44, 0.7);
-            -webkit-backdrop-filter: blur(16px) saturate(120%);
-                    backdrop-filter: blur(16px) saturate(120%);
+            border-radius: 24.58px;
+            background: #282a2c;
+            -webkit-backdrop-filter: none;
+                    backdrop-filter: none;
             border: none;
             box-shadow: 0 20px 60px -20px rgba(0, 0, 0, 0.45);
           }
           .persona-profile-card--test2 .persona-profile-card__head {
-            margin-bottom: 26px;
+            margin-bottom: 25.684px;
           }
           .persona-profile-card--test2 .persona-profile-card__heading {
             gap: 0;
+            line-height: 1.8;
           }
           .persona-profile-card--test2 .persona-profile-card__name {
             font-family: 'Pretendard', var(--font), sans-serif;
             font-weight: 700;
-            font-size: 24.0526px;
+            font-size: 23.76px;
             line-height: 1.8;
-            letter-spacing: -0.02em;
-            color: #FFFFFF;
+            letter-spacing: -0.4752px;
+            color: #ffffff;
           }
           .persona-profile-card--test2 .persona-profile-card__age {
             font-family: 'Pretendard', var(--font), sans-serif;
             font-weight: 600;
-            font-size: 14.9292px;
+            font-size: 14.748px;
             line-height: 1.8;
-            letter-spacing: -0.02em;
-            color: #FFEDBB;
+            letter-spacing: -0.295px;
+            color: #c8d1ff;
             opacity: 0.6;
           }
           .persona-profile-card--test2 .persona-profile-card__interests {
-            gap: 8.29px;
-            margin: 0 0 9px;
+            gap: 5px;
+            margin: 0 0 7px;
           }
           .persona-profile-card--test2 .persona-profile-card__tag {
             font-family: 'Pretendard', var(--font), sans-serif;
             font-weight: 500;
-            font-size: 11.6116px;
-            letter-spacing: -0.02em;
-            line-height: 1.8;
-            color: #282A2C;
-            background: #FFEDBB;
+            font-size: 9.5px;
+            letter-spacing: -0.19px;
+            line-height: 1.32;
+            color: #282a2c;
+            background: #c8d1ff;
             border: none;
-            padding: 2.4882px 10.7822px 3.3176px;
-            border-radius: 828.572px;
+            padding: 1.5px 7px 2px;
+            border-radius: 99px;
           }
           .persona-profile-card--test2 .persona-profile-card__bio {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
             font-family: 'Pretendard', var(--font), sans-serif;
             font-weight: 400;
-            font-size: 14.9292px;
+            font-size: 14.748px;
             line-height: 1.5;
-            letter-spacing: -0.02em;
-            color: #EBE8DF;
+            letter-spacing: -0.295px;
+            color: #ebe8df;
             margin: 0;
             white-space: normal;
+            word-break: keep-all;
+          }
+          .persona-profile-card--test2 .persona-profile-card__bio-line {
+            display: block;
           }
           .persona-profile-card--test2.is-visible .persona-profile-card__bio {
             animation: personaCardTextRise 320ms cubic-bezier(0.2, 0, 0.05, 1) 540ms both;
           }
-          /* test1 (지수) — test2 card shell, mint age/role row */
-          .persona-profile-card--test2.persona-profile-card--test1 {
-            width: 392px;
-            padding: 22px 24px 20px;
+          /* test1 (지수) — Figma 5502:17167 */
+          .persona-profile-card--test1 {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            width: 406px;
+            padding: 21.74px 34.587px 21.74px 29.646px;
+            gap: 0;
+            border-radius: 24.588px;
+            background: #282a2c;
+            -webkit-backdrop-filter: none;
+                    backdrop-filter: none;
+            border: none;
+            box-shadow: 0 20px 60px -20px rgba(0, 0, 0, 0.45);
+          }
+          .persona-profile-card--test1 .persona-profile-card__head {
+            margin-bottom: 25.693px;
+          }
+          .persona-profile-card--test1 .persona-profile-card__heading {
+            gap: 0;
+            line-height: 1.8;
+          }
+          .persona-profile-card--test1 .persona-profile-card__name {
+            font-family: 'Pretendard', var(--font), sans-serif;
+            font-weight: 700;
+            font-size: 23.769px;
+            line-height: 1.8;
+            letter-spacing: -0.4754px;
+            color: #ffffff;
           }
           .persona-profile-card--test1 .persona-profile-card__age {
-            display: flex;
-            flex-direction: row;
-            align-items: baseline;
-            gap: 4px;
-          }
-          .persona-profile-card--test1 .persona-profile-card__age-num,
-          .persona-profile-card--test1 .persona-profile-card__age-role {
-            color: #BDE5EC;
+            font-family: 'Pretendard', var(--font), sans-serif;
+            font-weight: 600;
+            font-size: 14.753px;
+            line-height: 1.8;
+            letter-spacing: -0.2951px;
+            color: #bde5ec;
             opacity: 0.6;
           }
+          .persona-profile-card--test1 .persona-profile-card__interests {
+            gap: 5px;
+            margin: 0 0 7px;
+          }
           .persona-profile-card--test1 .persona-profile-card__tag {
-            color: #282A2C;
-            background: #BDE5EC;
+            font-family: 'Pretendard', var(--font), sans-serif;
+            font-weight: 500;
+            font-size: 9.5px;
+            letter-spacing: -0.19px;
+            line-height: 1.32;
+            color: #282a2c;
+            background: #bde5ec;
             border: none;
+            padding: 1.5px 7px 2px;
+            border-radius: 99px;
           }
           .persona-profile-card--test1 .persona-profile-card__bio {
             display: flex;
             flex-direction: column;
             gap: 0;
-            margin: 0;
-            font-size: 14.9292px;
+            font-family: 'Pretendard', var(--font), sans-serif;
+            font-weight: 400;
+            font-size: 14.753px;
             line-height: 1.5;
+            letter-spacing: -0.2951px;
+            color: #ebe8df;
+            margin: 0;
             white-space: normal;
             word-break: keep-all;
           }
           .persona-profile-card--test1 .persona-profile-card__bio-line {
             display: block;
           }
-          /* test3 (유진) — solid card, mint tags, bio below tags */
+          .persona-profile-card--test1.is-visible .persona-profile-card__bio {
+            animation: personaCardTextRise 320ms cubic-bezier(0.2, 0, 0.05, 1) 540ms both;
+          }
+          /* test3 (유진) — Figma 5502:16328 */
           .persona-profile-card--test3 {
             display: flex;
             flex-direction: column;
             align-items: flex-start;
-            width: 409px;
-            padding: 22px 35px 22px 30px;
+            width: 406px;
+            padding: 21.733px 34.574px 21.733px 29.635px;
             gap: 0;
-            border-radius: 24.882px;
-            background: rgba(40, 42, 44, 0.7);
-            -webkit-backdrop-filter: blur(16px) saturate(120%);
-                    backdrop-filter: blur(16px) saturate(120%);
+            border-radius: 24.58px;
+            background: #282a2c;
+            -webkit-backdrop-filter: none;
+                    backdrop-filter: none;
             border: none;
             box-shadow: 0 20px 60px -20px rgba(0, 0, 0, 0.45);
           }
           .persona-profile-card--test3 .persona-profile-card__head {
-            margin-bottom: 26px;
+            margin-bottom: 25.684px;
           }
           .persona-profile-card--test3 .persona-profile-card__heading {
             gap: 0;
+            line-height: 1.8;
           }
           .persona-profile-card--test3 .persona-profile-card__name {
             font-family: 'Pretendard', var(--font), sans-serif;
             font-weight: 700;
-            font-size: 24.0526px;
+            font-size: 23.76px;
             line-height: 1.8;
-            letter-spacing: -0.02em;
-            color: #FFFFFF;
+            letter-spacing: -0.4752px;
+            color: #ffffff;
           }
           .persona-profile-card--test3 .persona-profile-card__age {
             font-family: 'Pretendard', var(--font), sans-serif;
             font-weight: 600;
-            font-size: 14.9292px;
+            font-size: 14.748px;
             line-height: 1.8;
-            letter-spacing: -0.02em;
-            color: #BDE5EC;
+            letter-spacing: -0.295px;
+            color: #ebffa4;
             opacity: 0.6;
           }
           .persona-profile-card--test3 .persona-profile-card__interests {
-            gap: 8.29px;
-            margin: 0 0 9px;
+            gap: 5px;
+            margin: 0 0 7px;
           }
           .persona-profile-card--test3 .persona-profile-card__tag {
             font-family: 'Pretendard', var(--font), sans-serif;
             font-weight: 500;
-            font-size: 11.6116px;
-            letter-spacing: -0.02em;
-            line-height: 1.8;
-            color: #282A2C;
-            background: #BDE5EC;
+            font-size: 9.5px;
+            letter-spacing: -0.19px;
+            line-height: 1.32;
+            color: #282a2c;
+            background: #ebffa4;
             border: none;
-            padding: 2.4882px 10.7822px 3.3176px;
-            border-radius: 828.572px;
+            padding: 1.5px 7px 2px;
+            border-radius: 99px;
           }
           .persona-profile-card--test3 .persona-profile-card__bio {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
             font-family: 'Pretendard', var(--font), sans-serif;
             font-weight: 400;
-            font-size: 14.9292px;
+            font-size: 14.748px;
             line-height: 1.5;
-            letter-spacing: -0.02em;
-            color: #EBE8DF;
+            letter-spacing: -0.295px;
+            color: #ebe8df;
             margin: 0;
             white-space: normal;
+            word-break: keep-all;
+          }
+          .persona-profile-card--test3 .persona-profile-card__bio-line {
+            display: block;
           }
           .persona-profile-card--test3.is-visible .persona-profile-card__bio {
             animation: personaCardTextRise 320ms cubic-bezier(0.2, 0, 0.05, 1) 540ms both;
@@ -1431,10 +1570,6 @@ export default function MlpTestPage({
             width: 100% !important;
             height: 100% !important;
             object-fit: cover !important;
-            display: block !important;
-            /* border-radius on the img itself keeps it circular even
-               though the parent .persona-circle now has overflow:visible
-               (so the ring above can extend outside). */
             border-radius: 50% !important;
           }
           .mlp-right {
@@ -1446,16 +1581,22 @@ export default function MlpTestPage({
             align-items: center !important;
             padding-right: 0 !important;
           }
-          .canvas-wrap {
+          /* Test pages: no phone bezel frame — only clipped canvas content. */
+          .mlp-test-page .canvas-wrap {
             width: calc(${PHONE_W}px * var(--scale, 1)) !important;
             height: calc(${PHONE_H}px * var(--scale, 1)) !important;
             flex-shrink: 0 !important;
             position: relative !important;
+            overflow: hidden !important;
+            border-radius: ${PHONE_RADIUS}px !important;
+            background: transparent !important;
+            background-image: none !important;
+            padding: 0 !important;
             transition: width 0.2s ease-out, height 0.2s ease-out !important;
             margin: 0 auto !important;
             transform: translateY(var(--offsetY, 0px)) !important;
           }
-          .canvas-frame.mlp-phone {
+          .mlp-test-page .canvas-frame.mlp-phone {
             width: ${PHONE_W}px !important;
             height: ${PHONE_H}px !important;
             transform: scale(var(--scale, 1)) !important;
@@ -1465,11 +1606,14 @@ export default function MlpTestPage({
             position: absolute !important;
             top: 0 !important;
             left: 0 !important;
-            box-shadow: 0 30px 80px rgba(0,0,0,0.9) !important;
-            background: #000 !important;
+            border: none !important;
+            box-shadow: none !important;
+            outline: none !important;
+            background: transparent !important;
+            background-image: none !important;
             transition: transform 0.2s ease-out !important;
           }
-          .canvas-frame.mlp-phone .canvas-inner {
+          .mlp-test-page .canvas-frame.mlp-phone .canvas-inner {
             border-radius: ${PHONE_RADIUS}px !important;
           }
           .canvas-inner {
@@ -1482,70 +1626,6 @@ export default function MlpTestPage({
             overflow: hidden !important;
             zoom: 1 !important;
             transform: none !important;
-          }
-          .gen-input-container {
-            position: absolute !important;
-            bottom: 40px !important;
-            right: 40px !important;
-            z-index: 100 !important;
-            width: 320px !important;
-            background: rgba(255, 255, 255, 0.08) !important;
-            backdrop-filter: blur(20px) !important;
-            border: 1px solid rgba(255, 255, 255, 0.15) !important;
-            border-radius: 20px !important;
-            padding: 8px 16px !important;
-            display: flex !important;
-            align-items: center !important;
-            gap: 12px !important;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3) !important;
-            transition: all 0.3s ease !important;
-          }
-          .gen-input-container:focus-within {
-            border-color: #64e9e3 !important;
-            box-shadow: 0 10px 40px rgba(100, 233, 227, 0.2) !important;
-            width: 400px !important;
-          }
-          .gen-input {
-            background: transparent !important;
-            border: none !important;
-            color: #fff !important;
-            font-size: 14px !important;
-            font-family: 'Pretendard', sans-serif !important;
-            flex: 1 !important;
-            outline: none !important;
-            padding: 8px 0 !important;
-          }
-          .gen-input::placeholder {
-            color: rgba(255, 255, 255, 0.4) !important;
-          }
-          .gen-submit {
-            background: #64e9e3 !important;
-            border: none !important;
-            width: 32px !important;
-            height: 32px !important;
-            border-radius: 50% !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            cursor: pointer !important;
-            transition: all 0.2s ease !important;
-            flex-shrink: 0 !important;
-          }
-          .gen-submit svg {
-            width: 16px !important;
-            height: 16px !important;
-            color: #000 !important;
-          }
-          .gen-loading {
-            width: 16px !important;
-            height: 16px !important;
-            border: 2px solid rgba(0,0,0,0.2) !important;
-            border-top-color: #000 !important;
-            border-radius: 50% !important;
-            animation: gen-spin 0.8s linear infinite !important;
-          }
-          @keyframes gen-spin {
-            to { transform: rotate(360deg); }
           }
         `}</style>
       </Head>
@@ -1567,8 +1647,15 @@ export default function MlpTestPage({
               const onMouseEnter = test.disabled ? undefined : () => {
                 setHoveredId(test.id);
                 setHasInteracted(true);
+                playPersonaVideoToEnd(test.id);
               };
-              const onMouseLeave = test.disabled ? undefined : () => setHoveredId(prev => prev === test.id ? null : prev);
+              const onMouseLeave = test.disabled ? undefined : () => {
+                setPersonaVideoFrame(
+                  test.id,
+                  test.id === testId ? "end" : "start"
+                );
+                setHoveredId(prev => prev === test.id ? null : prev);
+              };
               if (test.disabled) {
                 return (
                   <div key={test.id} className="persona-slot">
@@ -1605,7 +1692,7 @@ export default function MlpTestPage({
                 currently hovered. */}
             <div
               ref={profileCardRef}
-              className={`persona-profile-card${cardVisible ? " is-visible" : ""}${hoveredTest?.id === "test2" || hoveredTest?.id === "test1" ? " persona-profile-card--test2" : ""}${hoveredTest?.id === "test1" ? " persona-profile-card--test1" : ""}${hoveredTest?.id === "test3" ? " persona-profile-card--test3" : ""}`}
+              className={`persona-profile-card${cardVisible ? " is-visible" : ""}${hoveredTest?.id === "test1" ? " persona-profile-card--test1" : ""}${hoveredTest?.id === "test2" ? " persona-profile-card--test2" : ""}${hoveredTest?.id === "test3" ? " persona-profile-card--test3" : ""}`}
               style={{ "--hover-idx": Math.max(0, hoveredIdx) }}
               aria-hidden={cardVisible ? "false" : "true"}
             >
@@ -1614,14 +1701,7 @@ export default function MlpTestPage({
                   <div className="persona-profile-card__head">
                     <div className="persona-profile-card__heading">
                       <div className="persona-profile-card__name">{hoveredTest.name}</div>
-                      {hoveredTest.id === "test1" ? (
-                        <div className="persona-profile-card__age">
-                          <span className="persona-profile-card__age-num">{hoveredTest.age},</span>
-                          <span className="persona-profile-card__age-role">{hoveredTest.role}</span>
-                        </div>
-                      ) : (
-                        <div className="persona-profile-card__age">{hoveredTest.age}</div>
-                      )}
+                      <div className="persona-profile-card__age">{hoveredTest.age}</div>
                     </div>
                   </div>
                   {hoveredTest.id === "test2" || hoveredTest.id === "test3" || hoveredTest.id === "test1" ? (
@@ -1633,7 +1713,7 @@ export default function MlpTestPage({
                           ))}
                         </ul>
                       )}
-                      {hoveredTest.id === "test1" && hoveredTest.bioLines ? (
+                      {hoveredTest.bioLines && hoveredTest.bioLines.length > 0 ? (
                         <p className="persona-profile-card__bio">
                           {hoveredTest.bioLines.map((line) => (
                             <span key={line} className="persona-profile-card__bio-line">{line}</span>
@@ -1669,10 +1749,11 @@ export default function MlpTestPage({
                     id="canvas"
                     data-test-scope={testId}
                     style={{
-                      backgroundColor: "transparent",
-                      backgroundImage: `url(${HOME_BG})`,
+                      backgroundColor: testId === "test3" ? "#e8a06a" : "transparent",
+                      backgroundImage: `url(${PHONE_BG_BY_TEST[testId] || HOME_BG})`,
                       backgroundSize: "cover",
                       backgroundPosition: "center",
+                      backgroundRepeat: "no-repeat",
                       display: "flex",
                       flexDirection: "column",
                       alignItems: "stretch",
@@ -1684,62 +1765,12 @@ export default function MlpTestPage({
               </div>
             )}
 
-            {mounted && testId === "test1" && (
-              <form className="gen-input-container" onSubmit={handleGenSubmit}>
-                <input
-                  type="text"
-                  className="gen-input"
-                  placeholder="필요한 기능을 입력하세요 (예: 운동과 음악)"
-                  value={genInput}
-                  onChange={(e) => setGenInput(e.target.value)}
-                  disabled={isGenerating}
-                />
-                <button type="submit" className="gen-submit" disabled={isGenerating}>
-                  {isGenerating ? (
-                    <div className="gen-loading" />
-                  ) : (
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="22" y1="2" x2="11" y2="13"></line>
-                      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                    </svg>
-                  )}
-                </button>
-              </form>
-            )}
-
-            {mounted && testId === "test2" && (
-              <button
-                className="gen-input-container p2-agent-trigger"
-                onClick={handleP2StarClick}
-                style={{ cursor: "pointer", border: "none", width: "auto" }}
-              >
-                <div className="gen-submit" style={{ background: "var(--p2-lavender, #FF9748)" }}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5">
-                    <path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4L12 2z" fill="#fff" />
-                  </svg>
-                </div>
-                <span style={{ color: "#fff", fontSize: "14px", fontWeight: "600", marginLeft: "4px" }}>AI 에이전트 실행</span>
-              </button>
-            )}
           </section>
         </div>
 
-        {/* ─── Gradient Editor (temporary tool) ─────────────────────
-            Floating panel for tweaking each persona badge's conic
-            gradient live. Closed by default — toggle via the 🎨 button.
-            Doesn't touch the badge gradient until opened. Available on
-            ALL test pages (test1, test2, test3) per user direction. */}
+        {/* ─── Gradient Editor (temporary dev tool, toggle hidden) ─── */}
         {(
           <>
-            <button
-              type="button"
-              className="grad-editor-toggle"
-              onClick={() => setGradEditorOpen((v) => !v)}
-              aria-label={gradEditorOpen ? "Close gradient editor" : "Open gradient editor"}
-              title={gradEditorOpen ? "Close gradient editor" : "Open gradient editor"}
-            >
-              🎨
-            </button>
             {gradEditorOpen && (
               <div className="grad-editor" role="dialog" aria-label="Gradient editor">
                 <div className="grad-editor__head">
@@ -1838,29 +1869,6 @@ export default function MlpTestPage({
               </div>
             )}
             <style>{`
-              .grad-editor-toggle {
-                position: fixed;
-                right: 16px;
-                bottom: 16px;
-                width: 44px;
-                height: 44px;
-                border-radius: 50%;
-                border: 1px solid rgba(255,255,255,0.15);
-                background: rgba(28,28,32,0.85);
-                color: #fff;
-                font-size: 18px;
-                cursor: pointer;
-                z-index: 10000;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-                -webkit-backdrop-filter: blur(10px);
-                        backdrop-filter: blur(10px);
-              }
-              .grad-editor-toggle:hover {
-                background: rgba(40,40,44,0.92);
-              }
               .grad-editor {
                 position: fixed;
                 right: 16px;
