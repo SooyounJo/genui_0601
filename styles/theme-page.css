@@ -297,9 +297,6 @@
     background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;
-    filter: blur(6px);
-    transform: scale(1.04);
-    transform-origin: center center;
     pointer-events: none;
   }
   /* Keep lock atomics absolutely placed — do not force position:relative on canvas-items */
