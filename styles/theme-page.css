@@ -324,8 +324,7 @@
     overflow: visible;
   }
   #canvas[data-test-scope="test2"].p2-listening #p2-area.p2-agent-shell,
-  #canvas[data-test-scope="test2"].p2-generating #p2-area.p2-agent-shell,
-  #canvas[data-test-scope="test2"] #p2-area.p2-agent-shell:has(#p2-result.is-loading) {
+  #canvas[data-test-scope="test2"].p2-generating #p2-area.p2-agent-shell {
     overflow: visible !important;
   }
 
@@ -333,13 +332,14 @@
   #canvas[data-test-scope="test2"] #p2-result {
     overflow: hidden;
   }
+  /* 로딩 오버레이는 셸(148px) 안 content box(~118px)를 채움 — 여기에 36px radius+clip 주면 하단 캡슐/오rb가 잘림 */
   #canvas[data-test-scope="test2"] #p2-result.is-loading {
     position: absolute;
     inset: 0;
     z-index: 20;
     height: 100%;
-    border-radius: 36px;
-    overflow: hidden;
+    border-radius: 0 !important;
+    overflow: visible !important;
   }
   #canvas[data-test-scope="test2"] .p2-result-loading {
     position: absolute;
@@ -535,7 +535,7 @@
   #canvas[data-test-scope="test2"] .p2-result-loading__content {
     position: relative;
     z-index: 2;
-    padding: 0 0 6px;
+    padding: 0 8px 0 10px;
     box-sizing: border-box;
     height: 100%;
     display: flex;
@@ -2425,6 +2425,7 @@
   /* 로딩: main+result가 셸 전체를 덮고, 푸터는 로딩 오버레이 안 __footer만 사용 */
   #canvas[data-test-scope="test2"] .p2-agent-shell:has(#p2-result.is-loading):not(.p2-loading-chrome-exiting):not(.p2-contact-shell-expanding):not(.p2-contact-layout-active) {
     gap: 0;
+    overflow: hidden;
   }
   #canvas[data-test-scope="test2"] .p2-agent-shell:has(#p2-result.is-loading):not(.p2-loading-chrome-exiting):not(.p2-contact-shell-expanding) .p2-agent-main {
     position: absolute;
@@ -2439,11 +2440,12 @@
     position: absolute;
     inset: 0;
     z-index: 10;
-    border-radius: inherit;
+    border-radius: 0 !important;
     bottom: auto;
     height: 100% !important;
     flex: none;
     min-height: 0;
+    overflow: visible !important;
   }
   #canvas[data-test-scope="test2"] #p2-result.is-loading .p2-result-loading {
     border-radius: 0;
