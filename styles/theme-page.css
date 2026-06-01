@@ -1,4 +1,4 @@
-image.png  :root {
+:root {
     --pg-bg:     #0a0a0c;
     --panel:     rgba(23, 23, 26, 0.6);
     --panel-2:   rgba(35, 35, 40, 0.7);
@@ -302,9 +302,20 @@ image.png  :root {
     transform-origin: center center;
     pointer-events: none;
   }
-  #canvas[data-test-scope="test2"] > * {
-    position: relative;
+  /* Keep lock atomics absolutely placed — do not force position:relative on canvas-items */
+  #canvas[data-test-scope="test2"] > .canvas-item {
+    position: absolute !important;
     z-index: 1;
+  }
+  #canvas[data-test-scope="test2"] .canvas-item[data-role="lockIndicator"],
+  #canvas[data-test-scope="test2"] .canvas-item[data-role="weatherDate"],
+  #canvas[data-test-scope="test2"] .canvas-item[data-role="clock"] {
+    z-index: 3;
+    pointer-events: none;
+  }
+  #canvas[data-test-scope="test2"] .canvas-item[data-role="persona2-widgets"] {
+    z-index: 4;
+    overflow: hidden;
   }
 
   /* Persona2: loading crossfade overlay on the right card */
@@ -2151,9 +2162,10 @@ image.png  :root {
     position: relative;
     flex-shrink: 0;
     height: 56px;
-    padding: 0 8px 0 4px;
+    padding: 0 8px 0 8px;
     box-sizing: border-box;
     display: flex;
+    flex-direction: row;
     align-items: center;
     gap: 8px;
     z-index: 15;
@@ -2243,12 +2255,12 @@ image.png  :root {
   #canvas[data-test-scope="test2"] .p2-agent-input .p2-agent-fill--gl-ready .p2-agent-fill__bloom {
     opacity: 0.42 !important;
     filter: blur(16px);
-    transform: translate(28%, 0%) scale(0.82);
+    transform: translate(-10%, 0%) scale(0.82);
   }
   #canvas[data-test-scope="test2"] .p2-agent-input .p2-agent-fill--gl-ready .p2-agent-fill__mist {
     opacity: 0.34 !important;
     filter: blur(20px);
-    transform: translate(22%, 0%) scale(0.88);
+    transform: translate(-6%, 0%) scale(0.88);
   }
   #canvas[data-test-scope="test2"] .p2-agent-input .p2-agent-fill--gl-ready .p2-agent-fill__wave {
     opacity: 0.28 !important;
@@ -2434,7 +2446,7 @@ image.png  :root {
     opacity: 1 !important;
     pointer-events: none;
     height: 56px !important;
-    padding: 0 8px 0 4px !important;
+    padding: 0 8px 0 8px !important;
     overflow: visible;
   }
   #canvas[data-test-scope="test2"] .p2-agent-shell:has(#p2-result.is-loading):not(.p2-contact-layout-active) .p2-agent-footer .p2-agent-input,
@@ -3194,6 +3206,9 @@ image.png  :root {
     --test3-music-gleam-rgb: 255, 252, 245;
     --test3-music-gleam-mid-rgb: 255, 232, 198;
     --test3-music-gleam-warm-rgb: 255, 205, 150;
+    /* Bright wash anchor — bottom-left (orb side), not bottom-right. */
+    --test3-music-gleam-x: 14%;
+    --test3-music-gleam-y: 82%;
     font-family: 'Pretendard', var(--font), -apple-system, BlinkMacSystemFont, sans-serif;
     background-color: #e8a06a !important;
     background-image: url('/assets/test3-wallpaper.png?v=4') !important;
@@ -3659,9 +3674,17 @@ image.png  :root {
     --test3-music-media-pill-pad-x: 8px;
     --test3-music-shell-white: var(--test3-card-shell-cream, #FFFCF4);
     --test3-music-fill-fade-ms: 1400ms;
-    --test3-music-chrome-fade-ms: 1000ms;
-    --test3-music-settle-text-ms: 1000ms;
-    --test3-card-gap-v: 6px;
+    --test3-music-fill-in-ms: 1320ms;
+    --test3-music-shell-fade-ms: 1180ms;
+    --test3-music-ivory-handoff-ms: 1280ms;
+    --test3-music-cyan-out-ms: 1100ms;
+    --test3-music-chrome-fade-ms: 520ms;
+    --test3-music-settle-text-ms: 560ms;
+    --test3-card-gap-v: 12px;
+    /* Capsule-phase orb (82px-tall pill) — smaller than settled player disc. */
+    --test3-orb-capsule-size: 46px;
+    --test3-orb-capsule-x: 13px;
+    --test3-orb-capsule-y: 18px;
     --test3-music-progress-dur: 245s;
     --test3-music-bar-h: 10px;
     --test3-music-bar-thumb: 15px;
@@ -5003,10 +5026,26 @@ image.png  :root {
     overflow: hidden;
   }
   /* test3: home 진입 후 music 등장 + 주변 컴포넌트 자리 이동 */
-  @keyframes test3MusicCardIn {
-    0% { opacity: 0; transform: translateY(18px) scale(0.965); filter: blur(4px); }
-    58% { opacity: 0.72; transform: translateY(6px) scale(0.992); filter: blur(1px); }
-    100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+  /* Short spawn fade — blur must not ride the 14 s height timeline. */
+  @keyframes test3MusicSpawnFade {
+    0% {
+      opacity: 0;
+      transform: translateY(14px) scale(0.96);
+      filter: blur(3px);
+      visibility: hidden;
+    }
+    42% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      filter: blur(0);
+      visibility: visible;
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      filter: blur(0);
+      visibility: visible;
+    }
   }
   /* Weather + Steps reposition during the music card's growth window.
      Now follows a CURVED path: an intermediate keyframe biases one axis
@@ -5025,20 +5064,34 @@ image.png  :root {
     }
     100% {
       opacity: 1;
-      transform: translateY(var(--test3-weather-drop, 86px));
+      transform: translateY(var(--test3-weather-drop, 94px));
     }
   }
-  /* Phase 2 — music timeline: cards already sit one row lower. */
+  /* 57%→68% — glide down in lockstep with test3MusicWrapperHeight (same 14s timeline). */
   @keyframes test3WeatherShift {
-    0%, 100% {
+    0%, 56% {
       opacity: 1;
-      transform: translateY(var(--test3-weather-drop, 86px));
+      transform: translateY(var(--test3-weather-drop, 94px));
+    }
+    57% {
+      animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    68%, 100% {
+      opacity: 1;
+      transform: translateY(var(--test3-weather-drop-expanded, 230px));
     }
   }
   @keyframes test3StepsShift {
-    0%, 100% {
+    0%, 56% {
       opacity: 1;
-      transform: translateY(var(--test3-weather-drop, 86px));
+      transform: translateY(var(--test3-weather-drop, 94px));
+    }
+    57% {
+      animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    68%, 100% {
+      opacity: 1;
+      transform: translateY(var(--test3-weather-drop-expanded, 230px));
     }
   }
   /* === test3 music card — v2 motion (14 s master timeline) =================
@@ -5052,21 +5105,31 @@ image.png  :root {
       height: 82px;
       border-radius: 41px;
       clip-path: inset(0 0 0 0 round 41px);
+      opacity: 0;
+      transform: scale(0.86);
     }
     0%, 2% {
       width: 82px;
       height: 82px;
       border-radius: 41px;
       clip-path: inset(0 0 0 0 round 41px);
+      opacity: 0;
+      transform: scale(0.86);
     }
     2% {
       animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    6% {
+      opacity: 1;
+      transform: scale(1);
     }
     10% {
       width: 340px;
       height: 82px;
       border-radius: 41px;
       clip-path: inset(0 0 0 0 round 41px);
+      opacity: 1;
+      transform: scale(1);
     }
     57% {
       width: 340px;
@@ -5136,25 +5199,30 @@ image.png  :root {
     0%, 12% {
       opacity: 0;
       visibility: hidden;
-      transform: translateY(-50%) translateX(0);
+      transform: translateY(-50%) translateX(0) scale(0.94);
     }
     22%, 100% {
       opacity: 1;
       visibility: visible;
-      transform: translateY(-50%) translateX(0);
+      transform: translateY(-50%) translateX(0) scale(1);
     }
   }
   /* Ivory shell — line 2: fade in → hold ≥1s → fade out before vertical expand. */
   @keyframes test3MusicSearchLine2White {
-    0%, 14% {
+    0% {
       opacity: 0;
       visibility: hidden;
-      transform: translateY(-50%) translateX(0);
+      transform: translateY(-50%) translateX(0) scale(0.98);
     }
-    16%, 72% {
+    18% {
+      opacity: 0.35;
+      visibility: visible;
+      transform: translateY(-50%) translateX(0) scale(0.99);
+    }
+    28%, 72% {
       opacity: 1;
       visibility: visible;
-      transform: translateY(-50%) translateX(0);
+      transform: translateY(-50%) translateX(0) scale(1);
     }
     76%, 100% {
       opacity: 0;
@@ -5175,10 +5243,10 @@ image.png  :root {
   }
   @keyframes test3MusicOrbMotion {
     0%, 14% {
-      width: var(--test3-orb-size, 56px);
-      height: var(--test3-orb-size, 56px);
-      left: 13px;
-      top: 13px;
+      width: var(--test3-orb-capsule-size, 46px);
+      height: var(--test3-orb-capsule-size, 46px);
+      left: var(--test3-orb-capsule-x, 13px);
+      top: var(--test3-orb-capsule-y, 18px);
       margin: 0;
       border-radius: 50%;
       opacity: 1;
@@ -5187,10 +5255,10 @@ image.png  :root {
       animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     }
     24%, 56% {
-      width: var(--test3-orb-size, 56px);
-      height: var(--test3-orb-size, 56px);
-      left: var(--test3-orb-x, 12px);
-      top: 13px;
+      width: var(--test3-orb-capsule-size, 46px);
+      height: var(--test3-orb-capsule-size, 46px);
+      left: var(--test3-orb-capsule-x, 13px);
+      top: var(--test3-orb-capsule-y, 18px);
       margin: 0;
       border-radius: 50%;
       opacity: 1;
@@ -5199,28 +5267,28 @@ image.png  :root {
       animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     }
     57% {
-      width: var(--test3-orb-size, 56px);
-      height: var(--test3-orb-size, 56px);
-      left: var(--test3-orb-x, 12px);
-      top: 13px;
+      width: var(--test3-orb-capsule-size, 46px);
+      height: var(--test3-orb-capsule-size, 46px);
+      left: var(--test3-orb-capsule-x, 13px);
+      top: var(--test3-orb-capsule-y, 18px);
       margin: 0;
       border-radius: 50%;
       opacity: 1;
     }
     62% {
-      width: 58px;
-      height: 58px;
-      left: 14px;
-      top: 16px;
+      width: calc(var(--test3-orb-capsule-size, 46px) + 2px);
+      height: calc(var(--test3-orb-capsule-size, 46px) + 2px);
+      left: calc(var(--test3-orb-capsule-x, 13px) + 1px);
+      top: calc(var(--test3-orb-capsule-y, 18px) + 1px);
       margin: 0;
       border-radius: 50%;
       opacity: 1;
     }
     68%, 100% {
-      width: var(--test3-orb-size, 56px);
-      height: var(--test3-orb-size, 56px);
-      left: var(--test3-orb-x, 12px);
-      top: 13px;
+      width: var(--test3-orb-capsule-size, 46px);
+      height: var(--test3-orb-capsule-size, 46px);
+      left: var(--test3-orb-capsule-x, 13px);
+      top: var(--test3-orb-capsule-y, 18px);
       margin: 0;
       border-radius: 50%;
       opacity: 1;
@@ -5341,7 +5409,7 @@ image.png  :root {
     50%      { background-position: -15% 50%; opacity: 0.82; }
   }
   @keyframes test3MusicFillOrangeBase {
-    0% { opacity: 0.72; }
+    0% { opacity: 0; }
     100% { opacity: 1; }
   }
   @keyframes test3MusicBlueCornerIn {
@@ -5361,55 +5429,68 @@ image.png  :root {
       opacity: 0.9;
       transform: scale(0.94);
       filter: blur(0px);
-      background-position: 90% 96%, 82% 90%;
+      background-position: 6% 84%, 10% 78%;
     }
     35% {
       opacity: 1;
       transform: scale(1.26);
       filter: blur(1px);
-      background-position: 94% 100%, 88% 94%;
+      background-position: 2% 86%, 6% 80%;
     }
     65% {
       opacity: 0.94;
       transform: scale(1.1);
       filter: blur(0px);
-      background-position: 84% 90%, 76% 86%;
+      background-position: 10% 80%, 14% 74%;
     }
   }
-  /* 14s — gleam expands (14%→42%), ivory handoff with shell @43% (test3MusicShellFill). */
+  /* 14s — gleam expands from bottom-left (14%→42%), ivory handoff @43%. */
   @keyframes test3MusicBrGleamExpand {
-    0%, 13% {
+    0% {
       opacity: 0;
       transform: scale(0.72);
     }
-    14%, 30% {
+    10% {
+      opacity: 0.28;
+      transform: scale(0.82);
+    }
+    18%, 30% {
       opacity: 1;
       transform: scale(0.98);
     }
-    30%, 41% {
+    30%, 38% {
       opacity: 1;
-      transform: scale(1.32);
+      transform: scale(1.22);
     }
-    41%, 43% {
-      opacity: 0.92;
+    38%, 42% {
+      opacity: 0.85;
+      transform: scale(1.34);
+    }
+    42%, 48% {
+      opacity: 0.35;
       transform: scale(1.42);
-    }
-    43%, 48% {
-      opacity: 0.2;
-      transform: scale(1.48);
-      filter: blur(3px);
+      filter: blur(2px);
     }
     48%, 100% {
       opacity: 0;
-      transform: scale(1.5);
+      transform: scale(1.48);
+      filter: blur(0);
     }
   }
   @keyframes test3MusicFillOrangeToIvory {
-    0%, 13% {
+    0% {
       opacity: 0;
       background-color: #FF7F24;
     }
-    14%, 40% {
+    8% {
+      opacity: 0.22;
+      background-color: #FF7F24;
+    }
+    16% {
+      opacity: 0.52;
+      background-color: #FF7F24;
+    }
+    24%, 40% {
       opacity: 1;
       background-color: #FF7F24;
     }
@@ -5427,44 +5508,68 @@ image.png  :root {
     }
   }
   @keyframes test3MusicIvoryWashExpand {
-    0%, 30% {
+    0%, 20% {
       opacity: 0;
-      transform: scale(0.55);
+      transform: scale(0.48);
     }
-    30%, 40% {
-      opacity: 0.55;
-      transform: scale(0.95);
+    26% {
+      opacity: 0.22;
+      transform: scale(0.68);
     }
-    40%, 43% {
-      opacity: 0.92;
-      transform: scale(1.18);
+    32% {
+      opacity: 0.48;
+      transform: scale(0.86);
     }
-    43%, 47% {
+    38% {
+      opacity: 0.72;
+      transform: scale(1.04);
+    }
+    42%, 46% {
       opacity: 1;
-      transform: scale(1.28);
+      transform: scale(1.26);
     }
-    47%, 54% {
-      opacity: 0.45;
+    46%, 52% {
+      opacity: 0.82;
       transform: scale(1.32);
     }
-    54%, 100% {
+    52%, 58% {
+      opacity: 0.38;
+      transform: scale(1.36);
+    }
+    58%, 100% {
       opacity: 0;
-      transform: scale(1.34);
+      transform: scale(1.38);
     }
   }
   /* Left orb halo — opacity only (no horizontal creep across the pill). */
   @keyframes test3MusicAmbientLeftGrow {
-    0%, 13% {
+    0% {
       opacity: 0;
+      transform: translateY(-50%) scale(0.88);
     }
-    14%, 42% {
+    12% {
+      opacity: 0.32;
+      transform: translateY(-50%) scale(0.94);
+    }
+    22%, 40% {
       opacity: 1;
+      transform: translateY(-50%) scale(1);
     }
-    43%, 47% {
-      opacity: 0.82;
+    40%, 46% {
+      opacity: 1;
+      transform: translateY(-50%) scale(1.08);
     }
-    48%, 100% {
+    46%, 52% {
+      opacity: 0.72;
+      transform: translateY(-50%) scale(1.12);
+    }
+    52%, 58% {
+      opacity: 0.35;
+      transform: translateY(-50%) scale(1.14);
+    }
+    58%, 100% {
       opacity: 0;
+      transform: translateY(-50%) scale(1.16);
     }
   }
   @keyframes test3MusicAmbientTopGrow {
@@ -5524,7 +5629,7 @@ image.png  :root {
   }
   @keyframes test3MusicFillColorFlow {
     0%, 100% { background-size: 185% 100%; background-position: 0% 50%; }
-    50%      { background-size: 340% 130%; background-position: 78% 50%; }
+    50%      { background-size: 340% 130%; background-position: 22% 50%; }
   }
   @keyframes test3MusicEdgeBloom {
     0%, 100% {
@@ -5626,14 +5731,16 @@ image.png  :root {
     animation: none !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music {
-    --test3-orb-size: 56px;
-    --test3-orb-x: 12px;
-    --test3-orb-y: 13px;
+    /* Capsule loader orb (46px in 82px pill); player disc stays 64px after settle. */
+    --test3-orb-size: var(--test3-orb-capsule-size, 46px);
+    --test3-disc-size: 64px;
+    --test3-orb-x: var(--test3-orb-capsule-x, 13px);
+    --test3-orb-y: var(--test3-orb-capsule-y, 18px);
     --test3-orb-mask-x: calc(var(--test3-orb-x) + var(--test3-orb-size) * 0.5);
     --test3-orb-mask-y: calc(var(--test3-orb-y) + var(--test3-orb-size) * 0.5);
     --test3-orb-mask-r: calc(var(--test3-orb-size) * 0.5 + 8px);
     --test3-music-search-ink: #FF7F24;
-    --test3-disc-size: 64px;
+    --test3-music-search-gap: 6px;
     --test3-disc-x: 16px;
     --test3-disc-y: 20px;
     --test3-orb-glow-delay: 0s;
@@ -5643,11 +5750,16 @@ image.png  :root {
     overflow: visible;
     transition: none !important;
     animation:
-      test3MusicSpawnIn 14s cubic-bezier(0.16, 1, 0.3, 1) both,
+      test3MusicSpawnFade 0.9s cubic-bezier(0.16, 1, 0.3, 1) both,
       test3MusicWrapperHeight 14s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
     animation-delay:
       var(--test3-music-spawn-delay-ms, 360ms),
       var(--test3-music-spawn-delay-ms, 360ms);
+  }
+  /* Ivory horizontal pill — clip fill bleed so weather/steps do not read as one lobe. */
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-shell-white="1"]:not([data-test3-music-pre-expand="1"]):not([data-test3-music-expand-ready="1"]),
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-ivory-handoff="1"]:not([data-test3-music-pre-expand="1"]) {
+    overflow: hidden !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-phase="playing"] {
     opacity: 1 !important;
@@ -5656,6 +5768,10 @@ image.png  :root {
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-loading="1"] {
     opacity: 1 !important;
     visibility: visible !important;
+  }
+  /* Capsule phase — clip fill bloom so goal↔music gap matches --test3-card-gap-v. */
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-loading="1"]:not([data-test3-music-pre-expand="1"]) {
+    overflow: hidden !important;
   }
   /* Loading — orb bottom-right linear shimmer + stroke ring (capsule fill runs in parallel from 14%). */
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-loading="1"]:not([data-test3-music-resolved="1"]) .dot-music1__compact--layout .dot-music1__iconBg {
@@ -5770,7 +5886,7 @@ image.png  :root {
     pointer-events: none;
     opacity: 0;
     overflow: hidden;
-    transition: opacity 0.55s cubic-bezier(0.22, 0.82, 0.24, 1);
+    transition: opacity var(--test3-music-fill-in-ms, 1320ms) cubic-bezier(0.22, 0.82, 0.24, 1);
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.test3-music-fill--fading {
     transition: opacity 1.4s cubic-bezier(0.22, 0.82, 0.24, 1) !important;
@@ -5796,7 +5912,9 @@ image.png  :root {
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .dot-music1.test3-music-shell--fill-active {
     background-color: transparent !important;
     overflow: visible;
-    animation: test3MusicMotionShell 14s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+    transition:
+      background-color var(--test3-music-shell-fade-ms, 1180ms) cubic-bezier(0.22, 0.82, 0.24, 1) 120ms !important;
+    /* Keep the base shell timeline running — re-declaring animation here restarts at 340px. */
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .dot-music1.test3-music-shell--fill-active .dot-music1__compact,
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .dot-music1.test3-music-shell--fill-active .dot-music1__player {
@@ -5957,6 +6075,7 @@ image.png  :root {
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.test3-music-fill--active .test3-music-ambient,
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.p2-agent-fill--gl-ready.p2-agent-fill--gl-active .test3-music-ambient {
     opacity: 1;
+    transition: opacity var(--test3-music-fill-in-ms, 1320ms) cubic-bezier(0.22, 0.82, 0.24, 1);
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-ambient__wash {
     position: absolute;
@@ -5964,7 +6083,7 @@ image.png  :root {
     border-radius: inherit;
     pointer-events: none;
     z-index: 3;
-    transform-origin: 88% 92%;
+    transform-origin: var(--test3-music-gleam-x, 14%) var(--test3-music-gleam-y, 82%);
     opacity: 0;
     background:
       radial-gradient(
@@ -5973,7 +6092,7 @@ image.png  :root {
         rgba(255, 252, 245, 0) 68%
       ),
       radial-gradient(
-        ellipse 110% 88% at 88% 94%,
+        ellipse 92% 72% at var(--test3-music-gleam-x, 14%) var(--test3-music-gleam-y, 82%),
         rgba(255, 252, 245, 0.98) 0%,
         rgba(255, 248, 235, 0.82) 38%,
         rgba(255, 252, 244, 0.45) 58%,
@@ -5985,12 +6104,12 @@ image.png  :root {
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-ambient::before {
     content: "";
     position: absolute;
-    left: calc(var(--test3-orb-x, 12px) - 14px);
+    left: calc(var(--test3-orb-capsule-x, 13px) - 10px);
     top: 50%;
-    width: calc(var(--test3-orb-size, 56px) * 1.22);
-    max-width: 78px;
-    height: calc(var(--test3-orb-size, 56px) * 1.12);
-    max-height: 72px;
+    width: calc(var(--test3-orb-capsule-size, 46px) * 1.22);
+    max-width: 62px;
+    height: calc(var(--test3-orb-capsule-size, 46px) * 1.12);
+    max-height: 56px;
     transform: translateY(-50%);
     transform-origin: 78% 50%;
     border-radius: 50%;
@@ -6049,17 +6168,49 @@ image.png  :root {
       test3MusicAmbientTopGrow 14s cubic-bezier(0.16, 1, 0.3, 1) forwards,
       test3MusicAmbientTopSheen 2.2s ease-in-out 0.45s infinite;
   }
+  /* Ivory handoff — warm lights keep expanding; only cyan / GL waver fades out. */
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-ivory-handoff="1"] .test3-music-fill.test3-music-fill--active {
+    opacity: 1 !important;
+    transition: opacity var(--test3-music-ivory-handoff-ms, 1280ms) cubic-bezier(0.22, 0.82, 0.24, 1) !important;
+  }
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-ivory-handoff="1"] .test3-music-fill.test3-music-fill--active .test3-music-ambient {
+    opacity: 1 !important;
+    transition: opacity 720ms cubic-bezier(0.22, 0.82, 0.24, 1) !important;
+  }
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-ivory-handoff="1"] .test3-music-fill.test3-music-fill--active .test3-music-ambient__wash {
+    inset: -2% !important;
+    animation: test3MusicIvoryWashExpand 14s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  }
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-ivory-handoff="1"] .test3-music-fill.test3-music-fill--active .test3-music-ambient::before {
+    animation: test3MusicAmbientLeftGrow 14s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  }
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-ivory-handoff="1"] .test3-music-fill.test3-music-fill--active .test3-music-ambient::after {
+    animation: test3MusicAmbientTopGrow 14s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  }
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-ivory-handoff="1"] .test3-music-fill.test3-music-fill--active::after {
+    opacity: 0 !important;
+    animation: none !important;
+    transition: opacity var(--test3-music-cyan-out-ms, 1100ms) cubic-bezier(0.22, 0.82, 0.24, 1) !important;
+  }
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-ivory-handoff="1"] .test3-music-fill.test3-music-fill--active .p2-agent-fill__gl {
+    opacity: 0 !important;
+    transition: opacity var(--test3-music-cyan-out-ms, 1100ms) cubic-bezier(0.22, 0.82, 0.24, 1) !important;
+  }
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-ivory-handoff="1"] .test3-music-fill.test3-music-fill--active::before {
+    opacity: 0 !important;
+    transition: opacity var(--test3-music-ivory-handoff-ms, 1280ms) cubic-bezier(0.22, 0.82, 0.24, 1) !important;
+  }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.test3-music-fill--fading .test3-music-ambient,
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.p2-agent-fill--gl-ready:not(.p2-agent-fill--gl-active) .test3-music-ambient {
     opacity: 0 !important;
-    transition: opacity 640ms cubic-bezier(0.22, 0.82, 0.24, 1) !important;
+    transition: opacity var(--test3-music-ivory-handoff-ms, 1280ms) cubic-bezier(0.22, 0.82, 0.24, 1) !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.test3-music-fill--fading .test3-music-ambient__wash,
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.test3-music-fill--fading .test3-music-ambient::before,
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.test3-music-fill--fading .test3-music-ambient::after {
-    animation: none !important;
+    transition: opacity var(--test3-music-ivory-handoff-ms, 1280ms) cubic-bezier(0.22, 0.82, 0.24, 1) !important;
   }
-  /* Capsule body: solid orange + vivid blue shimmer at bottom-right (never the left disc). */
+  /* Capsule body: solid orange + vivid blue shimmer at bottom-left (never the left disc). */
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill::before {
     content: "";
     position: absolute;
@@ -6078,17 +6229,17 @@ image.png  :root {
     opacity: 0;
     pointer-events: none;
     z-index: 2;
-    transform-origin: 88% 92%;
+    transform-origin: var(--test3-music-gleam-x, 14%) var(--test3-music-gleam-y, 82%);
     background:
       radial-gradient(
-        ellipse 128% 96% at 88% 96%,
+        ellipse 118% 78% at var(--test3-music-gleam-x, 14%) calc(var(--test3-music-gleam-y, 82%) + 4%),
         rgba(61, 166, 236, 1) 0%,
         rgba(61, 166, 236, 0.9) 28%,
         rgba(61, 166, 236, 0.48) 52%,
         rgba(61, 166, 236, 0) 72%
       ),
       radial-gradient(
-        ellipse 72% 52% at 82% 92%,
+        ellipse 68% 48% at calc(var(--test3-music-gleam-x, 14%) + 8%) calc(var(--test3-music-gleam-y, 82%) + 2%),
         rgba(120, 210, 255, 0.82) 0%,
         rgba(61, 166, 236, 0.35) 42%,
         rgba(61, 166, 236, 0) 100%
@@ -6096,16 +6247,16 @@ image.png  :root {
     background-size: 100% 100%, 135% 135%;
     background-repeat: no-repeat;
     mix-blend-mode: screen;
-    /* Cyan ripple — wider bottom-right, still off left orb / top. */
+    /* Cyan ripple — bottom-left gleam, still off left orb / top. */
     -webkit-mask-image: radial-gradient(
-      ellipse 78% 62% at 89% 94%,
+      ellipse 72% 54% at var(--test3-music-gleam-x, 14%) var(--test3-music-gleam-y, 82%),
       #000 0%,
       #000 44%,
       rgba(0, 0, 0, 0.5) 58%,
       transparent 76%
     );
     mask-image: radial-gradient(
-      ellipse 78% 62% at 89% 94%,
+      ellipse 72% 54% at var(--test3-music-gleam-x, 14%) var(--test3-music-gleam-y, 82%),
       #000 0%,
       #000 44%,
       rgba(0, 0, 0, 0.5) 58%,
@@ -6113,23 +6264,27 @@ image.png  :root {
     );
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.test3-music-fill--active::before {
-    opacity: 1;
+    display: block;
+    opacity: 0;
+    transition: opacity 960ms cubic-bezier(0.22, 0.82, 0.24, 1);
     animation:
-      test3MusicFillOrangeBase 1.1s cubic-bezier(0.22, 0.82, 0.24, 1) forwards,
+      test3MusicFillOrangeBase 1.35s cubic-bezier(0.22, 0.82, 0.24, 1) forwards,
       test3MusicFillOrangeToIvory 14s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.test3-music-fill--active::after {
-    opacity: 1;
+    display: block;
+    opacity: 0;
+    transition: opacity 1.1s cubic-bezier(0.22, 0.82, 0.24, 1) 180ms;
     animation:
-      test3MusicBlueCornerIn 1.4s cubic-bezier(0.22, 0.82, 0.24, 1) forwards,
-      test3MusicBlueCornerRipple 2.8s ease-in-out 1.4s infinite,
+      test3MusicBlueCornerIn 1.6s cubic-bezier(0.22, 0.82, 0.24, 1) forwards,
+      test3MusicBlueCornerRipple 2.8s ease-in-out 1.6s infinite,
       test3MusicBrGleamExpand 14s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.test3-music-fill--fading::after,
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.test3-music-fill--fading::before {
     opacity: 0 !important;
     animation: none !important;
-    transition: opacity 640ms cubic-bezier(0.22, 0.82, 0.24, 1) !important;
+    transition: opacity var(--test3-music-ivory-handoff-ms, 1280ms) cubic-bezier(0.22, 0.82, 0.24, 1) !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.test3-music-fill--fading::after {
     opacity: 0 !important;
@@ -6144,7 +6299,7 @@ image.png  :root {
     opacity: 0.28;
     animation: none;
   }
-  /* Capsule fill — blue settles on the right; no bloom/mist/wave dots on the body. */
+  /* Capsule fill — blue gleam on the left; no bloom/mist/wave dots on the body. */
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.test3-music-fill--active .p2-agent-fill__bloom,
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.test3-music-fill--active .p2-agent-fill__mist,
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.test3-music-fill--active .p2-agent-fill__wave,
@@ -6159,6 +6314,7 @@ image.png  :root {
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.p2-agent-fill--gl-ready.p2-agent-fill--gl-active {
     opacity: 1;
     overflow: visible;
+    transition: opacity var(--test3-music-fill-in-ms, 1320ms) cubic-bezier(0.22, 0.82, 0.24, 1);
     -webkit-mask-image: radial-gradient(
       circle var(--test3-orb-mask-r) at var(--test3-orb-mask-x) var(--test3-orb-mask-y),
       transparent 0,
@@ -6175,8 +6331,9 @@ image.png  :root {
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.p2-agent-fill--gl-ready.p2-agent-fill--gl-active::before {
     display: block !important;
     opacity: 1 !important;
+    transition: opacity 1.05s cubic-bezier(0.22, 0.82, 0.24, 1) !important;
     animation:
-      test3MusicFillOrangeBase 1.1s cubic-bezier(0.22, 0.82, 0.24, 1) forwards,
+      test3MusicFillOrangeBase 1.35s cubic-bezier(0.22, 0.82, 0.24, 1) forwards,
       test3MusicFillOrangeToIvory 14s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.p2-agent-fill--gl-ready.p2-agent-fill--gl-active::after {
@@ -6184,24 +6341,34 @@ image.png  :root {
     opacity: 1 !important;
     mix-blend-mode: screen;
     z-index: 2;
+    transition: opacity 1.15s cubic-bezier(0.22, 0.82, 0.24, 1) 140ms !important;
     animation:
-      test3MusicBlueCornerIn 1.4s cubic-bezier(0.22, 0.82, 0.24, 1) forwards,
-      test3MusicBlueCornerRipple 2.8s ease-in-out 1.4s infinite,
+      test3MusicBlueCornerIn 1.6s cubic-bezier(0.22, 0.82, 0.24, 1) forwards,
+      test3MusicBlueCornerRipple 2.8s ease-in-out 1.6s infinite,
       test3MusicBrGleamExpand 14s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.p2-agent-fill--gl-ready.p2-agent-fill--gl-active .test3-music-ambient__wash {
     display: block !important;
     animation: test3MusicIvoryWashExpand 14s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
   }
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.p2-agent-fill--gl-ready .p2-agent-fill__gl {
+    opacity: 0 !important;
+    mix-blend-mode: soft-light;
+    transition: opacity var(--test3-music-fill-in-ms, 1320ms) cubic-bezier(0.22, 0.82, 0.24, 1);
+  }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.p2-agent-fill--gl-ready.p2-agent-fill--gl-active .p2-agent-fill__gl {
     opacity: 0.14 !important;
     mix-blend-mode: soft-light;
   }
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.p2-agent-fill--gl-ready::before,
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.p2-agent-fill--gl-ready::after {
+    display: block !important;
+    opacity: 0 !important;
+    transition: opacity 1.05s cubic-bezier(0.22, 0.82, 0.24, 1);
+  }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.p2-agent-fill--gl-ready:not(.p2-agent-fill--gl-active) .p2-agent-fill__bloom,
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.p2-agent-fill--gl-ready:not(.p2-agent-fill--gl-active) .p2-agent-fill__mist,
-  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.p2-agent-fill--gl-ready:not(.p2-agent-fill--gl-active) .p2-agent-fill__wave,
-  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.p2-agent-fill--gl-ready:not(.p2-agent-fill--gl-active)::after,
-  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.p2-agent-fill--gl-ready:not(.p2-agent-fill--gl-active)::before {
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.p2-agent-fill--gl-ready:not(.p2-agent-fill--gl-active) .p2-agent-fill__wave {
     display: none !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .test3-music-fill.p2-agent-fill--gl-ready.p2-agent-fill--gl-active .p2-agent-fill__wave,
@@ -6223,6 +6390,7 @@ image.png  :root {
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-loading="1"]:not([data-test3-music-resolved="1"]):not([data-test3-music-shell-white="1"]) .dot-music1 {
     background-color: #FF7F24 !important;
+    transition: background-color var(--test3-music-shell-fade-ms, 1180ms) cubic-bezier(0.22, 0.82, 0.24, 1) !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .dot-music1 {
     position: relative;
@@ -6235,7 +6403,10 @@ image.png  :root {
     animation:
       test3MusicMotionShell 14s cubic-bezier(0.16, 1, 0.3, 1) forwards,
       test3MusicShellFill   14s ease forwards !important;
-    will-change: width, height, border-radius, clip-path, background-color;
+    animation-delay:
+      var(--test3-music-spawn-delay-ms, 360ms),
+      var(--test3-music-spawn-delay-ms, 360ms);
+    will-change: width, height, border-radius, clip-path, background-color, opacity, transform;
   }
   /* Resolve (43%) — orange GL fades out; white shell fades in underneath (no transparent gap). */
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-resolved="1"] .dot-music1,
@@ -6244,17 +6415,17 @@ image.png  :root {
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-resolved="1"] .dot-music1.test3-music-shell--fill-active,
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-pre-expand="1"] .dot-music1.test3-music-shell--fill-active,
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-expand-ready="1"] .dot-music1.test3-music-shell--fill-active {
-    animation: test3MusicMotionShell 14s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
     background-color: var(--test3-music-shell-white, #FFFCF4) !important;
     transition: background-color var(--test3-music-fill-fade-ms, 1400ms) cubic-bezier(0.22, 0.82, 0.24, 1) !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-shell-white="0"]:not([data-test3-music-expand-ready="1"]):not([data-test3-music-settling="1"]) .dot-music1 {
-    background-color: rgba(255, 255, 255, 0) !important;
-    transition: none !important;
+    background-color: rgba(255, 127, 36, 0) !important;
+    transition: background-color 920ms cubic-bezier(0.22, 0.82, 0.24, 1) !important;
   }
-  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-shell-white="1"] .dot-music1 {
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-shell-white="1"] .dot-music1,
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-ivory-handoff="1"] .dot-music1 {
     background-color: var(--test3-music-shell-white, #FFFCF4) !important;
-    transition: background-color var(--test3-music-fill-fade-ms, 1400ms) cubic-bezier(0.22, 0.82, 0.24, 1) !important;
+    transition: background-color var(--test3-music-ivory-handoff-ms, 1280ms) cubic-bezier(0.22, 0.82, 0.24, 1) !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .dot-music1__compact {
     width: 100%;
@@ -6287,8 +6458,8 @@ image.png  :root {
     height: 100%;
     flex-direction: row;
     align-items: center;
-    justify-content: flex-start;
-    position: static;
+    justify-content: center;
+    position: relative;
     padding: 0;
     gap: 0;
     background: transparent;
@@ -6302,21 +6473,23 @@ image.png  :root {
     animation: none !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .dot-music1__searchText {
-    position: relative;
+    position: absolute;
+    inset: 0;
     z-index: 5;
-    flex: 1 1 0;
+    flex: none;
+    width: 100%;
     min-width: 0;
     height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 12px 0 calc(var(--test3-orb-x, 0px) + var(--test3-orb-size, 48px) + 12px);
+    padding: 0 12px;
     pointer-events: none;
     text-align: center;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .dot-music1__searchLine {
     position: absolute;
-    left: calc(var(--test3-orb-x, 0px) + var(--test3-orb-size, 48px) + 12px);
+    left: 12px;
     right: 12px;
     top: 50%;
     transform: translateY(-50%);
@@ -6364,6 +6537,7 @@ image.png  :root {
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-loading="1"]:not([data-test3-music-pre-expand="1"]):not([data-test3-music-expand-ready="1"]) .dot-music1__searchText {
     opacity: 1 !important;
     visibility: visible !important;
+    pointer-events: none !important;
   }
   /* Pre-resolve (not loading) — hide until white shell / resolved beat. */
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music:not([data-test3-music-loading="1"]):not([data-test3-music-resolved="1"]):not([data-test3-music-expand-ready="1"]) .dot-music1__searchText,
@@ -6431,17 +6605,17 @@ image.png  :root {
     opacity: 1 !important;
     visibility: visible !important;
     transform: none !important;
-    transition: opacity var(--test3-music-chrome-fade-ms, 560ms) cubic-bezier(0.22, 0.82, 0.24, 1) !important;
+    transition: opacity var(--test3-music-chrome-fade-ms, 520ms) cubic-bezier(0.22, 0.82, 0.24, 1) !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-expand-ready="1"][data-test3-music-chrome-reveal="1"]:not([data-test3-music-settled="1"]) .dot-music1__icon .dot-music3__title {
-    transition-delay: 80ms !important;
+    transition-delay: 40ms !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-expand-ready="1"][data-test3-music-chrome-reveal="1"]:not([data-test3-music-settled="1"]) .dot-music1__icon .dot-music3__bottom {
-    transition-delay: 140ms !important;
+    transition-delay: 72ms !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-expand-ready="1"][data-test3-music-chrome-reveal="1"]:not([data-test3-music-settled="1"]) .dot-music3__headerRow,
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-expand-ready="1"][data-test3-music-chrome-reveal="1"]:not([data-test3-music-settled="1"]) .dot-music3__compactHeader {
-    transition-delay: 40ms !important;
+    transition-delay: 0ms !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .dot-music1__icon .dot-music3__iconBg {
     visibility: hidden;
@@ -6472,7 +6646,7 @@ image.png  :root {
     visibility: visible !important;
     transform: none !important;
     filter: none !important;
-    transition: opacity 320ms cubic-bezier(0.22, 0.82, 0.24, 1), transform 320ms cubic-bezier(0.22, 0.82, 0.24, 1), filter 320ms cubic-bezier(0.22, 0.82, 0.24, 1) !important;
+    transition: opacity 220ms cubic-bezier(0.22, 0.82, 0.24, 1), transform 220ms cubic-bezier(0.22, 0.82, 0.24, 1), filter 220ms cubic-bezier(0.22, 0.82, 0.24, 1) !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-settled="1"] .dot-music1__compact--layout .dot-music1__iconBg,
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-phase="playing"]:not([data-test3-music-loading="1"]):not([data-test3-music-settling="1"]) .dot-music1__compact--layout .dot-music1__iconBg {
@@ -6702,12 +6876,12 @@ image.png  :root {
     background-position: center center !important;
     filter: none;
     box-shadow: none;
-    left: var(--test3-orb-x, 12px);
+    left: var(--test3-orb-capsule-x, 13px);
     right: auto;
-    top: 13px;
+    top: var(--test3-orb-capsule-y, 18px);
     margin: 0;
-    width: var(--test3-orb-size, 56px);
-    height: var(--test3-orb-size, 56px);
+    width: var(--test3-orb-capsule-size, 46px);
+    height: var(--test3-orb-capsule-size, 46px);
     transform-origin: center center;
     animation:
       test3MusicOrbBodyFill 14s cubic-bezier(0.16, 1, 0.3, 1) forwards,
@@ -6785,87 +6959,172 @@ image.png  :root {
     background: transparent;
     z-index: 3;
   }
+  /* One orb diameter for star + dots: no conic ring / duplicate fill / halo on the disc. */
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .dot-music1__compact--layout .dot-music1__iconBg:has(.dot-icon11--test3-disc) {
+    box-shadow: none !important;
+    overflow: visible;
+  }
+  #canvas[data-test-scope="test3"] #test3-music .dot-music1__compact--layout .dot-music1__iconBg .dot-icon11--test3-disc {
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0;
+    min-height: 0;
+    max-width: 100%;
+    max-height: 100%;
+  }
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-loading="1"]:not([data-test3-music-resolved="1"]) .dot-music1__compact--layout .dot-music1__iconBg:has(.dot-icon11--test3-disc) {
+    animation:
+      test3MusicOrbBodyFill 14s cubic-bezier(0.16, 1, 0.3, 1) forwards,
+      test3MusicOrbMotion 14s cubic-bezier(0.16, 1, 0.3, 1) forwards,
+      test3MusicOrbShrinkTimeline 14s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  }
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .dot-music1__compact--layout .dot-music1__iconBg:has(.dot-icon11--test3-disc)::before,
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .dot-music1__compact--layout .dot-music1__iconBg:has(.dot-icon11--test3-disc)::after {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    animation: none !important;
+    display: none !important;
+    content: none !important;
+  }
   #canvas[data-test-scope="test3"] #test3-music .dot-icon11--test3-disc .dot-icon11__grad,
   #canvas[data-test-scope="test3"] #test3-music .dot-icon11--test3-disc .dot-icon11__layer--from,
   #canvas[data-test-scope="test3"] #test3-music .dot-icon11--test3-disc .dot-icon11__layer--to {
     display: none !important;
     animation: none !important;
   }
+  #canvas[data-test-scope="test3"] #test3-music {
+    --test3-disc-crossfade-ms: 720ms;
+    --test3-disc-crossfade-ease: cubic-bezier(0.22, 0.82, 0.24, 1);
+  }
   #canvas[data-test-scope="test3"] #test3-music .test3-music-disc__layer {
     position: absolute;
     inset: 0;
     display: grid;
     place-items: center;
-    transition: opacity 0.5s cubic-bezier(0.22, 0.82, 0.24, 1), filter 0.5s cubic-bezier(0.22, 0.82, 0.24, 1);
+    transition:
+      opacity var(--test3-disc-crossfade-ms, 720ms) var(--test3-disc-crossfade-ease, cubic-bezier(0.22, 0.82, 0.24, 1)),
+      transform var(--test3-disc-crossfade-ms, 720ms) var(--test3-disc-crossfade-ease, cubic-bezier(0.22, 0.82, 0.24, 1)),
+      filter var(--test3-disc-crossfade-ms, 720ms) var(--test3-disc-crossfade-ease, cubic-bezier(0.22, 0.82, 0.24, 1)),
+      visibility 0s linear var(--test3-disc-crossfade-ms, 720ms);
+    will-change: opacity, transform, filter;
+  }
+  #canvas[data-test-scope="test3"] #test3-music .test3-music-disc__sparkleCanvas,
+  #canvas[data-test-scope="test3"] #test3-music .test3-music-disc__loaderCanvas {
+    transition: opacity var(--test3-disc-crossfade-ms, 720ms) var(--test3-disc-crossfade-ease, cubic-bezier(0.22, 0.82, 0.24, 1));
   }
   #canvas[data-test-scope="test3"] #test3-music .test3-music-disc__layer--star {
     opacity: 1;
+    transform: scale(1);
+    filter: none;
+    visibility: visible;
     z-index: 2;
+    transition:
+      opacity var(--test3-disc-crossfade-ms, 720ms) var(--test3-disc-crossfade-ease, cubic-bezier(0.22, 0.82, 0.24, 1)),
+      transform var(--test3-disc-crossfade-ms, 720ms) var(--test3-disc-crossfade-ease, cubic-bezier(0.22, 0.82, 0.24, 1)),
+      filter var(--test3-disc-crossfade-ms, 720ms) var(--test3-disc-crossfade-ease, cubic-bezier(0.22, 0.82, 0.24, 1)),
+      visibility 0s linear 0s;
+  }
+  #canvas[data-test-scope="test3"] #test3-music .test3-music-disc__sparkleCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    margin: 0;
+    pointer-events: none;
   }
   #canvas[data-test-scope="test3"] #test3-music .test3-music-disc__starSvg {
-    width: min(22px, 40%);
-    height: min(22px, 40%);
-    max-width: 40%;
-    max-height: 40%;
-    animation: test3MusicDiscStarPulse 2.4s ease-in-out infinite;
-  }
-  #canvas[data-test-scope="test3"] #test3-music .test3-music-disc__starSvg path {
-    fill: #ffffff !important;
+    display: none !important;
   }
   #canvas[data-test-scope="test3"] #test3-music .test3-music-disc__layer--dots {
     opacity: 0;
+    transform: scale(1);
+    filter: blur(5px);
     visibility: hidden;
     z-index: 1;
     pointer-events: none;
+    transition:
+      opacity var(--test3-disc-crossfade-ms, 720ms) var(--test3-disc-crossfade-ease, cubic-bezier(0.22, 0.82, 0.24, 1)),
+      transform var(--test3-disc-crossfade-ms, 720ms) var(--test3-disc-crossfade-ease, cubic-bezier(0.22, 0.82, 0.24, 1)),
+      filter var(--test3-disc-crossfade-ms, 720ms) var(--test3-disc-crossfade-ease, cubic-bezier(0.22, 0.82, 0.24, 1)),
+      visibility 0s linear 0s;
   }
-  #canvas[data-test-scope="test3"] #test3-music .test3-music-disc__dotsSvg {
-    width: min(30px, 52%);
-    height: min(30px, 52%);
-    max-width: 52%;
-    max-height: 52%;
-    overflow: visible;
+  #canvas[data-test-scope="test3"] #test3-music .test3-music-disc__loaderCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    margin: 0;
+    pointer-events: none;
   }
-  #canvas[data-test-scope="test3"] #test3-music .test3-music-disc__waveDot {
-    fill: #ffffff !important;
+  #canvas[data-test-scope="test3"] #test3-music .test3-music-disc__dotsSvg,
+  #canvas[data-test-scope="test3"] #test3-music .test3-music-disc__waveDot,
+  #canvas[data-test-scope="test3"] #test3-music .test3-grid-to-ring {
+    display: none !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music:not([data-test3-music-stroke-ready="1"]):not([data-test3-music-capsule-phase="dots"]) .test3-music-disc__layer--dots {
-    opacity: 0 !important;
-    visibility: hidden !important;
-    animation: none !important;
+    opacity: 0;
+    transform: scale(1);
+    filter: blur(5px);
+    visibility: hidden;
+    pointer-events: none;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music:not([data-test3-music-stroke-ready="1"]):not([data-test3-music-capsule-phase="dots"]) .test3-music-disc__layer--star {
-    opacity: 1 !important;
-    visibility: visible !important;
+    opacity: 1;
+    transform: scale(1);
+    filter: none;
+    visibility: visible;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-stroke-ready="1"] .test3-music-disc__layer--star,
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-capsule-phase="dots"] .test3-music-disc__layer--star {
-    opacity: 0 !important;
-    visibility: hidden !important;
-    filter: blur(6px);
+    opacity: 0;
+    transform: scale(1);
+    filter: blur(5px);
+    visibility: hidden;
+    pointer-events: none;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-stroke-ready="1"] .test3-music-disc__layer--dots,
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-capsule-phase="dots"] .test3-music-disc__layer--dots {
-    opacity: 1 !important;
-    visibility: visible !important;
+    opacity: 1;
+    transform: scale(1);
+    filter: none;
+    visibility: visible;
+    pointer-events: none;
   }
-  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-stroke-ready="1"] .test3-music-disc__waveDot,
-  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-capsule-phase="dots"] .test3-music-disc__waveDot {
+  /* Resolved — keep dot loader on compact orb until expand / settle (star does not return). */
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-resolved="1"]:not([data-test3-music-expand-ready="1"]):not([data-test3-music-settling="1"]):not([data-test3-music-stroke-ready="1"]):not([data-test3-music-capsule-phase="dots"]) .test3-music-disc__layer--star {
+    opacity: 0;
+    transform: scale(1);
+    filter: blur(5px);
+    visibility: hidden;
+    pointer-events: none;
+  }
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-resolved="1"]:not([data-test3-music-expand-ready="1"]):not([data-test3-music-settling="1"]):not([data-test3-music-stroke-ready="1"]):not([data-test3-music-capsule-phase="dots"]) .test3-music-disc__layer--dots,
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-resolved="1"]:not([data-test3-music-expand-ready="1"]):not([data-test3-music-settling="1"]) .test3-music-disc__layer--dots {
+    opacity: 1;
+    transform: scale(1);
+    filter: none;
+    visibility: visible;
+    pointer-events: none;
+  }
+  /* Dots phase — hide orb conic stroke; loader is fill dots only (no inner ring). */
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-stroke-ready="1"] .dot-music1__compact--layout .dot-music1__iconBg::before,
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-capsule-phase="dots"] .dot-music1__compact--layout .dot-music1__iconBg::before {
+    opacity: 0 !important;
+    visibility: hidden !important;
     animation: none !important;
-    transform: none !important;
-    opacity: 1 !important;
+  }
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-stroke-ready="1"] .dot-music1__compact--layout .dot-music1__iconBg,
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-capsule-phase="dots"] .dot-music1__compact--layout .dot-music1__iconBg {
+    box-shadow: none !important;
+    animation:
+      test3MusicOrbBodyFill 14s cubic-bezier(0.16, 1, 0.3, 1) forwards,
+      test3MusicOrbMotion 14s cubic-bezier(0.16, 1, 0.3, 1) forwards,
+      test3MusicOrbShrinkTimeline 14s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
   }
   #canvas[data-test-scope="test3"] #test3-music .dot-music1__compact--layout .dot-music1__iconBg .dot-icon11--music-orb {
     z-index: 1;
-  }
-  @keyframes test3MusicDiscStarPulse {
-    0%, 100% {
-      transform: scale(1);
-      opacity: 0.9;
-    }
-    50% {
-      transform: scale(1.08);
-      opacity: 1;
-    }
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .dot-music1__icon .dot-music3__icon .dot-icon11--music-orb {
     grid-area: 1 / 1;
@@ -6911,12 +7170,8 @@ image.png  :root {
      coverage in case the class is ever removed later.
 
      z-index: 4 lifts the cards ABOVE the music card (which is z-index
-     3). The curved-path keyframes (test3WeatherShift / test3StepsShift)
-     route the cards THROUGH the music card's footprint — weather
-     swings right + down, steps down + left — and without the lift
-     they slid BEHIND the opaque orange music card mid-flight,
-     vanishing for ~2 s before re-emerging at their final positions.
-     With z-index 4 they stay visible through the entire arc. */
+     3) while test3WeatherShift / test3StepsShift glide down in sync
+     with the music wrapper height expand (57%→68%). */
   /* Prep drop — capsules move down while music spawns in the same row (music on top). */
   #canvas[data-test-scope="test3"][data-test3-weather-prep="1"] #test3-weather,
   #canvas[data-test-scope="test3"][data-test3-weather-prep="1"] #test3-weather.test3-intro-prefade,
@@ -6942,16 +7197,18 @@ image.png  :root {
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-weather,
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-weather.test3-intro-prefade {
     animation: test3WeatherShift 14s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+    animation-delay: var(--test3-music-spawn-delay-ms, 360ms);
     opacity: 1 !important;
     will-change: transform;
-    z-index: 4;
+    z-index: 5;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-steps,
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-steps.test3-intro-prefade {
     animation: test3StepsShift 14s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+    animation-delay: var(--test3-music-spawn-delay-ms, 360ms);
     opacity: 1 !important;
     will-change: transform;
-    z-index: 4;
+    z-index: 5;
   }
   /* JS-driven layout (.test3-card-flow class added by _layoutTest3Cards)
      takes over after the music shift's curved-path keyframe completes.
@@ -10987,13 +11244,13 @@ image.png  :root {
     letter-spacing: -0.1px;
     border-radius: 83px;
   }
-  /* expand-ready without settled — suppress white-shell chrome flash (settled applies at 68%). */
-  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-expand-ready="1"]:not([data-test3-music-settled="1"]) .dot-music1__icon,
-  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-expand-ready="1"]:not([data-test3-music-settled="1"]) .dot-music1__icon .dot-music3__title,
-  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-expand-ready="1"]:not([data-test3-music-settled="1"]) .dot-music1__icon .dot-music3__bottom,
-  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-expand-ready="1"]:not([data-test3-music-settled="1"]) .dot-music3__compactHeader,
-  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-expand-ready="1"]:not([data-test3-music-settled="1"]) .dot-music3__headerRow,
-  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-expand-ready="1"]:not([data-test3-music-settled="1"]) .dot-music3__transport {
+  /* expand-ready gap only — hide chrome until settling; down reveal runs under [data-test3-music-settling]. */
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-expand-ready="1"]:not([data-test3-music-settled="1"]):not([data-test3-music-settling="1"]) .dot-music1__icon,
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-expand-ready="1"]:not([data-test3-music-settled="1"]):not([data-test3-music-settling="1"]) .dot-music1__icon .dot-music3__title,
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-expand-ready="1"]:not([data-test3-music-settled="1"]):not([data-test3-music-settling="1"]) .dot-music1__icon .dot-music3__bottom,
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-expand-ready="1"]:not([data-test3-music-settled="1"]):not([data-test3-music-settling="1"]) .dot-music3__compactHeader,
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-expand-ready="1"]:not([data-test3-music-settled="1"]):not([data-test3-music-settling="1"]) .dot-music3__headerRow,
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-expand-ready="1"]:not([data-test3-music-settled="1"]):not([data-test3-music-settling="1"]) .dot-music3__transport {
     opacity: 0 !important;
     visibility: hidden !important;
     animation: none !important;
@@ -11172,7 +11429,7 @@ image.png  :root {
   @keyframes test3MusicSettleTextReveal {
     0% {
       opacity: 0;
-      transform: translateY(6px);
+      transform: translateY(4px);
     }
     100% {
       opacity: 1;
@@ -11182,7 +11439,7 @@ image.png  :root {
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-settling="1"] .dot-music1 {
     background-color: #FFFCF4 !important;
     animation: none !important;
-    transition: background-color 720ms cubic-bezier(0.22, 0.82, 0.24, 1) !important;
+    transition: background-color 460ms cubic-bezier(0.22, 0.82, 0.24, 1) !important;
     filter: none !important;
     box-shadow: none !important;
   }
@@ -11209,7 +11466,7 @@ image.png  :root {
     visibility: visible !important;
     pointer-events: none !important;
     z-index: 2 !important;
-    transition: opacity 760ms cubic-bezier(0.22, 0.82, 0.24, 1) !important;
+    transition: opacity 420ms cubic-bezier(0.22, 0.82, 0.24, 1) !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-settling="1"].test3-music-settle-active .dot-music1__compact--layout {
     opacity: 1 !important;
@@ -11232,10 +11489,10 @@ image.png  :root {
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-settling="1"] .dot-music1__compact--layout .dot-music1__iconBg {
     position: absolute !important;
-    left: var(--test3-orb-x, 12px) !important;
-    top: 13px !important;
-    width: 56px !important;
-    height: 56px !important;
+    left: var(--test3-orb-capsule-x, 13px) !important;
+    top: var(--test3-orb-capsule-y, 18px) !important;
+    width: var(--test3-orb-capsule-size, 46px) !important;
+    height: var(--test3-orb-capsule-size, 46px) !important;
     margin: 0 !important;
     transform-origin: center center;
     overflow: visible !important;
@@ -11293,21 +11550,21 @@ image.png  :root {
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-settling="1"].test3-music-settle-active .dot-music3__mediaPill {
     visibility: visible !important;
     opacity: 0;
-    transform: translateY(6px);
-    animation: test3MusicSettleTextReveal var(--test3-music-settle-text-ms, 1000ms) cubic-bezier(0.22, 0.82, 0.24, 1) 0ms forwards !important;
+    transform: translateY(4px);
+    animation: test3MusicSettleTextReveal var(--test3-music-settle-text-ms, 560ms) cubic-bezier(0.22, 0.82, 0.24, 1) 0ms forwards !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-settling="1"].test3-music-settle-active .dot-music3__title {
     visibility: visible !important;
     opacity: 0;
-    transform: translateY(6px);
-    animation: test3MusicSettleTextReveal var(--test3-music-settle-text-ms, 1000ms) cubic-bezier(0.22, 0.82, 0.24, 1) 0ms forwards !important;
+    transform: translateY(4px);
+    animation: test3MusicSettleTextReveal var(--test3-music-settle-text-ms, 560ms) cubic-bezier(0.22, 0.82, 0.24, 1) 40ms forwards !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-settling="1"].test3-music-settle-active .dot-music3__bottom,
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-settling="1"].test3-music-settle-active .dot-music3__transport {
     visibility: visible !important;
     opacity: 0;
-    transform: translateY(6px);
-    animation: test3MusicSettleTextReveal var(--test3-music-settle-text-ms, 1000ms) cubic-bezier(0.22, 0.82, 0.24, 1) 0ms forwards !important;
+    transform: translateY(4px);
+    animation: test3MusicSettleTextReveal var(--test3-music-settle-text-ms, 560ms) cubic-bezier(0.22, 0.82, 0.24, 1) 72ms forwards !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-settling="1"].test3-music-settle-active .dot-music1__icon {
     pointer-events: auto !important;
@@ -13830,7 +14087,7 @@ image.png  :root {
         calc(10px * var(--test3-pill-sx));
     }
   }
-  /* Copy slot widens with shell; text itself stays hidden until ShinyText mounts. */
+  /* Copy slot widens with shell; text itself stays hidden until GradientText mounts. */
   @keyframes test3PillRevealCopy {
     0%, 26% {
       opacity: 0;
@@ -13846,18 +14103,15 @@ image.png  :root {
   @keyframes test3PillTextEmerge {
     0% {
       opacity: 0;
-      filter: blur(5px);
-      transform: translateX(7px);
     }
-    30% {
-      opacity: 0.45;
-      filter: blur(2px);
-      transform: translateX(2px);
+    20% {
+      opacity: 0.28;
+    }
+    55% {
+      opacity: 0.72;
     }
     100% {
       opacity: 1;
-      filter: none;
-      transform: translateX(0);
     }
   }
   @keyframes test3PillRingSpin {
@@ -13877,7 +14131,7 @@ image.png  :root {
   #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"] #test3-steps .dot-steps21--pace-pill .dot-steps21__pillRow {
     position: relative;
     justify-content: flex-start !important;
-    gap: calc(8px * var(--test3-pill-sx) * var(--test3-pill-content)) !important;
+    gap: calc(5px * var(--test3-pill-sx) * var(--test3-pill-content)) !important;
     min-height: calc(43px * var(--test3-pill-sy) * var(--test3-pill-content));
     animation: none !important;
   }
@@ -14003,22 +14257,27 @@ image.png  :root {
     0% {
       opacity: 0;
       color: transparent;
-      background-position: 120% center;
+      background-position: 200% center;
     }
     18% {
-      opacity: 1;
-      color: #3A4729;
+      opacity: 0.22;
     }
-    55% {
-      background-position: -30% center;
+    38% {
+      opacity: 0.55;
+      background-position: 120% center;
+    }
+    62% {
+      opacity: 0.85;
+      background-position: 0% center;
     }
     100% {
       opacity: 1;
       color: #4C5B17;
-      background-position: -120% center;
+      -webkit-text-fill-color: #4C5B17;
+      background-position: 0% center;
     }
   }
-  /* Copy lines — same 27% reveal beat as pillCopy (never opacity:0 until ShinyText). */
+  /* Copy lines — same 27% reveal beat as pillCopy (never opacity:0 until GradientText). */
   #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"]
     #test3-weather .dot-w21--party-pill .dot-w21__compact .dot-w21__pillTitle,
   #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"]
@@ -14033,13 +14292,13 @@ image.png  :root {
     animation: test3PillRevealCopy var(--test3-pill-reveal-ms) cubic-bezier(0.16, 1, 0.3, 1) both;
   }
   #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"]
-    #test3-weather .dot-w21--party-pill .dot-w21__compact .dot-w21__pillTitle:has(.test3-pill-shiny-text--active),
+    #test3-weather .dot-w21--party-pill .dot-w21__compact .dot-w21__pillTitle:has(.test3-pill-gradient-text--active),
   #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"]
-    #test3-weather .dot-w21--party-pill .dot-w21__compact .dot-w21__pillSub:has(.test3-pill-shiny-text--active),
+    #test3-weather .dot-w21--party-pill .dot-w21__compact .dot-w21__pillSub:has(.test3-pill-gradient-text--active),
   #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"]
-    #test3-steps .dot-steps21--pace-pill .dot-steps21__compact .dot-steps21__pillTitle:has(.test3-pill-shiny-text--active),
+    #test3-steps .dot-steps21--pace-pill .dot-steps21__compact .dot-steps21__pillTitle:has(.test3-pill-gradient-text--active),
   #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"]
-    #test3-steps .dot-steps21--pace-pill .dot-steps21__compact .dot-steps21__pillSub:has(.test3-pill-shiny-text--active) {
+    #test3-steps .dot-steps21--pace-pill .dot-steps21__compact .dot-steps21__pillSub:has(.test3-pill-gradient-text--active) {
     color: transparent;
   }
   #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"][data-test3-pills-text-live="1"]
@@ -14051,13 +14310,13 @@ image.png  :root {
   #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"][data-test3-pills-text-live="1"]
     #test3-steps .dot-steps21--pace-pill .dot-steps21__compact .dot-steps21__pillSub,
   #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"]
-    #test3-weather .dot-w21--party-pill .dot-w21__compact .dot-w21__pillTitle:has(.test3-pill-shiny-text),
+    #test3-weather .dot-w21--party-pill .dot-w21__compact .dot-w21__pillTitle:has(.test3-pill-gradient-text),
   #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"]
-    #test3-weather .dot-w21--party-pill .dot-w21__compact .dot-w21__pillSub:has(.test3-pill-shiny-text),
+    #test3-weather .dot-w21--party-pill .dot-w21__compact .dot-w21__pillSub:has(.test3-pill-gradient-text),
   #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"]
-    #test3-steps .dot-steps21--pace-pill .dot-steps21__compact .dot-steps21__pillTitle:has(.test3-pill-shiny-text),
+    #test3-steps .dot-steps21--pace-pill .dot-steps21__compact .dot-steps21__pillTitle:has(.test3-pill-gradient-text),
   #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"]
-    #test3-steps .dot-steps21--pace-pill .dot-steps21__compact .dot-steps21__pillSub:has(.test3-pill-shiny-text),
+    #test3-steps .dot-steps21--pace-pill .dot-steps21__compact .dot-steps21__pillSub:has(.test3-pill-gradient-text),
   #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"]
     #test3-weather .dot-w21--party-pill .dot-w21__compact [data-test3-shiny-ready="1"],
   #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"]
@@ -14067,36 +14326,36 @@ image.png  :root {
   }
   /* Fallback if React mount fails — plain ink + optional CSS shine. */
   #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"]
-    #test3-weather .dot-w21--party-pill .dot-w21__compact .dot-w21__pillTitle:not(:has(.test3-pill-shiny-text)),
+    #test3-weather .dot-w21--party-pill .dot-w21__compact .dot-w21__pillTitle:not(:has(.test3-pill-gradient-text)),
   #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"]
-    #test3-weather .dot-w21--party-pill .dot-w21__compact .dot-w21__pillSub:not(:has(.test3-pill-shiny-text)),
+    #test3-weather .dot-w21--party-pill .dot-w21__compact .dot-w21__pillSub:not(:has(.test3-pill-gradient-text)),
   #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"]
-    #test3-steps .dot-steps21--pace-pill .dot-steps21__compact .dot-steps21__pillTitle:not(:has(.test3-pill-shiny-text)),
+    #test3-steps .dot-steps21--pace-pill .dot-steps21__compact .dot-steps21__pillTitle:not(:has(.test3-pill-gradient-text)),
   #canvas[data-test-scope="test3"][data-test3-pills-reveal="1"]
-    #test3-steps .dot-steps21--pace-pill .dot-steps21__compact .dot-steps21__pillSub:not(:has(.test3-pill-shiny-text)) {
+    #test3-steps .dot-steps21--pace-pill .dot-steps21__compact .dot-steps21__pillSub:not(:has(.test3-pill-gradient-text)) {
     opacity: 1 !important;
     visibility: visible !important;
     animation: test3PillRevealCopy var(--test3-pill-reveal-ms) cubic-bezier(0.16, 1, 0.3, 1) both;
     background-image: linear-gradient(
-      100deg,
-      #3A4729 0%,
-      #3A4729 36%,
-      #E8FFD8 46%,
-      #FFFFFF 50%,
-      #E8FFD8 54%,
-      #3A4729 64%,
-      #3A4729 100%
+      to right,
+      #3A4729,
+      #5C6F38,
+      #8FA86A,
+      #C5D4A0,
+      #6E8A48,
+      #4C5B17,
+      #3A4729
     );
-    background-size: 280% auto;
+    background-size: 300% 100%;
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
     animation:
       test3PillRevealCopy var(--test3-pill-reveal-ms) cubic-bezier(0.16, 1, 0.3, 1) both,
-      test3PillPlainTextFallback 2.2s cubic-bezier(0.22, 0.82, 0.24, 1) var(--test3-pill-text-start-ms, 1500ms) both;
+      test3PillPlainTextFallback 4.2s cubic-bezier(0.22, 0.82, 0.24, 1) var(--test3-pill-text-start-ms, 1500ms) both;
   }
-  #canvas[data-test-scope="test3"] .test3-pill-shiny-text {
+  #canvas[data-test-scope="test3"] .test3-pill-gradient-text {
     display: inline-block;
     font: inherit;
     font-size: inherit;
@@ -14108,22 +14367,28 @@ image.png  :root {
     -webkit-font-smoothing: antialiased;
     background-repeat: no-repeat;
   }
-  #canvas[data-test-scope="test3"] .test3-pill-shiny-text--active {
+  #canvas[data-test-scope="test3"] .test3-pill-gradient-text--active .text-content {
     -webkit-text-fill-color: transparent;
     background-clip: text;
     -webkit-background-clip: text;
-    filter:
-      drop-shadow(0 0 6px rgba(255, 255, 255, 0.85))
-      drop-shadow(0 0 12px rgba(255, 248, 220, 0.65))
-      drop-shadow(0 0 20px rgba(255, 235, 180, 0.4));
-    text-shadow:
-      0 0 12px rgba(255, 255, 255, 0.55),
-      0 0 18px rgba(255, 248, 220, 0.35);
   }
-  #canvas[data-test-scope="test3"] .test3-pill-shiny-text--emerge {
-    animation: test3PillTextEmerge var(--test3-pill-text-emerge-ms, 420ms) cubic-bezier(0.22, 0.82, 0.24, 1) both;
+  #canvas[data-test-scope="test3"] .test3-pill-gradient-text--active,
+  #canvas[data-test-scope="test3"] .test3-pill-gradient-text--emerge {
+    opacity: 0;
+    animation: test3PillTextEmerge var(--test3-pill-shine-ms, 1500ms) cubic-bezier(0.22, 0.82, 0.24, 1) both;
   }
-  #canvas[data-test-scope="test3"] .test3-pill-shiny-text--settled {
+  #canvas[data-test-scope="test3"][data-test3-pills-text-live="1"]
+    #test3-weather .dot-w21--party-pill .dot-w21__compact .dot-w21__pillTitle:has(.test3-pill-gradient-text--active),
+  #canvas[data-test-scope="test3"][data-test3-pills-text-live="1"]
+    #test3-weather .dot-w21--party-pill .dot-w21__compact .dot-w21__pillSub:has(.test3-pill-gradient-text--active),
+  #canvas[data-test-scope="test3"][data-test3-pills-text-live="1"]
+    #test3-steps .dot-steps21--pace-pill .dot-steps21__compact .dot-steps21__pillTitle:has(.test3-pill-gradient-text--active),
+  #canvas[data-test-scope="test3"][data-test3-pills-text-live="1"]
+    #test3-steps .dot-steps21--pace-pill .dot-steps21__compact .dot-steps21__pillSub:has(.test3-pill-gradient-text--active) {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  #canvas[data-test-scope="test3"] .test3-pill-gradient-text--settled {
     color: var(--test3-pill-text-settled, #4C5B17) !important;
     -webkit-text-fill-color: var(--test3-pill-text-settled, #4C5B17) !important;
     background-image: none !important;
@@ -14218,11 +14483,11 @@ image.png  :root {
     min-width: 0;
   }
   #canvas[data-test-scope="test3"] #test3-weather .dot-w21__pillRow {
-    gap: calc(8px * var(--test3-pill-sx) * var(--test3-pill-content));
+    gap: calc(5px * var(--test3-pill-sx) * var(--test3-pill-content));
     justify-content: flex-start;
   }
   #canvas[data-test-scope="test3"] #test3-steps .dot-steps21__pillRow {
-    gap: calc(8px * var(--test3-pill-sx) * var(--test3-pill-content));
+    gap: calc(5px * var(--test3-pill-sx) * var(--test3-pill-content));
     justify-content: flex-start;
   }
   #canvas[data-test-scope="test3"] #test3-weather .dot-w21__pillCopy,
@@ -16581,6 +16846,11 @@ image.png  :root {
   /* Persona 2 Lock Screen Stagger */
   #canvas[data-scenario="lockscreen-persona2"] .canvas-item {
     opacity: 0;
+    animation: scenarioEntrySlideDown 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  /* test2: lock chrome stays visible (image2) even if entry animation is reduced/skipped */
+  #canvas[data-test-scope="test2"][data-scenario="lockscreen-persona2"] > .canvas-item {
+    opacity: 1;
     animation: scenarioEntrySlideDown 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
   #canvas[data-scenario="lockscreen-persona2"] [data-role="status-bar"] { animation-delay: 0s; }

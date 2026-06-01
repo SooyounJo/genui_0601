@@ -1,11 +1,12 @@
 import { createRoot } from 'react-dom/client';
 import { createElement, useEffect } from 'react';
-import ShinyText from './ShinyText';
+import GradientText from './GradientText';
 
 var SETTLED_COLOR = '#4C5B17';
 var INK_DARK = '#3A4729';
-var SHINE_PEAK = '#FFFFFF';
-var SHINE_MID = '#E8FFD8';
+
+var PILL_GRADIENT_TITLE = ['#3A4729', '#5C6F38', '#8FA86A', '#C5D4A0', '#6E8A48', '#4C5B17'];
+var PILL_GRADIENT_SUB = ['#3A4729', '#5C6F38', '#94A86A', '#C8D8A8', '#7A9448', '#4C5B17'];
 
 var PILL_TEXT_SELECTORS = [
   '#test3-weather .dot-w21--party-pill .dot-w21__compact .dot-w21__pillTitle',
@@ -26,12 +27,11 @@ function getPillTiming() {
   return {
     textStart: 1500,
     emerge: 420,
-    shinePassMs: 680,
-    shineTitlePasses: 2,
-    shineSubPasses: 2,
-    shinyActive: 1780,
-    settle: 480,
-    blackHold: 2000,
+    gradientSpeed: 2.0,
+    gradientTitleCycles: 1,
+    gradientSubCycles: 1,
+    shinePassMs: 1500,
+    blackAt: 3720,
     dropAt: 3920,
   };
 }
@@ -84,31 +84,31 @@ function stashPlainText() {
   });
 }
 
-function PillShinyLine(props) {
+function PillGradientLine(props) {
   var settled = props.settled;
   var isTitle = props.isTitle;
   var emerging = props.emerging;
-  var baseColor = settled ? SETTLED_COLOR : INK_DARK;
-  return createElement(ShinyText, {
-    text: props.text,
+  var colors = isTitle ? PILL_GRADIENT_TITLE : PILL_GRADIENT_SUB;
+  var solidColor = settled ? SETTLED_COLOR : INK_DARK;
+
+  return createElement(GradientText, {
+    colors: colors,
+    animationSpeed: props.gradientSpeed,
+    showBorder: false,
+    direction: 'horizontal',
+    reverse: true,
+    yoyo: true,
+    inline: true,
+    settled: settled,
+    solidColor: solidColor,
+    cycleLimit: settled ? 0 : (isTitle ? props.titleCycles : props.subCycles),
+    onCyclesComplete: settled ? null : props.onCyclesComplete,
     className:
-      'test3-pill-shiny-text' +
-      (isTitle ? ' test3-pill-shiny-text--title' : ' test3-pill-shiny-text--sub') +
-      (emerging ? ' test3-pill-shiny-text--emerge' : '') +
-      (settled ? ' test3-pill-shiny-text--settled' : ' test3-pill-shiny-text--active'),
-    color: baseColor,
-    shineColor: settled ? SETTLED_COLOR : SHINE_MID,
-    shinePeakColor: settled ? SETTLED_COLOR : SHINE_PEAK,
-    speed: props.shinePassMs / 1000,
-    delay: 0,
-    spread: isTitle ? 100 : 104,
-    shineBandStart: isTitle ? 40 : 42,
-    shineBandEnd: isTitle ? 60 : 62,
-    backgroundSize: isTitle ? '400% auto' : '360% auto',
-    direction: 'left',
-    disabled: settled,
-    passLimit: settled ? 0 : (isTitle ? props.titlePasses : props.subPasses),
-    onPassesComplete: settled ? null : props.onPassesComplete,
+      'test3-pill-gradient-text' +
+      (isTitle ? ' test3-pill-gradient-text--title' : ' test3-pill-gradient-text--sub') +
+      (emerging ? ' test3-pill-gradient-text--emerge' : '') +
+      (settled ? ' test3-pill-gradient-text--settled' : ' test3-pill-gradient-text--active'),
+    children: props.text,
   });
 }
 
@@ -131,15 +131,15 @@ function mountLine(el, text, timing, opts) {
     el.classList.contains('dot-steps21__pillTitle');
 
   function render(next) {
-    root.render(createElement(PillShinyLine, {
+    root.render(createElement(PillGradientLine, {
       text: text,
       settled: next.settled,
       emerging: next.emerging,
       isTitle: isTitle,
-      shinePassMs: timing.shinePassMs,
-      titlePasses: timing.shineTitlePasses,
-      subPasses: timing.shineSubPasses,
-      onPassesComplete: next.onPassesComplete,
+      gradientSpeed: timing.gradientSpeed,
+      titleCycles: timing.gradientTitleCycles,
+      subCycles: timing.gradientSubCycles,
+      onCyclesComplete: next.onPassesComplete,
     }));
     if (next.settled) {
       el.setAttribute('data-test3-shiny-ready', '1');
@@ -183,10 +183,10 @@ function unmountAll() {
 function ensurePlainTextVisible(canvas) {
   PILL_TEXT_SELECTORS.forEach(function (sel) {
     document.querySelectorAll(sel).forEach(function (el) {
-      if (el.querySelector('.test3-pill-shiny-text--settled')) return;
+      if (el.querySelector('.test3-pill-gradient-text--settled')) return;
       var text = readLineText(el);
       if (!text) return;
-      if (!el.querySelector('.test3-pill-shiny-text')) {
+      if (!el.querySelector('.test3-pill-gradient-text')) {
         el.textContent = text;
         el.style.color = SETTLED_COLOR;
         el.style.webkitTextFillColor = SETTLED_COLOR;
@@ -216,7 +216,7 @@ export function armTest3PillShinyText(canvas) {
     if (canvas.getAttribute('data-test3-pills-revealed') === '1') return;
     if (!needsShinyMount()) return;
     ensurePlainTextVisible(canvas);
-  }, timing.dropAt || timing.textStart + timing.emerge + timing.shinePassMs * timing.shineTitlePasses + 400);
+  }, timing.dropAt || timing.textStart + timing.emerge + 800);
   mountTimerIds.push(safetyId);
 
   PILL_TEXT_SELECTORS.forEach(function (sel) {
@@ -224,7 +224,6 @@ export function armTest3PillShinyText(canvas) {
       var isSub = el.classList.contains('dot-w21__pillSub') ||
         el.classList.contains('dot-steps21__pillSub');
       var startMs = timing.textStart + (isSub ? SUB_EXTRA_MS : 0);
-      var passCount = isSub ? timing.shineSubPasses : timing.shineTitlePasses;
       var text = readLineText(el);
       if (!text) return;
 
@@ -260,7 +259,11 @@ export function armTest3PillShinyText(canvas) {
         if (el.__test3ShinyRender) {
           el.__test3ShinyRender({ settled: false, emerging: false, onPassesComplete: settleLine });
         }
-      }, startMs + timing.emerge);
+      }, startMs + Math.max(timing.emerge || 420, timing.shinePassMs || 1500));
+
+      if (typeof timing.blackAt === 'number') {
+        scheduleFromRevealStart(settleLine, timing.blackAt + (isSub ? SUB_EXTRA_MS : 0));
+      }
     });
   });
 }

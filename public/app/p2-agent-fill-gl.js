@@ -459,11 +459,17 @@
     if (!fill) return [0.92, 0.10];
     var isInput = this.fillEl && this.fillEl.closest('.p2-agent-input');
     var star = document.getElementById('p2-star');
-    if (!star) return isInput ? [0.96, 0.50] : [0.92, 0.10];
+    if (!star) return isInput ? [0.06, 0.50] : [0.92, 0.10];
     var btn = star.getBoundingClientRect();
     var btnX = (btn.left + btn.width * 0.5 - fill.left) / fill.width;
     var btnY = 1 - (btn.top + btn.height * 0.5 - fill.top) / fill.height;
     if (isInput) {
+      if (isTest2Scope()) {
+        return [
+          clamp(btnX * 0.35 + 0.06 * 0.65, 0.02, 0.22),
+          clamp(btnY * 0.22 + 0.5 * 0.78, 0.38, 0.62)
+        ];
+      }
       return [
         clamp(btnX * 0.52 + 0.98 * 0.48, 0.88, 1.06),
         clamp(btnY * 0.62 + 0.5 * 0.38, 0.40, 0.60)

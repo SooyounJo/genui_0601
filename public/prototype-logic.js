@@ -415,14 +415,27 @@
       return Math.min(Math.max(sz.h, P2_AREA_DEFAULT_H), P2_AREA_MAX_H);
     }
 
+    function test2P2AreaDefaultH() {
+      return (window.__mlpTestConfig && window.__mlpTestConfig.id === 'test2') ? 148 : P2_AREA_DEFAULT_H;
+    }
+
     function setP2AreaHeight(h) {
       var area = document.getElementById('p2-area');
       if (!area) return;
-      area.style.height = Math.round(h) + 'px';
+      var isTest2 = window.__mlpTestConfig && window.__mlpTestConfig.id === 'test2';
+      var nextH = Math.round(h);
+      if (isTest2 && !area.classList.contains('p2-contact-layout-active')) {
+        nextH = Math.max(148, nextH);
+      }
+      area.style.height = nextH + 'px';
+      if (isTest2) {
+        area.style.minHeight = nextH + 'px';
+        area.style.setProperty('--p2-shell-h', nextH + 'px');
+      }
     }
 
     function resetP2AreaHeight() {
-      setP2AreaHeight(P2_AREA_DEFAULT_H);
+      setP2AreaHeight(test2P2AreaDefaultH());
     }
 
     function clearP2DefaultRevealState() {
@@ -586,7 +599,7 @@
 
       slot.style.setProperty('--p2-reveal-h', Math.round(contentH) + 'px');
       if (result) result.style.setProperty('--p2-reveal-h', Math.round(contentH) + 'px');
-      setP2AreaHeight(P2_AREA_DEFAULT_H);
+      setP2AreaHeight(test2P2AreaDefaultH());
 
       slot.classList.remove('p2-reveal-swap', 'p2-reveal-visible', 'p2-seq-color', 'p2-seq-color-active', 'p2-seq-title', 'p2-seq-done');
       slot.classList.add('p2-reveal-waiting');

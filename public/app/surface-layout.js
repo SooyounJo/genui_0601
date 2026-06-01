@@ -27,8 +27,8 @@ var TEST3_GOAL_H = 245;
 /* Slightly shorter than goal card; Figma 5247:16990 base, tuned −10px */
 var TEST3_MUSIC_EXPAND_H = 218;
 var TEST3_MUSIC_LYRICS_H = TEST3_MUSIC_EXPAND_H + 112;
-/* Vertical gap between stacked home cards (goal↔music, music↔pills) — keep uniform */
-var TEST3_CARD_GAP_V = 6;
+/* Uniform vertical gap: goal↔music, music↔weather/steps, compact pill stack */
+var TEST3_CARD_GAP_V = 12;
 var TEST3_CARD_GAP_H = 5;
 var TEST3_HALF_COL_W = (340 - TEST3_CARD_GAP_H) / 2;
 var TEST3_HALF_COL_X = 24 + TEST3_HALF_COL_W + TEST3_CARD_GAP_H;
@@ -121,18 +121,428 @@ function renderTest2OrangeOrbHtml(sparkleSrc) {
   '</div>';
 }
 
-var TEST3_MUSIC_DISC_DOTS_SVG_HTML = TEST2_ORB_DOTS_SVG_HTML
-  .replace(/dot-icon11__dotsSvg/g, 'test3-music-disc__dotsSvg')
-  .replace(/dot-icon11__waveDot/g, 'test3-music-disc__waveDot');
+/** test3 disc loader — p2 breathing-chord style (sparse dots, vertical bounce; image-1 reference). */
+var TEST3_DISC_LOADER_PX = 112;
+var TEST3_DISC_LOADER_N = 5;
+var TEST3_DISC_LOADER_TEMPO = 2.1;
+var TEST3_DISC_LOADER_BLEND = 0.38;
+var TEST3_DISC_LOADER_TRAIL_LEN = 10;
+var TEST3_DISC_LOADER_VOICES = [
+  { noiseSeed: 12.4, alpha: 0.68 },
+  { noiseSeed: 48.9, alpha: 0.82 },
+  { noiseSeed: 91.2, alpha: 0.96 },
+  { noiseSeed: 133.7, alpha: 0.78 },
+  { noiseSeed: 176.1, alpha: 0.72 },
+];
+var TEST3_DISC_CROSSFADE_MS = 720;
+var TEST3_DISC_CROSSFADE_OVERLAP_MS = 220;
+var TEST3_DISC_CROSSFADE_EASE = 'cubic-bezier(0.22, 0.82, 0.24, 1)';
 
-/** test3 capsule left disc — Galaxy star first, dot grid only after generation fill. */
+function renderTest3MusicDiscLoaderHtml() {
+  return '<canvas class="test3-music-disc__loaderCanvas" width="' + TEST3_DISC_LOADER_PX +
+    '" height="' + TEST3_DISC_LOADER_PX + '" aria-hidden="true"></canvas>';
+}
+
+function _test3DiscLoaderLerp(a, b, t) {
+  return a + (b - a) * t;
+}
+function _test3DiscLoaderEase(x) {
+  return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+}
+function _test3DiscLoaderHash(n) {
+  var s = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+  return s - Math.floor(s);
+}
+function _test3DiscLoaderNoise(x) {
+  var i = Math.floor(x);
+  var f = x - i;
+  var u = f * f * (3 - 2 * f);
+  return _test3DiscLoaderLerp(_test3DiscLoaderHash(i), _test3DiscLoaderHash(i + 1), u);
+}
+function _test3DiscLoaderFreshTrails() {
+  var trails = [];
+  var i;
+  for (i = 0; i < TEST3_DISC_LOADER_N; i++) trails.push([]);
+  return trails;
+}
+function _test3DiscLoaderDrawFrame(canvas, st, dt) {
+  var ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  var px = canvas.width || TEST3_DISC_LOADER_PX;
+  var cx = px / 2;
+  var cy = px / 2;
+  var pad = 10;
+  var inner = px - pad * 2;
+  var spreadT = 0.92;
+  var baseDiameter = inner * 0.14;
+  var baseR = baseDiameter / 2;
+  var minGap = baseDiameter * 1.42;
+  var spread = Math.max(0, inner - baseDiameter);
+  var spacing = TEST3_DISC_LOADER_N > 1 ? Math.max(minGap, spread / (TEST3_DISC_LOADER_N - 1) * 1.08) : 0;
+  var totalW = spacing * (TEST3_DISC_LOADER_N - 1);
+  var startX = cx - totalW / 2;
+  var maxAmp = Math.max(0, inner / 2 - baseR - 2);
+  var ampPx = maxAmp * 0.92;
+  var t = st.time;
+  var phaseStep = (Math.PI * 2) / TEST3_DISC_LOADER_N;
+  var phaseStep2 = phaseStep * 0.45;
+  var positions = [];
+  var i;
+  var v;
+  var targetX;
+  var x;
+  var off;
+  var off2;
+  var sinY;
+  var noiseY;
+  var yMix;
+  var y;
+  var swell;
+  var dotR;
+
+  st.time += dt * TEST3_DISC_LOADER_TEMPO;
+  ctx.clearRect(0, 0, px, px);
+
+  for (i = 0; i < TEST3_DISC_LOADER_N; i++) {
+    v = TEST3_DISC_LOADER_VOICES[i];
+    targetX = startX + i * spacing;
+    x = _test3DiscLoaderLerp(cx, targetX, spreadT);
+    off = i * phaseStep;
+    off2 = i * phaseStep2;
+    sinY = Math.sin(t * 1.6 - off) * 0.65 + Math.sin(t * 0.7 - off2) * 0.45;
+    noiseY =
+      (_test3DiscLoaderNoise(v.noiseSeed + t * 0.9 - i * 0.55) - 0.5) * 2 * 0.65 +
+      (_test3DiscLoaderNoise(v.noiseSeed + 50 + t * 0.45 - i * 0.3) - 0.5) * 2 * 0.45;
+    yMix = _test3DiscLoaderLerp(sinY, noiseY, TEST3_DISC_LOADER_BLEND);
+    y = cy + ampPx * yMix;
+    swell = 0.84 + 0.12 * (0.5 + 0.5 * Math.sin(t * 1.3 - i * phaseStep * 0.85));
+    dotR = baseR * swell;
+    positions.push({
+      x: x,
+      y: y,
+      r: dotR,
+      alpha: v.alpha != null ? v.alpha : 0.88,
+    });
+  }
+
+  for (i = 0; i < TEST3_DISC_LOADER_N; i++) {
+    st.trails[i].push({ x: positions[i].x, y: positions[i].y, r: positions[i].r });
+    if (st.trails[i].length > TEST3_DISC_LOADER_TRAIL_LEN) st.trails[i].shift();
+  }
+
+  for (i = 0; i < TEST3_DISC_LOADER_N; i++) {
+    var pulse = 0.94 + 0.06 * Math.sin(t * 1.5 - i * phaseStep * 0.7);
+    var a = Math.min(1, Math.max(0.52, positions[i].alpha * pulse));
+    ctx.fillStyle = 'rgba(255, 255, 255, ' + a.toFixed(3) + ')';
+    ctx.beginPath();
+    ctx.arc(positions[i].x, positions[i].y, positions[i].r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+function _test3DiscLoaderStopCanvas(canvas) {
+  if (!canvas || !canvas.__test3DiscLoader) return;
+  if (canvas.__test3DiscLoader.rafId) {
+    cancelAnimationFrame(canvas.__test3DiscLoader.rafId);
+  }
+  delete canvas.__test3DiscLoader;
+}
+function _stopTest3MusicDiscLoader(music) {
+  var canvases;
+  var i;
+  if (music) {
+    canvases = music.querySelectorAll('.test3-music-disc__loaderCanvas');
+    for (i = 0; i < canvases.length; i++) _test3DiscLoaderStopCanvas(canvases[i]);
+    return;
+  }
+  canvases = document.querySelectorAll('#test3-music .test3-music-disc__loaderCanvas');
+  for (i = 0; i < canvases.length; i++) _test3DiscLoaderStopCanvas(canvases[i]);
+}
+function _test3DiscLoaderTick(canvas) {
+  var st = canvas.__test3DiscLoader;
+  if (!st || !canvas.isConnected) {
+    _test3DiscLoaderStopCanvas(canvas);
+    return;
+  }
+  var now = performance.now();
+  var dt = st.lastTs ? (now - st.lastTs) / 1000 : 0;
+  st.lastTs = now;
+  _test3DiscLoaderDrawFrame(canvas, st, dt);
+  st.rafId = requestAnimationFrame(function () {
+    _test3DiscLoaderTick(canvas);
+  });
+}
+function _startTest3MusicDiscLoaderCanvas(canvas) {
+  if (!canvas) return;
+  _test3DiscLoaderStopCanvas(canvas);
+  canvas.__test3DiscLoader = {
+    time: 0,
+    lastTs: 0,
+    trails: _test3DiscLoaderFreshTrails(),
+    rafId: 0,
+  };
+  _test3DiscLoaderTick(canvas);
+}
+function _startTest3MusicDiscLoader(music) {
+  music = music || document.querySelector('#test3-music');
+  if (!music) return;
+  var canvases = music.querySelectorAll('.test3-music-disc__loaderCanvas');
+  var i;
+  for (i = 0; i < canvases.length; i++) _startTest3MusicDiscLoaderCanvas(canvases[i]);
+}
+function _syncTest3MusicDiscLoaderAfterRender() {
+  var music = document.querySelector('#test3-music');
+  if (!music) return;
+  if (
+    music.getAttribute('data-test3-music-capsule-phase') === 'dots' ||
+    music.getAttribute('data-test3-music-stroke-ready') === '1'
+  ) {
+    _startTest3MusicDiscLoader(music);
+  }
+}
+
+/** GenSketches 13-ai-sparkle — Galaxy AI 4-star morph (test3 disc star phase). */
+var TEST3_DISC_SPARKLE_PX = 112;
+var TEST3_SPARKLE_POS_SCALE = 0.32;
+var TEST3_SPARKLE_BL_HOME = { x: -5, y: 5 };
+var TEST3_SPARKLE_TR_HOME = { x: 65, y: -55 };
+var TEST3_SPARKLE_TL_HOME = { x: -55, y: -45 };
+var TEST3_SPARKLE_BR_HOME = { x: 60, y: 40 };
+var TEST3_SPARKLE_SIZE_BL = 75;
+var TEST3_SPARKLE_SIZE_TR = 32;
+var TEST3_SPARKLE_SIZE_TL = 18;
+var TEST3_SPARKLE_SIZE_BR = 22;
+
+function renderTest3MusicDiscSparkleHtml() {
+  return '<canvas class="test3-music-disc__sparkleCanvas" width="' + TEST3_DISC_SPARKLE_PX +
+    '" height="' + TEST3_DISC_SPARKLE_PX + '" aria-hidden="true"></canvas>';
+}
+
+function _test3SparkleScalePos(v) {
+  return { x: v.x * TEST3_SPARKLE_POS_SCALE, y: v.y * TEST3_SPARKLE_POS_SCALE };
+}
+function _test3SparkleDrawDenseMorph(ctx, size, morph) {
+  var s = size * TEST3_SPARKLE_POS_SCALE;
+  var steps = 20;
+  var q;
+  var i;
+  var t;
+  var starX;
+  var starY;
+  var angle;
+  var circX;
+  var circY;
+  var x;
+  var y;
+  ctx.beginPath();
+  for (q = 0; q < 4; q++) {
+    for (i = 0; i <= steps; i++) {
+      t = i / steps;
+      if (q === 0) {
+        starX = s * (t * t);
+        starY = -s * ((1 - t) * (1 - t));
+        angle = t * Math.PI / 2;
+        circX = s * Math.sin(angle);
+        circY = -s * Math.cos(angle);
+      } else if (q === 1) {
+        starX = s * ((1 - t) * (1 - t));
+        starY = s * (t * t);
+        angle = Math.PI / 2 + t * Math.PI / 2;
+        circX = s * Math.sin(angle);
+        circY = -s * Math.cos(angle);
+      } else if (q === 2) {
+        starX = -s * (t * t);
+        starY = s * ((1 - t) * (1 - t));
+        angle = Math.PI + t * Math.PI / 2;
+        circX = s * Math.sin(angle);
+        circY = -s * Math.cos(angle);
+      } else {
+        starX = -s * ((1 - t) * (1 - t));
+        starY = -s * (t * t);
+        angle = Math.PI * 1.5 + t * Math.PI / 2;
+        circX = s * Math.sin(angle);
+        circY = -s * Math.cos(angle);
+      }
+      x = _test3DiscLoaderLerp(starX, circX, morph);
+      y = _test3DiscLoaderLerp(starY, circY, morph);
+      if (q === 0 && i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+function _test3SparkleDrawAt(ctx, pos, size, morph, scale, alpha) {
+  ctx.save();
+  ctx.translate(pos.x, pos.y);
+  ctx.scale(scale, scale);
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = '#ffffff';
+  _test3SparkleDrawDenseMorph(ctx, size, morph);
+  ctx.restore();
+}
+function _test3SparkleDrawFrame(canvas, st, dt) {
+  var ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  var px = canvas.width || TEST3_DISC_SPARKLE_PX;
+  var cx = px / 2;
+  var cy = px / 2;
+  var t = st.time;
+  var rot = Math.sin(t * 0.5) * (1.5 * Math.PI / 180);
+  var morph = 0.2 + Math.sin(t * 1.15) * 0.1;
+  var bl = _test3SparkleScalePos(TEST3_SPARKLE_BL_HOME);
+  var tr = _test3SparkleScalePos(TEST3_SPARKLE_TR_HOME);
+  var tl = _test3SparkleScalePos(TEST3_SPARKLE_TL_HOME);
+  var br = _test3SparkleScalePos(TEST3_SPARKLE_BR_HOME);
+  var pulseBig = 1 + Math.sin(t * 4) * 0.12;
+  var pulseTR = 1 + Math.sin(t * 5 + 2.35) * 0.15;
+  var pulseTL = 1 + Math.sin(t * 4.5 + 0.78) * 0.14;
+  var pulseBR = 1 + Math.sin(t * 3.5 + 1.57) * 0.14;
+
+  st.time += dt;
+  ctx.clearRect(0, 0, px, px);
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(rot);
+  _test3SparkleDrawAt(ctx, tl, TEST3_SPARKLE_SIZE_TL, morph, pulseTL, 0.88);
+  _test3SparkleDrawAt(ctx, br, TEST3_SPARKLE_SIZE_BR, morph, pulseBR, 0.92);
+  _test3SparkleDrawAt(ctx, tr, TEST3_SPARKLE_SIZE_TR, morph, pulseTR, 0.96);
+  _test3SparkleDrawAt(ctx, bl, TEST3_SPARKLE_SIZE_BL, morph, pulseBig, 1);
+  ctx.restore();
+}
+function _test3SparkleStopCanvas(canvas) {
+  if (!canvas || !canvas.__test3DiscSparkle) return;
+  if (canvas.__test3DiscSparkle.rafId) {
+    cancelAnimationFrame(canvas.__test3DiscSparkle.rafId);
+  }
+  delete canvas.__test3DiscSparkle;
+}
+function _stopTest3MusicDiscSparkle(music) {
+  var canvases;
+  var i;
+  if (music) {
+    canvases = music.querySelectorAll('.test3-music-disc__sparkleCanvas');
+    for (i = 0; i < canvases.length; i++) _test3SparkleStopCanvas(canvases[i]);
+    return;
+  }
+  canvases = document.querySelectorAll('#test3-music .test3-music-disc__sparkleCanvas');
+  for (i = 0; i < canvases.length; i++) _test3SparkleStopCanvas(canvases[i]);
+}
+function _test3SparkleTick(canvas) {
+  var st = canvas.__test3DiscSparkle;
+  if (!st || !canvas.isConnected) {
+    _test3SparkleStopCanvas(canvas);
+    return;
+  }
+  var now = performance.now();
+  var dt = st.lastTs ? (now - st.lastTs) / 1000 : 0;
+  st.lastTs = now;
+  _test3SparkleDrawFrame(canvas, st, dt);
+  st.rafId = requestAnimationFrame(function () {
+    _test3SparkleTick(canvas);
+  });
+}
+function _startTest3MusicDiscSparkleCanvas(canvas) {
+  if (!canvas) return;
+  _test3SparkleStopCanvas(canvas);
+  canvas.__test3DiscSparkle = { time: 0, lastTs: 0, rafId: 0 };
+  _test3SparkleTick(canvas);
+}
+function _startTest3MusicDiscSparkle(music) {
+  music = music || document.querySelector('#test3-music');
+  if (!music) return;
+  var canvases = music.querySelectorAll('.test3-music-disc__sparkleCanvas');
+  var i;
+  for (i = 0; i < canvases.length; i++) _startTest3MusicDiscSparkleCanvas(canvases[i]);
+}
+function _isTest3MusicDiscDotsPhase(music) {
+  if (!music) return false;
+  return (
+    music.getAttribute('data-test3-music-capsule-phase') === 'dots' ||
+    music.getAttribute('data-test3-music-stroke-ready') === '1'
+  );
+}
+function _applyTest3MusicDiscPhase(music, phase, opts) {
+  music = music || document.querySelector('#test3-music');
+  if (!music) return;
+  opts = opts || {};
+  var toDots = phase === 'dots';
+  var crossfadeMs = opts.crossfadeMs != null ? opts.crossfadeMs : TEST3_DISC_CROSSFADE_MS;
+  var overlapMs = opts.overlapMs != null ? opts.overlapMs : TEST3_DISC_CROSSFADE_OVERLAP_MS;
+  var instant = opts.instant === true;
+
+  if (window.__mlpTest3DiscCrossfadeStarTimer) {
+    clearTimeout(window.__mlpTest3DiscCrossfadeStarTimer);
+    window.__mlpTest3DiscCrossfadeStarTimer = null;
+  }
+  if (window.__mlpTest3DiscCrossfadeDotsTimer) {
+    clearTimeout(window.__mlpTest3DiscCrossfadeDotsTimer);
+    window.__mlpTest3DiscCrossfadeDotsTimer = null;
+  }
+
+  music.style.setProperty('--test3-disc-crossfade-ms', crossfadeMs + 'ms');
+  music.style.setProperty('--test3-disc-crossfade-ease', TEST3_DISC_CROSSFADE_EASE);
+
+  if (toDots) {
+    music.setAttribute('data-test3-music-capsule-phase', 'dots');
+    music.setAttribute('data-test3-music-stroke-ready', '1');
+  } else {
+    music.removeAttribute('data-test3-music-stroke-ready');
+    music.removeAttribute('data-test3-music-capsule-phase');
+  }
+  void music.offsetWidth;
+
+  if (instant) {
+    if (toDots) {
+      _stopTest3MusicDiscSparkle(music);
+      _startTest3MusicDiscLoader(music);
+    } else {
+      _stopTest3MusicDiscLoader(music);
+      _startTest3MusicDiscSparkle(music);
+    }
+    return;
+  }
+
+  if (toDots) {
+    window.__mlpTest3DiscCrossfadeDotsTimer = setTimeout(function () {
+      window.__mlpTest3DiscCrossfadeDotsTimer = null;
+      if (!_isTest3MusicDiscDotsPhase(music)) return;
+      _startTest3MusicDiscLoader(music);
+    }, overlapMs);
+    window.__mlpTest3DiscCrossfadeStarTimer = setTimeout(function () {
+      window.__mlpTest3DiscCrossfadeStarTimer = null;
+      if (!_isTest3MusicDiscDotsPhase(music)) return;
+      _stopTest3MusicDiscSparkle(music);
+    }, crossfadeMs);
+  } else {
+    window.__mlpTest3DiscCrossfadeStarTimer = setTimeout(function () {
+      window.__mlpTest3DiscCrossfadeStarTimer = null;
+      if (_isTest3MusicDiscDotsPhase(music)) return;
+      _startTest3MusicDiscSparkle(music);
+    }, overlapMs);
+    window.__mlpTest3DiscCrossfadeDotsTimer = setTimeout(function () {
+      window.__mlpTest3DiscCrossfadeDotsTimer = null;
+      if (_isTest3MusicDiscDotsPhase(music)) return;
+      _stopTest3MusicDiscLoader(music);
+    }, crossfadeMs);
+  }
+}
+function _syncTest3MusicDiscLayersAfterRender() {
+  var music = document.querySelector('#test3-music');
+  if (!music) return;
+  _applyTest3MusicDiscPhase(
+    music,
+    _isTest3MusicDiscDotsPhase(music) ? 'dots' : 'star',
+    { instant: true }
+  );
+}
+/** test3 capsule left disc — 13-ai-sparkle star, then breathing-chord loader on fill (no star return). */
 function renderTest3MusicDiscInnerHtml() {
   return '' +
     '<div class="test3-music-disc__layer test3-music-disc__layer--star" aria-hidden="true">' +
-      TEST3_CAPSULE_STAR_SVG_HTML.replace('test3-music-capsule-chrome__starSvg', 'test3-music-disc__starSvg') +
+      renderTest3MusicDiscSparkleHtml() +
     '</div>' +
     '<div class="test3-music-disc__layer test3-music-disc__layer--dots" aria-hidden="true">' +
-      TEST3_MUSIC_DISC_DOTS_SVG_HTML +
+      renderTest3MusicDiscLoaderHtml() +
     '</div>';
 }
 
@@ -163,17 +573,19 @@ var TEST3_PILL_REVEAL_ICON_MS = 480;
 var TEST3_PILL_PRE_EXPAND_WAIT_MS = 1500;
 var TEST3_PILL_REVEAL_ICON_HOLD_MS = TEST3_PILL_PRE_EXPAND_WAIT_MS - TEST3_PILL_REVEAL_ICON_MS;
 /* Pill copy: widen → text emerge → 2s hold → drop (shine runs in parallel, snaps on drop). */
-var TEST3_PILL_TEXT_EMERGE_MS = 420;
-var TEST3_PILL_SHINE_PASS_MS = 680;
-var TEST3_PILL_SHINE_TITLE_PASSES = 2;
-var TEST3_PILL_SHINE_SUB_PASSES = 2;
+var TEST3_PILL_TEXT_EMERGE_MS = 720;
+var TEST3_PILL_SHINE_PASS_MS = 1500;
+var TEST3_PILL_SHINE_TITLE_PASSES = 1;
+var TEST3_PILL_SHINE_SUB_PASSES = 1;
 var TEST3_PILL_SHINY_ACTIVE_MS =
   TEST3_PILL_TEXT_EMERGE_MS + TEST3_PILL_SHINE_PASS_MS * TEST3_PILL_SHINE_TITLE_PASSES;
 var TEST3_PILL_TEXT_SETTLE_MS = 480;
 var TEST3_PILL_TEXT_HOLD_BEFORE_DROP_MS = 2000;
 var TEST3_PILL_TEXT_START_MS = TEST3_PILL_PRE_EXPAND_WAIT_MS;
 var TEST3_PILL_TEXT_READY_MS = TEST3_PILL_TEXT_START_MS + TEST3_PILL_TEXT_EMERGE_MS;
-var TEST3_PILL_BLACK_AT_MS = TEST3_PILL_TEXT_READY_MS;
+/* Let gradient finish one shine pass after copy emerges before locking to ink. */
+var TEST3_PILL_BLACK_AT_MS =
+  TEST3_PILL_TEXT_READY_MS + TEST3_PILL_SHINE_PASS_MS;
 var TEST3_PILL_DROP_AT_MS = TEST3_PILL_TEXT_READY_MS + TEST3_PILL_TEXT_HOLD_BEFORE_DROP_MS;
 var TEST3_PILL_REVEAL_TEXT_MS =
   TEST3_PILL_TEXT_EMERGE_MS + TEST3_PILL_TEXT_HOLD_BEFORE_DROP_MS;
@@ -186,17 +598,23 @@ var TEST3_PILL_REVEAL_TOTAL_MS =
 var TEST3_MUSIC_MOUNT_DELAY_MS = 360;
 var TEST3_MUSIC_MOTION_MS = 14000;
 var TEST3_MUSIC_PRE_DELAY_MS = Math.round(TEST3_MUSIC_MOTION_MS * 0.10);
-var TEST3_MUSIC_EXPAND_START_MS = Math.round(TEST3_MUSIC_MOTION_MS * 0.57);
+/* Align with CSS keyframes that use animation-delay: --test3-music-spawn-delay-ms. */
+var TEST3_MUSIC_EXPAND_START_MS =
+  TEST3_MUSIC_MOUNT_DELAY_MS + Math.round(TEST3_MUSIC_MOTION_MS * 0.57);
 var TEST3_MUSIC_EXPAND_DUR_MS = Math.round(TEST3_MUSIC_MOTION_MS * 0.11);
-var TEST3_MUSIC_EXPAND_END_MS = TEST3_MUSIC_EXPAND_START_MS + TEST3_MUSIC_EXPAND_DUR_MS;
-var TEST3_MUSIC_FILL_START_MS = Math.round(TEST3_MUSIC_MOTION_MS * 0.14);
-var TEST3_MUSIC_RESOLVE_MS = Math.round(TEST3_MUSIC_MOTION_MS * 0.43);
+var TEST3_MUSIC_EXPAND_END_MS =
+  TEST3_MUSIC_MOUNT_DELAY_MS + Math.round(TEST3_MUSIC_MOTION_MS * 0.68);
+var TEST3_MUSIC_FILL_START_MS =
+  TEST3_MUSIC_MOUNT_DELAY_MS + Math.round(TEST3_MUSIC_MOTION_MS * 0.14);
+var TEST3_MUSIC_RESOLVE_MS =
+  TEST3_MUSIC_MOUNT_DELAY_MS + Math.round(TEST3_MUSIC_MOTION_MS * 0.43);
+var TEST3_MUSIC_IVORY_HANDOFF_MS = 1280;
 var TEST3_MUSIC_IMAGE1_HOLD_MS = 0;
 var TEST3_MUSIC_ORB_ABSORB_MS = 880;
 var TEST3_MUSIC_SETTLE_ACTIVE_DELAY_MS = 0;
 var TEST3_MUSIC_SETTLE_TEXT_STAGGER_MS = 0;
-var TEST3_MUSIC_SETTLE_TEXT_DUR_MS = 1000;
-var TEST3_MUSIC_SETTLE_TAIL_MS = 120;
+var TEST3_MUSIC_SETTLE_TEXT_DUR_MS = 560;
+var TEST3_MUSIC_SETTLE_TAIL_MS = 60;
 var TEST3_MUSIC_SETTLE_REVEAL_MS = TEST3_MUSIC_SETTLE_TEXT_DUR_MS;
 var TEST3_MUSIC_SETTLE_MS =
   TEST3_MUSIC_SETTLE_ACTIVE_DELAY_MS +
@@ -1398,9 +1816,12 @@ window.resolveComponentRect = function resolveComponentRect(comp, layout, plan) 
 
     case 'persona2-widgets':
       if (window.__mlpTestConfig && window.__mlpTestConfig.id === 'test2') {
+        var test2ClockY = 112 + (window.currentSurfaceType === 'lockscreen-persona2' ? 28 : 0);
+        var test2ClockH = 176;
+        var test2WidgetsGap = 10;
         return {
           x: 0,
-          y: 326,
+          y: test2ClockY + test2ClockH + test2WidgetsGap,
           w: vw,
           h: 240
         };
@@ -6623,10 +7044,10 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
                       '<div class="p2-result-loading__sub" aria-hidden="true"></div>' +
                     '</div>' +
                     '<div class="p2-result-loading__footer">' +
-                      '<div class="p2-result-loading__input"><span class="p2-input-text">놓친 보고서 요약해줘</span></div>' +
                       '<div class="p2-result-loading__icon" aria-hidden="true">' +
                         '<canvas class="p2-galaxy-star__canvas p2-galaxy-star__canvas--loading" width="112" height="112" aria-hidden="true"></canvas>' +
                       '</div>' +
+                      '<div class="p2-result-loading__input"><span class="p2-input-text">놓친 보고서 요약해줘</span></div>' +
                     '</div>' +
                   '</div>' +
                 '</div>' +
@@ -6640,6 +7061,10 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
             '</div>' +
             '<div id="p2-slot" class="p2-agent-slot" style="opacity:0; pointer-events:none; overflow:hidden;"></div>' +
             '<div class="p2-agent-footer">' +
+              '<button id="p2-star" type="button" aria-label="AI Voice" class="p2-galaxy-star-btn">' +
+                '<span class="p2-galaxy-star__grad" aria-hidden="true"></span>' +
+                '<canvas class="p2-galaxy-star__canvas" width="112" height="112" aria-hidden="true"></canvas>' +
+              '</button>' +
               '<div class="p2-agent-input">' +
                 '<div class="p2-agent-fill" aria-hidden="true">' +
                   '<canvas class="p2-agent-fill__gl"></canvas>' +
@@ -6651,10 +7076,6 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
                 '</div>' +
                 '<span class="p2-input-text">놓친 보고서 요약해줘</span>' +
               '</div>' +
-              '<button id="p2-star" type="button" aria-label="AI Voice" class="p2-galaxy-star-btn">' +
-                '<span class="p2-galaxy-star__grad" aria-hidden="true"></span>' +
-                '<canvas class="p2-galaxy-star__canvas" width="112" height="112" aria-hidden="true"></canvas>' +
-              '</button>' +
             '</div>' +
           '</div>' +
         '</div>';
@@ -7935,6 +8356,17 @@ function _stopTest3MapDotMotion() {
 //   (1) which state the music card is in (normal / lyrics / compact)
 //   (2) whether either of them is in the tap-expanded state
 // Called whenever any card's state changes. Uses inline style on the
+// Live music shell height for pill drop / layout (wrapper can overshoot content).
+function _test3MusicMeasuredH(music) {
+  music = music || document.querySelector('#test3-music');
+  if (!music) return TEST3_MUSIC_EXPAND_H;
+  var wh = music.getBoundingClientRect().height;
+  var shell = music.querySelector('.dot-music1');
+  var sh = shell ? shell.getBoundingClientRect().height : 0;
+  var h = Math.max(wh, sh);
+  if (h >= 1) return Math.round(h);
+  return TEST3_MUSIC_EXPAND_H;
+}
 // canvas-item wrappers; CSS transitions on .test3-card-flow handle
 // the smooth animation between states. Returns silently if any card
 // is missing or the music shift hasn't fired yet.
@@ -7956,7 +8388,7 @@ function _layoutTest3Cards() {
   // During entrance: 82 px capsule until vertical expand; 168 px once
   // phase-2 starts so weather/steps glide below the growing player.
   var musicH = inMusicEntrance
-    ? (inExpand ? TEST3_MUSIC_EXPAND_H : 82)
+    ? (inExpand ? _test3MusicMeasuredH(music) : TEST3_MUSIC_SPAWN_H)
     : ((musicState === 'lyrics') ? TEST3_MUSIC_LYRICS_H : TEST3_MUSIC_EXPAND_H);
   var weatherExp = weather.classList.contains('is-expanded');
   var stepsExp   = steps.classList.contains('is-expanded');
@@ -8069,9 +8501,48 @@ function _freezeTest3WeatherDropState() {
     if (!ty || ty === 'none') {
       ty = 'translateY(' + TEST3_WEATHER_DROP + 'px)';
     }
+    /* No !important on transform — test3WeatherShift must run 57%→68%. */
+    el.style.setProperty('transform', ty);
+    el.style.setProperty('opacity', '1', 'important');
+  });
+}
+function _stopTest3PillExpandSync() {
+  if (window.__mlpTest3PillExpandSyncRaf) {
+    cancelAnimationFrame(window.__mlpTest3PillExpandSyncRaf);
+    window.__mlpTest3PillExpandSyncRaf = null;
+  }
+}
+function _applyTest3PillDropForMusicH(musicH) {
+  var weather = document.querySelector('#test3-weather');
+  var steps   = document.querySelector('#test3-steps');
+  if (!weather || !steps) return;
+  var drop = Math.max(TEST3_WEATHER_DROP, Math.round(musicH) + TEST3_CARD_GAP_V);
+  var ty = 'translateY(' + drop + 'px)';
+  [weather, steps].forEach(function (el) {
+    el.style.setProperty('animation', 'none', 'important');
     el.style.setProperty('transform', ty, 'important');
     el.style.setProperty('opacity', '1', 'important');
   });
+}
+function _runTest3PillExpandSync(deadlineMs) {
+  _stopTest3PillExpandSync();
+  var music = document.querySelector('#test3-music');
+  if (!music) return;
+  function tick() {
+    if (!window.__mlpTest3MusicShifted) {
+      _stopTest3PillExpandSync();
+      return;
+    }
+    var h = _test3MusicMeasuredH(music);
+    if (h < TEST3_MUSIC_SPAWN_H) h = TEST3_MUSIC_SPAWN_H;
+    _applyTest3PillDropForMusicH(h);
+    if (performance.now() >= deadlineMs || h >= TEST3_MUSIC_EXPAND_H - 1) {
+      _stopTest3PillExpandSync();
+      return;
+    }
+    window.__mlpTest3PillExpandSyncRaf = requestAnimationFrame(tick);
+  }
+  window.__mlpTest3PillExpandSyncRaf = requestAnimationFrame(tick);
 }
 // Reset test3 music card copy to the curated Figma strings so stale
 // LLM patches (Holocene etc.) never surface in normal/lyrics/compact.
@@ -8419,7 +8890,7 @@ function _restoreTest3PillPlainTextLines() {
   sels.forEach(function (sel) {
     document.querySelectorAll(sel).forEach(function (el) {
       if (el.getAttribute('data-test3-shiny-mounted') === '1') return;
-      if (el.querySelector('.test3-pill-shiny-text')) return;
+      if (el.querySelector('.test3-pill-gradient-text')) return;
       var t = (el.getAttribute('data-test3-pill-plain') || el.textContent || '').trim();
       if (!t) return;
       el.textContent = t;
@@ -8458,9 +8929,13 @@ function _armTest3PillsReveal(canvas) {
   canvas.style.setProperty('--test3-pill-text-settle-ms', TEST3_PILL_TEXT_SETTLE_MS + 'ms');
   canvas.style.setProperty('--test3-pill-black-hold-ms', TEST3_PILL_TEXT_HOLD_BEFORE_DROP_MS + 'ms');
   canvas.style.setProperty('--test3-pill-text-start-ms', TEST3_PILL_TEXT_START_MS + 'ms');
+  canvas.style.setProperty('--test3-pill-shine-ms', TEST3_PILL_SHINE_PASS_MS + 'ms');
   window.__mlpTest3PillTiming = {
     textStart: TEST3_PILL_TEXT_START_MS,
     emerge: TEST3_PILL_TEXT_EMERGE_MS,
+    gradientSpeed: 2.0,
+    gradientTitleCycles: 1,
+    gradientSubCycles: 1,
     shinePassMs: TEST3_PILL_SHINE_PASS_MS,
     shineTitlePasses: TEST3_PILL_SHINE_TITLE_PASSES,
     shineSubPasses: TEST3_PILL_SHINE_SUB_PASSES,
@@ -8520,7 +8995,7 @@ function _armTest3PillsReveal(canvas) {
     clearTimeout(window.__mlpTest3PillsRevealEndTimer);
     window.__mlpTest3PillsRevealEndTimer = null;
   }
-  /* Black text locks after ShinyText sweep (~4.6s). */
+  /* Dark pill copy after gradient wave (~text emerge end). */
   window.__mlpTest3PillsBlackTimer = setTimeout(function () {
     window.__mlpTest3PillsBlackTimer = null;
     try {
@@ -8596,6 +9071,11 @@ function _beginTest3WeatherPrep(runId) {
       clearTimeout(window.__mlpTest3WeatherDropCompleteTimer);
       window.__mlpTest3WeatherDropCompleteTimer = null;
     }
+    if (typeof _stopTest3PillExpandSync === 'function') _stopTest3PillExpandSync();
+    if (window.__mlpTest3MusicIvoryFadeTimer) {
+      clearTimeout(window.__mlpTest3MusicIvoryFadeTimer);
+      window.__mlpTest3MusicIvoryFadeTimer = null;
+    }
     /* Music spawns shortly after pills begin dropping (staggered handoff). */
     window.__mlpTest3MusicMountTimer = setTimeout(function () {
       window.__mlpTest3MusicMountTimer = null;
@@ -8650,6 +9130,7 @@ function _mountTest3MusicAfterWeatherPrep(runId) {
     if (typeof _stopTest3MusicAudio === 'function') _stopTest3MusicAudio();
     var test3MusicEl = document.querySelector('#test3-music');
     if (test3MusicEl) {
+      test3MusicEl.style.removeProperty('height');
       if (typeof _clearTest3MusicGlowRing === 'function') {
         _clearTest3MusicGlowRing(test3MusicEl);
       }
@@ -8670,7 +9151,7 @@ function _mountTest3MusicAfterWeatherPrep(runId) {
       test3MusicEl.removeAttribute('data-test3-music-settling');
       test3MusicEl.removeAttribute('data-test3-music-resolved');
       test3MusicEl.removeAttribute('data-test3-music-stroke-ready');
-      test3MusicEl.removeAttribute('data-test3-music-capsule-phase');
+      test3MusicEl.setAttribute('data-test3-music-capsule-phase', 'star');
       if (typeof _clearTest3MusicEntranceInlineStyles === 'function') {
         _clearTest3MusicEntranceInlineStyles(test3MusicEl);
       }
@@ -8686,6 +9167,9 @@ function _mountTest3MusicAfterWeatherPrep(runId) {
           }
           if (window.Test3MusicFillGL && typeof window.Test3MusicFillGL.ensureBound === 'function') {
             window.Test3MusicFillGL.ensureBound();
+          }
+          if (typeof _syncTest3MusicDiscLayersAfterRender === 'function') {
+            _syncTest3MusicDiscLayersAfterRender();
           }
         });
       });
@@ -8715,6 +9199,9 @@ function _mountTest3MusicAfterWeatherPrep(runId) {
     }, TEST3_MUSIC_EXPAND_START_MS);
     setTimeout(function () {
       if ((window.__mlpTest3MusicShiftRunId || 0) !== runId) return;
+      if (typeof _lockTest3CardsAfterMusicExpand === 'function') {
+        _lockTest3CardsAfterMusicExpand();
+      }
       if (typeof _endTest3MusicFill === 'function') {
         _endTest3MusicFill();
       }
@@ -8739,21 +9226,33 @@ function _mountTest3MusicAfterWeatherPrep(runId) {
 function _beginTest3MusicFill(music) {
   music = music || document.querySelector('#test3-music');
   if (!music) return;
-  music.setAttribute('data-test3-music-stroke-ready', '1');
-  music.setAttribute('data-test3-music-capsule-phase', 'dots');
   var shell = music.querySelector('.dot-music1');
-  if (shell) {
-    shell.classList.add('test3-music-shell--fill-active');
-  }
   var fill = music.querySelector('.test3-music-fill');
   if (fill) {
-    fill.classList.remove('test3-music-fill--fading');
-    fill.classList.add('test3-music-fill--active');
+    fill.classList.remove('test3-music-fill--fading', 'p2-agent-fill--gl-active');
   }
   if (window.Test3MusicFillGL) {
     window.Test3MusicFillGL.ensureBound();
-    window.Test3MusicFillGL.setPhase('generating');
   }
+  void (fill && fill.offsetWidth);
+  if (fill) {
+    fill.classList.add('test3-music-fill--active');
+  }
+  void (shell && shell.offsetWidth);
+  if (shell) {
+    shell.classList.add('test3-music-shell--fill-active');
+  }
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      if (!music.isConnected) return;
+      if (window.Test3MusicFillGL) {
+        window.Test3MusicFillGL.setPhase('generating');
+      }
+      if (typeof _applyTest3MusicDiscPhase === 'function') {
+        _applyTest3MusicDiscPhase(music, 'dots');
+      }
+    });
+  });
 }
 function _armTest3MusicWhiteShell(music) {
   music = music || document.querySelector('#test3-music');
@@ -8783,17 +9282,27 @@ function _beginTest3MusicResolve(music) {
   if (!music) return;
   if (music.getAttribute('data-test3-music-resolved') === '1') return;
   music.setAttribute('data-test3-music-resolved', '1');
-  var fill = music.querySelector('.test3-music-fill');
-  if (fill && fill.classList.contains('test3-music-fill--active')) {
-    fill.classList.remove('test3-music-fill--active');
-    fill.classList.add('test3-music-fill--fading');
-  }
+  music.setAttribute('data-test3-music-ivory-handoff', '1');
+  music.style.removeProperty('height');
   if (typeof _armTest3MusicWhiteShell === 'function') {
     _armTest3MusicWhiteShell(music);
   }
   if (window.Test3MusicFillGL) {
     window.Test3MusicFillGL.setPhase('idle');
   }
+  if (window.__mlpTest3MusicIvoryFadeTimer) {
+    clearTimeout(window.__mlpTest3MusicIvoryFadeTimer);
+  }
+  window.__mlpTest3MusicIvoryFadeTimer = setTimeout(function () {
+    window.__mlpTest3MusicIvoryFadeTimer = null;
+    var fill = music.querySelector('.test3-music-fill');
+    if (!fill || !music.isConnected) return;
+    if (fill.classList.contains('test3-music-fill--active')) {
+      fill.classList.remove('test3-music-fill--active');
+      fill.classList.add('test3-music-fill--fading');
+    }
+    music.removeAttribute('data-test3-music-ivory-handoff');
+  }, TEST3_MUSIC_IVORY_HANDOFF_MS);
 }
 function _endTest3MusicFill(music) {
   music = music || document.querySelector('#test3-music');
@@ -8831,32 +9340,24 @@ function _primeTest3MusicGlowRing(music) {
   shell.classList.remove('is-glow-in', 'is-glow-out');
   shell.classList.add('test3-music-glow-ring', 'is-glow-prime');
 }
-// Phase-2: weather/steps glide to row below the expanding music card.
-// Music shell + orb motion stay on the 14 s CSS timeline (no JS cut).
+// Phase-2 start (57%): music pre-expand — pills glide via test3WeatherShift (do not touch).
 function _syncTest3CardsExpandDown() {
   var canvas = document.getElementById('canvas');
   if (!canvas || canvas.getAttribute('data-test-scope') !== 'test3') return;
   if (!window.__mlpTest3MusicShifted) return;
-  var weather = document.querySelector('#test3-weather');
-  var steps   = document.querySelector('#test3-steps');
-  if (!weather || !steps) return;
   var music = document.querySelector('#test3-music');
   if (music) {
     music.setAttribute('data-test3-music-pre-expand', '1');
   }
-  [weather, steps].forEach(function (el) {
-    var computed = getComputedStyle(el).transform;
-    el.classList.add('test3-card-flow', 'is-motion-phase2');
-    el.style.setProperty('animation', 'none', 'important');
-    if (computed && computed !== 'none') {
-      el.style.setProperty('transform', computed, 'important');
-    }
-  });
-  requestAnimationFrame(function () {
-    requestAnimationFrame(function () {
-      if (typeof _layoutTest3Cards === 'function') _layoutTest3Cards();
-    });
-  });
+  if (typeof _stopTest3PillExpandSync === 'function') {
+    _stopTest3PillExpandSync();
+  }
+}
+// After music vertical expand (~68%) — CSS fill holds pill row; layout runs at entrance end.
+function _lockTest3CardsAfterMusicExpand() {
+  if (typeof _stopTest3PillExpandSync === 'function') {
+    _stopTest3PillExpandSync();
+  }
 }
 function _clearTest3MusicGlowRing(music) {
   if (window.__mlpTest3MusicGlowHoldTimer) {
@@ -8926,14 +9427,15 @@ function _finishTest3MusicSettle(music) {
   requestAnimationFrame(function () {
     requestAnimationFrame(function () {
       if (!music.isConnected) return;
-      music.removeAttribute('data-test3-music-settling');
-  music.removeAttribute('data-test3-music-resolved');
-  music.removeAttribute('data-test3-music-chrome-reveal');
-  music.removeAttribute('data-test3-music-shell-white');
-  music.removeAttribute('data-test3-music-stroke-ready');
       if (typeof _applyTest3MusicSettledLayout === 'function') {
         _applyTest3MusicSettledLayout(music);
       }
+      music.removeAttribute('data-test3-music-settling');
+      music.removeAttribute('data-test3-music-resolved');
+      music.removeAttribute('data-test3-music-chrome-reveal');
+      music.removeAttribute('data-test3-music-shell-white');
+      music.removeAttribute('data-test3-music-stroke-ready');
+      music.removeAttribute('data-test3-music-capsule-phase');
       if (typeof _clearTest3MusicEntranceInlineStyles === 'function') {
         _clearTest3MusicEntranceInlineStyles(music);
       }
@@ -8972,6 +9474,9 @@ function _beginTest3MusicSettle(music) {
     _resetTest3MusicCopy(music);
   }
   music.classList.add('test3-music-settle-active', 'test3-music-content-enter');
+  music.style.setProperty('--test3-music-settle-text-ms', TEST3_MUSIC_SETTLE_TEXT_DUR_MS + 'ms');
+  music.style.setProperty('--test3-music-chrome-fade-ms', Math.round(TEST3_MUSIC_SETTLE_TEXT_DUR_MS * 0.92) + 'ms');
+  void music.offsetWidth;
   setTimeout(function () {
     if (typeof _finishTest3MusicSettle === 'function') {
       _finishTest3MusicSettle(music);
@@ -8997,6 +9502,13 @@ function _revealTest3MusicPlayBtn(music) {
   playBtn.style.visibility = 'visible';
   playBtn.style.setProperty('animation', 'none', 'important');
 }
+function _forceTest3CssAnimationRestart(el) {
+  if (!el || !el.style) return;
+  el.style.animation = 'none';
+  void el.offsetWidth;
+  el.style.removeProperty('animation');
+  void el.offsetWidth;
+}
 function _restartTest3MusicEntranceAnimations(music) {
   if (!music) return;
   if (typeof _clearTest3MusicGlowRing === 'function') {
@@ -9009,34 +9521,22 @@ function _restartTest3MusicEntranceAnimations(music) {
   var shell = music.querySelector('.dot-music1');
   if (shell) {
     shell.classList.remove('test3-music-shell--fill-active');
+    ['width', 'height', 'border-radius', 'clip-path', 'background-color', 'opacity', 'transform'].forEach(function (prop) {
+      shell.style.removeProperty(prop);
+    });
   }
   if (window.Test3MusicFillGL) {
     window.Test3MusicFillGL.destroy();
   }
-  var targets = [music].concat(
-    Array.prototype.slice.call(music.querySelectorAll('*')).filter(function (el) {
-      return !el.classList.contains('dot-music1__searchLine') &&
-        !el.classList.contains('dot-music1__searchText');
-    })
-  );
-  targets.forEach(function (el) {
-    el.style.animation = 'none';
-  });
-  void music.offsetWidth;
-  targets.forEach(function (el) {
-    el.style.removeProperty('animation');
-  });
-  music.querySelectorAll('.dot-music1__searchLine').forEach(function (line) {
-    line.style.removeProperty('animation');
-    void line.offsetWidth;
-  });
   music.style.removeProperty('height');
-  var shell = music.querySelector('.dot-music1');
-  if (shell) {
-    ['width', 'height', 'border-radius', 'clip-path', 'background-color'].forEach(function (prop) {
-      shell.style.removeProperty(prop);
-    });
-  }
+  music.style.removeProperty('opacity');
+  music.style.removeProperty('visibility');
+  music.style.removeProperty('transform');
+  _forceTest3CssAnimationRestart(music);
+  _forceTest3CssAnimationRestart(shell);
+  music.querySelectorAll('.dot-music1__searchLine').forEach(function (line) {
+    _forceTest3CssAnimationRestart(line);
+  });
 }
 // Lock the music shell geometry after the 14 s entrance timeline finishes.
 function _lockTest3MusicShell(music) {
@@ -9090,7 +9590,17 @@ function _finalizeTest3MusicEntrance() {
   requestAnimationFrame(function () {
     requestAnimationFrame(function () {
       if (music) music.style.removeProperty('height');
+      [weather, steps].forEach(function (el) {
+        if (!el) return;
+        el.style.setProperty('transition', 'none', 'important');
+      });
       if (typeof _layoutTest3Cards === 'function') _layoutTest3Cards();
+      requestAnimationFrame(function () {
+        [weather, steps].forEach(function (el) {
+          if (!el) return;
+          el.style.removeProperty('transition');
+        });
+      });
     });
   });
 }
@@ -9656,7 +10166,19 @@ function _buildCanvasItemWrapper(comp, layout, plan, existing) {
   wrapper.style.left = rect.x + 'px';
   wrapper.style.top = rect.y + 'px';
   wrapper.style.width = rect.w + 'px';
-  wrapper.style.height = rect.h + 'px';
+  /* Entrance capsule: CSS test3MusicWrapperHeight owns #test3-music height (not 218px _rect). */
+  if (isTest3Scope && comp.id === 'test3-music') {
+    var musicKeepCssHeight = !existing ||
+      existing.getAttribute('data-test3-music-loading') === '1' ||
+      existing.getAttribute('data-test3-music-settled') !== '1';
+    if (musicKeepCssHeight) {
+      wrapper.style.removeProperty('height');
+    } else {
+      wrapper.style.height = rect.h + 'px';
+    }
+  } else {
+    wrapper.style.height = rect.h + 'px';
+  }
 
   if (comp.role === 'background' || comp.role === 'scrim') {
     wrapper.style.pointerEvents = 'none';
@@ -11002,6 +11524,14 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
     }
     if (testScope === 'test3') {
       canvas.style.setProperty('--test3-weather-drop', TEST3_WEATHER_DROP + 'px');
+      canvas.style.setProperty(
+        '--test3-weather-drop-expanded',
+        (TEST3_MUSIC_EXPAND_H + TEST3_CARD_GAP_V) + 'px'
+      );
+      canvas.style.setProperty('--test3-music-spawn-h', TEST3_MUSIC_SPAWN_H + 'px');
+      canvas.style.setProperty('--test3-music-expand-h', TEST3_MUSIC_EXPAND_H + 'px');
+      canvas.style.setProperty('--test3-card-gap-v', TEST3_CARD_GAP_V + 'px');
+      canvas.style.setProperty('--test3-music-ivory-handoff-ms', TEST3_MUSIC_IVORY_HANDOFF_MS + 'ms');
       var homeStage = window.__mlpTestConfig && window.__mlpTestConfig.homeStage;
       var shouldEnter = (homeStage === 'home') && !!window.__mlpTest3HomeEnterArmed;
       // Performance: avoid starting enter animation on the same frame as heavy DOM creation.

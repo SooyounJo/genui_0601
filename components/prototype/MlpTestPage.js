@@ -618,12 +618,6 @@ export default function MlpTestPage({
     };
   }, [initialSurfaceType, testId]);
 
-  const handleP2StarClick = () => {
-    if (typeof window.startP2VoiceInput === "function") {
-      window.startP2VoiceInput();
-    }
-  };
-
   return (
     <>
       <Head>
@@ -1635,41 +1629,6 @@ export default function MlpTestPage({
             zoom: 1 !important;
             transform: none !important;
           }
-          .gen-input-container {
-            position: absolute !important;
-            bottom: 40px !important;
-            right: 40px !important;
-            z-index: 100 !important;
-            width: 320px !important;
-            background: rgba(255, 255, 255, 0.08) !important;
-            backdrop-filter: blur(20px) !important;
-            border: 1px solid rgba(255, 255, 255, 0.15) !important;
-            border-radius: 20px !important;
-            padding: 8px 16px !important;
-            display: flex !important;
-            align-items: center !important;
-            gap: 12px !important;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3) !important;
-            transition: all 0.3s ease !important;
-          }
-          .gen-submit {
-            background: #64e9e3 !important;
-            border: none !important;
-            width: 32px !important;
-            height: 32px !important;
-            border-radius: 50% !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            cursor: pointer !important;
-            transition: all 0.2s ease !important;
-            flex-shrink: 0 !important;
-          }
-          .gen-submit svg {
-            width: 16px !important;
-            height: 16px !important;
-            color: #000 !important;
-          }
         `}</style>
       </Head>
 
@@ -1797,31 +1756,14 @@ export default function MlpTestPage({
                       backgroundSize: "cover",
                       backgroundPosition: "center",
                       backgroundRepeat: "no-repeat",
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "stretch",
-                      justifyContent: "flex-start",
+                      display: "block",
+                      position: "relative",
+                      overflow: "hidden",
                     }}
                   />
                 </div>
                 <div id="pipelineOutput" style={{ display: "none" }} />
               </div>
-            )}
-
-            {mounted && testId === "test2" && (
-              <button
-                type="button"
-                className="gen-input-container p2-agent-trigger"
-                onClick={handleP2StarClick}
-                style={{ cursor: "pointer", border: "none", width: "auto" }}
-              >
-                <div className="gen-submit" style={{ background: "var(--p2-lavender, #FF9DDA)" }}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5">
-                    <path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4L12 2z" fill="#fff" />
-                  </svg>
-                </div>
-                <span style={{ color: "#fff", fontSize: "14px", fontWeight: "600", marginLeft: "4px" }}>AI 에이전트 실행</span>
-              </button>
             )}
 
           </section>
