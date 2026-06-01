@@ -108,7 +108,9 @@
     '    max(0.24, 0.34 * s + early * 0.12 + audio * 0.028),',
     '    isCompact',
     '  );',
+    '  softLead *= mix(1.0, 1.42, step(1.5, u_variant));',
     '  float softTrail = softLead * mix(1.32, 1.52, isCompact);',
+    '  softTrail *= mix(1.0, 1.18, step(1.5, u_variant));',
     '  float revealCore = 1.0 - smoothstep(',
     '    localFront - softLead * 0.82 + wobble,',
     '    localFront + softTrail * 0.88 + wobble,',
@@ -191,10 +193,10 @@
     '  vec2 a1 = u_origin + vec2(sin(mt * 0.42) * 0.028, cos(mt * 0.36) * 0.024);',
     '  vec2 a2 = u_origin + vec2(-0.10, 0.12) + vec2(cos(mt * 0.31) * 0.022, sin(mt * 0.28) * 0.020);',
     '  vec2 a3 = u_origin + vec2(-0.18, 0.20) + vec2(sin(mt * 0.26) * 0.024, cos(mt * 0.30) * 0.018);',
-    '  float falloff = 1.32;',
-    '  float w1 = 1.0 / (pow(length(u - a1), falloff) + 0.065);',
-    '  float w2 = 1.0 / (pow(length(u - a2), falloff) + 0.070);',
-    '  float w3 = 1.0 / (pow(length(u - a3), falloff) + 0.075);',
+    '  float falloff = 1.16;',
+    '  float w1 = 1.0 / (pow(length(u - a1), falloff) + 0.092);',
+    '  float w2 = 1.0 / (pow(length(u - a2), falloff) + 0.098);',
+    '  float w3 = 1.0 / (pow(length(u - a3), falloff) + 0.104);',
     '  float wSum = w1 + w2 + w3;',
     '  vec3 col = (gleam * w1 + white * w2 + sage * w3) / wSum;',
     '  return col * 1.08;',
@@ -274,7 +276,7 @@
     '  float sdf = sdRoundedBox(p, halfSize, u_radius) + edgeBreath + edgeWobble;',
     '  float morphEarly = smoothstep(0.02, 0.12, morph);',
     '  float shapeAlpha = u_variant >= 1.5',
-    '    ? (1.0 - smoothstep(-0.006, 0.020, sdf))',
+    '    ? (1.0 - smoothstep(-0.018, 0.042, sdf))',
     '    : mix(',
     '        1.0 - smoothstep(-0.018, 0.048, sdf),',
     '        1.0 - smoothstep(-0.042, 0.072, sdf),',
@@ -1109,28 +1111,63 @@
     var isFood = this.shellEl && this.shellEl.classList.contains('test1-home-food');
     if (phaseName === 'generating') {
       return {
-        spread: isFood ? 1.42 : 1.16,
-        intensity: isFood ? 1.04 : 0.78,
+        spread: isFood ? 1.45 : 1.38,
+        intensity: isFood ? 0.82 : 0.72,
         fill: 0,
-        duration: 2000
+        duration: 5200
       };
     }
     if (phaseName === 'fadeOut') {
       return {
-        spread: isFood ? 1.42 : 1.16,
+        spread: isFood ? 1.45 : 1.38,
         intensity: 0,
         fill: 0,
-        duration: 600
+        duration: isFood ? 950 : 700
       };
     }
     return PHASES[phaseName] || PHASES.idle;
+  };
+
+  Test1HomeWidgetFillGL.prototype._pulseWave = function (t, cycles) {
+    var wave = Math.sin(t * Math.PI * 2 * cycles) * 0.5 + 0.5;
+    return wave * wave * (3 - 2 * wave);
+  };
+
+  Test1HomeWidgetFillGL.prototype._updateValues = function (now) {
+    if (this.phase !== 'generating') {
+      AgentFillGL.prototype._updateValues.call(this, now);
+      return;
+    }
+    var t = this.phaseDuration > 0
+      ? clamp((now - this.phaseStart) / this.phaseDuration, 0, 1)
+      : 1;
+    var isFood = this.shellEl && this.shellEl.classList.contains('test1-home-food');
+    var pulseT;
+    if (t <= 0.55) {
+      var expandT = t / 0.55;
+      expandT = 1 - Math.pow(1 - expandT, 2.1);
+      pulseT = expandT;
+    } else {
+      var contractT = (t - 0.55) / 0.45;
+      contractT = contractT * contractT * (3 - 2 * contractT);
+      pulseT = 1 - contractT;
+    }
+    if (isFood) {
+      this.values.spread = lerp(0.34, 1.45, pulseT);
+      this.values.intensity = lerp(0.12, 0.82, pulseT);
+    } else {
+      this.values.spread = lerp(0.28, 1.38, pulseT);
+      this.values.intensity = lerp(0.1, 0.72, pulseT);
+    }
+    this.values.fill = 0;
+    this.values.sweep = 1;
   };
 
   Test1HomeWidgetFillGL.prototype._resize = function (force) {
     AgentFillGL.prototype._resize.call(this, force);
     var rect = this._fillRect();
     if (!rect) return;
-    this.layout.radius = Math.min(38, rect.height * 0.5) / rect.height;
+    this.layout.radius = Math.min(42, rect.height * 0.5) / rect.height;
   };
 
   Test1HomeWidgetFillGL.prototype.setPhase = function (phaseName) {
@@ -1302,6 +1339,15 @@
     fadeAll: function () {
       test1Instances.forEach(function (inst) {
         if (inst.ready) inst.setPhase('fadeOut');
+      });
+    },
+    fadeWidgets: function (which) {
+      test1Instances.forEach(function (inst) {
+        if (!inst.ready || !inst.shellEl) return;
+        var isFood = inst.shellEl.classList.contains('test1-home-food');
+        if (which === 'top' && isFood) return;
+        if (which === 'food' && !isFood) return;
+        inst.setPhase('fadeOut');
       });
     },
     destroyAll: function () {

@@ -1047,7 +1047,7 @@ window.composeSurfacePlan = function composeSurfacePlan(surfaceType, layout) {
         var test1HomeRowX = test1HomeColX + Math.round((test1HomeColW - (test1HomeSmallW * 2 + test1HomeSmallGap)) / 2);
         var test1HomeFoodW = 340;
         var test1HomeFoodY = test1HomeRowY + test1HomeSmallH + 10;
-        var test1HomeFoodH = 662 - test1HomeFoodY - 8;
+        var test1HomeFoodH = 668 - test1HomeFoodY;
         var test1HomeFoodX = test1HomeColX + Math.round((test1HomeColW - test1HomeFoodW) / 2);
         var test1LockStackW = 236;
         var test1LockStackX = Math.round((388 - test1LockStackW) / 2);
@@ -6757,16 +6757,22 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
         '<div class="test1-home-widget__inner">' +
           '<div class="test1-home-map__top">' +
             '<span class="test1-home-widget__chip test1-home-widget__chip--map"><img class="test1-home-widget__chip-icon" src="/assets/test1/home/naver-map-icon.png" alt="" draggable="false" />네이버지도</span>' +
-            '<img class="test1-home-map__bus" src="/assets/test1/home/naver-map-chip-icon.png" alt="" draggable="false" />' +
+            '<img class="test1-home-map__bus" src="/assets/test1/home/naver-map-bus.png" alt="" draggable="false" />' +
           '</div>' +
-          '<div class="test1-home-map__time"><span class="test1-home-map__time-num">5</span><span class="test1-home-map__time-unit">분 뒤</span></div>' +
-          '<p class="test1-home-map__sub">진천청구타운 앞 하차</p>' +
-          '<div class="test1-home-map__progress">' +
-            '<div class="test1-home-map__track"></div>' +
-            '<div class="test1-home-map__fill"></div>' +
-            '<div class="test1-home-map__thumb"><img src="/assets/test1/home/send-arrow.png" alt="" draggable="false" /></div>' +
+          '<div class="test1-home-map__body">' +
+            '<div class="test1-home-map__copy">' +
+              '<div class="test1-home-map__time"><span class="test1-home-map__time-num">5</span><span class="test1-home-map__time-unit">분 뒤</span></div>' +
+              '<p class="test1-home-map__sub">진천청구타운 앞 하차</p>' +
+            '</div>' +
+            '<div class="test1-home-map__bottom">' +
+              '<div class="test1-home-map__progress">' +
+                '<div class="test1-home-map__track"></div>' +
+                '<div class="test1-home-map__fill"></div>' +
+                '<div class="test1-home-map__thumb"><img src="/assets/test1/home/send-arrow.png" alt="" draggable="false" /></div>' +
+              '</div>' +
+              '<p class="test1-home-widget__action">안내 종료</p>' +
+            '</div>' +
           '</div>' +
-          '<p class="test1-home-widget__action">안내 종료</p>' +
         '</div>' +
       '</div>';
     }
@@ -6808,7 +6814,7 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
             '<p class="test1-home-food__title">' + title + '</p>' +
             '<p class="test1-home-food__sub">' + sub + '</p>' +
           '</div>' +
-          '<span class="test1-home-food__chev" aria-hidden="true"></span>' +
+          '<span class="test1-home-food__chev" aria-hidden="true"><img src="/assets/test1/home/food-row-chev.png" alt="" draggable="false" /></span>' +
         '</div>';
       };
       return '<div class="test1-home-widget test1-home-food">' +
@@ -11293,9 +11299,12 @@ var TEST1_STACK_ITEM_GAP_PX = 16;
 var TEST1_STACK_SHIFT_PX = 72 + TEST1_STACK_ITEM_GAP_PX;
 var TEST1_HOME_EXIT_MS = 560;
 var TEST1_HOME_GLOW_HOLD_MS = 2000;
-var TEST1_HOME_GLOW_FADE_MS = 600;
-var TEST1_HOME_BG_SETTLE_MS = TEST1_HOME_GLOW_HOLD_MS + TEST1_HOME_GLOW_FADE_MS;
-var TEST1_HOME_INNER_RISE_MS = TEST1_HOME_GLOW_HOLD_MS;
+var TEST1_HOME_FOOD_PULSE_MS = 5200;
+var TEST1_HOME_FOOD_CONTRACT_RATIO = 0.55;
+var TEST1_HOME_GLOW_FADE_MS = 850;
+var TEST1_HOME_FOOD_RISE_MS = Math.round(TEST1_HOME_FOOD_PULSE_MS * TEST1_HOME_FOOD_CONTRACT_RATIO);
+var TEST1_HOME_FOOD_GLOW_FADE_MS = Math.round(TEST1_HOME_FOOD_PULSE_MS * (1 - TEST1_HOME_FOOD_CONTRACT_RATIO));
+var TEST1_HOME_BG_SETTLE_MS = TEST1_HOME_FOOD_PULSE_MS + TEST1_HOME_FOOD_GLOW_FADE_MS;
 
 function _clearTest1IntroTimer() {
   if (window.__mlpTest1IntroTimer) {
@@ -11405,6 +11414,14 @@ function _clearTest1IntroTimer() {
   if (window.__mlpTest1HomeInnerRiseTimer) {
     clearTimeout(window.__mlpTest1HomeInnerRiseTimer);
     window.__mlpTest1HomeInnerRiseTimer = null;
+  }
+  if (window.__mlpTest1HomeFoodRiseTimer) {
+    clearTimeout(window.__mlpTest1HomeFoodRiseTimer);
+    window.__mlpTest1HomeFoodRiseTimer = null;
+  }
+  if (window.__mlpTest1HomeFoodPulseEndTimer) {
+    clearTimeout(window.__mlpTest1HomeFoodPulseEndTimer);
+    window.__mlpTest1HomeFoodPulseEndTimer = null;
   }
   if (window.Test1HomeWidgetFillGL) {
     try { window.Test1HomeWidgetFillGL.destroyAll(); } catch (_) {}
@@ -11842,6 +11859,7 @@ function _runTest1HomeIntro() {
         if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
         c2.removeAttribute('data-test1-home-exit');
         c2.removeAttribute('data-test1-home-inner-rise');
+        c2.removeAttribute('data-test1-home-food-rise');
         c2.removeAttribute('data-test1-home-bg-settled');
         c2.setAttribute('data-test1-home-run', '1');
         c2.setAttribute('data-test1-home-animate', '1');
@@ -11853,6 +11871,7 @@ function _runTest1HomeIntro() {
           window.__mlpTestConfig.test1HomeRun = true;
           window.__mlpTestConfig.test1HomeBgSettled = false;
           window.__mlpTestConfig.test1HomeInnerRise = false;
+          window.__mlpTestConfig.test1HomeFoodRise = false;
         }
         window.__mlpTest1Transitioning = false;
         _applyTest1HomeStatusBar();
@@ -11871,25 +11890,38 @@ function _runTest1HomeIntro() {
             }
           } catch (_) {}
         }, TEST1_HOME_BG_SETTLE_MS);
-        if (window.__mlpTest1HomeInnerRiseTimer) clearTimeout(window.__mlpTest1HomeInnerRiseTimer);
-        window.__mlpTest1HomeInnerRiseTimer = setTimeout(function () {
-          window.__mlpTest1HomeInnerRiseTimer = null;
+        if (window.__mlpTest1HomeFoodRiseTimer) clearTimeout(window.__mlpTest1HomeFoodRiseTimer);
+        window.__mlpTest1HomeFoodRiseTimer = setTimeout(function () {
+          window.__mlpTest1HomeFoodRiseTimer = null;
           requestAnimationFrame(function () {
             requestAnimationFrame(function () {
               try {
-                var c3 = document.getElementById('canvas');
-                if (!c3 || c3.getAttribute('data-test-scope') !== 'test1') return;
+                var cFood = document.getElementById('canvas');
+                if (!cFood || cFood.getAttribute('data-test-scope') !== 'test1') return;
                 if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
-                if (!c3.getAttribute('data-test1-home-animate')) return;
-                c3.setAttribute('data-test1-home-inner-rise', '1');
-                if (window.__mlpTestConfig) window.__mlpTestConfig.test1HomeInnerRise = true;
-                if (window.Test1HomeWidgetFillGL) {
-                  try { window.Test1HomeWidgetFillGL.fadeAll(); } catch (_) {}
+                if (!cFood.getAttribute('data-test1-home-animate')) return;
+                cFood.setAttribute('data-test1-home-food-rise', '1');
+                if (window.__mlpTestConfig) {
+                  window.__mlpTestConfig.test1HomeFoodRise = true;
+                  window.__mlpTestConfig.test1HomeInnerRise = true;
                 }
               } catch (_) {}
             });
           });
-        }, TEST1_HOME_INNER_RISE_MS);
+        }, TEST1_HOME_FOOD_RISE_MS);
+        if (window.__mlpTest1HomeFoodPulseEndTimer) clearTimeout(window.__mlpTest1HomeFoodPulseEndTimer);
+        window.__mlpTest1HomeFoodPulseEndTimer = setTimeout(function () {
+          window.__mlpTest1HomeFoodPulseEndTimer = null;
+          try {
+            var cPulse = document.getElementById('canvas');
+            if (!cPulse || cPulse.getAttribute('data-test-scope') !== 'test1') return;
+            if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
+            if (!cPulse.getAttribute('data-test1-home-animate')) return;
+            if (window.Test1HomeWidgetFillGL) {
+              try { window.Test1HomeWidgetFillGL.fadeAll(); } catch (_) {}
+            }
+          } catch (_) {}
+        }, TEST1_HOME_FOOD_PULSE_MS);
       } catch (_) {}
     }, TEST1_HOME_EXIT_MS);
   } catch (_) {}
@@ -12121,7 +12153,7 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
         canvas.setAttribute('data-test1-reveal-all', '1');
         canvas.setAttribute('data-test1-home-run', '1');
         canvas.setAttribute('data-test1-home-prep', '1');
-        canvas.setAttribute('data-test1-home-inner-rise', '1');
+        canvas.setAttribute('data-test1-home-food-rise', '1');
         canvas.setAttribute('data-test1-home-bg-settled', '1');
         canvas.removeAttribute('data-test1-intro');
         canvas.removeAttribute('data-test1-intro-run');
@@ -12144,6 +12176,7 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
         canvas.removeAttribute('data-test1-coda-done');
         canvas.removeAttribute('data-test1-home-animate');
         canvas.removeAttribute('data-test1-home-inner-rise');
+        canvas.removeAttribute('data-test1-home-food-rise');
         canvas.removeAttribute('data-test1-home-bg-settled');
         if (window.__mlpTestConfig) {
           window.__mlpTestConfig.test1GreenRun = false;
@@ -12166,6 +12199,7 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
         canvas.removeAttribute('data-test1-home-exit');
         canvas.removeAttribute('data-test1-home-animate');
         canvas.removeAttribute('data-test1-home-inner-rise');
+        canvas.removeAttribute('data-test1-home-food-rise');
         canvas.removeAttribute('data-test1-home-bg-settled');
         canvas.removeAttribute('data-test1-pill-swipe-armed');
         canvas.removeAttribute('data-test1-pill-swipe-out');
@@ -12176,7 +12210,7 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
           }
           if (window.__mlpTestConfig.test1HomeBgSettled) {
             canvas.setAttribute('data-test1-home-bg-settled', '1');
-            canvas.setAttribute('data-test1-home-inner-rise', '1');
+            canvas.setAttribute('data-test1-home-food-rise', '1');
           }
         }
         canvas.removeAttribute('data-test1-intro');
@@ -12378,6 +12412,7 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
     canvas.removeAttribute('data-test1-home-exit');
     canvas.removeAttribute('data-test1-home-animate');
     canvas.removeAttribute('data-test1-home-inner-rise');
+    canvas.removeAttribute('data-test1-home-food-rise');
     canvas.removeAttribute('data-test1-home-bg-settled');
     canvas.removeAttribute('data-test1-pill-swipe-armed');
     canvas.removeAttribute('data-test1-pill-swipe-out');

@@ -50,6 +50,7 @@ export default function Test1Page() {
         canvas.removeAttribute("data-test1-home-run");
         canvas.removeAttribute("data-test1-home-animate");
         canvas.removeAttribute("data-test1-home-inner-rise");
+        canvas.removeAttribute("data-test1-home-food-rise");
         canvas.removeAttribute("data-test1-pill-swipe-armed");
         if (typeof window.__armTest1IntroDelay === "function") {
           window.__armTest1IntroDelay(canvas);
