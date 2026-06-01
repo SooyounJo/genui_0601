@@ -11299,12 +11299,68 @@ var TEST1_STACK_ITEM_GAP_PX = 16;
 var TEST1_STACK_SHIFT_PX = 72 + TEST1_STACK_ITEM_GAP_PX;
 var TEST1_HOME_EXIT_MS = 560;
 var TEST1_HOME_GLOW_HOLD_MS = 2000;
-var TEST1_HOME_FOOD_PULSE_MS = 5200;
-var TEST1_HOME_FOOD_CONTRACT_RATIO = 0.55;
+var TEST1_HOME_CROSSFADE_MS = 2000;
+var TEST1_HOME_EXPAND_MS = 3200;
+var TEST1_HOME_FOOD_PULSE_MS = TEST1_HOME_EXPAND_MS + TEST1_HOME_CROSSFADE_MS;
+var TEST1_HOME_FOOD_CONTRACT_RATIO = TEST1_HOME_EXPAND_MS / TEST1_HOME_FOOD_PULSE_MS;
 var TEST1_HOME_GLOW_FADE_MS = 850;
-var TEST1_HOME_FOOD_RISE_MS = Math.round(TEST1_HOME_FOOD_PULSE_MS * TEST1_HOME_FOOD_CONTRACT_RATIO);
-var TEST1_HOME_FOOD_GLOW_FADE_MS = Math.round(TEST1_HOME_FOOD_PULSE_MS * (1 - TEST1_HOME_FOOD_CONTRACT_RATIO));
-var TEST1_HOME_BG_SETTLE_MS = TEST1_HOME_FOOD_PULSE_MS + TEST1_HOME_FOOD_GLOW_FADE_MS;
+var TEST1_HOME_FOOD_RISE_MS = TEST1_HOME_EXPAND_MS;
+var TEST1_HOME_FOOD_GLOW_FADE_MS = TEST1_HOME_CROSSFADE_MS;
+var TEST1_HOME_BG_SETTLE_MS = TEST1_HOME_FOOD_RISE_MS + TEST1_HOME_CROSSFADE_MS + 480;
+
+function _runTest1HomeGleamReveal(done) {
+  try {
+    var canvas = document.getElementById('canvas');
+    if (!canvas || canvas.getAttribute('data-test-scope') !== 'test1') return;
+    var dur = TEST1_HOME_CROSSFADE_MS;
+    var widgets = canvas.querySelectorAll('.test1-home-widget');
+
+    widgets.forEach(function (widget) {
+      var veil = widget.querySelector('.test1-home-widget__veil');
+      var inner = widget.querySelector('.test1-home-widget__inner');
+      var bg = widget.querySelector('.test1-home-widget__bg');
+
+      widget.classList.add('test1-home-widget--gleam-out');
+
+      if (inner) {
+        inner.getAnimations().forEach(function (anim) { try { anim.cancel(); } catch (_) {} });
+        inner.style.transition = 'none';
+        inner.style.zIndex = '1';
+        inner.style.visibility = 'visible';
+        inner.style.opacity = '1';
+      }
+      if (bg) {
+        bg.getAnimations().forEach(function (anim) { try { anim.cancel(); } catch (_) {} });
+        bg.style.transition = 'none';
+        bg.style.opacity = '1';
+      }
+      if (veil) {
+        veil.getAnimations().forEach(function (anim) { try { anim.cancel(); } catch (_) {} });
+        veil.style.animation = 'none';
+        veil.style.transition = 'none';
+        veil.style.visibility = 'visible';
+        veil.style.opacity = '1';
+      }
+    });
+
+    void canvas.offsetWidth;
+
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        widgets.forEach(function (widget) {
+          var veil = widget.querySelector('.test1-home-widget__veil');
+          if (!veil) return;
+          veil.style.transition = 'opacity ' + dur + 'ms linear';
+          veil.style.opacity = '0';
+        });
+        if (window.Test1HomeWidgetFillGL) {
+          try { window.Test1HomeWidgetFillGL.crossfadeAll(dur); } catch (_) {}
+        }
+        if (typeof done === 'function') done();
+      });
+    });
+  } catch (_) {}
+}
 
 function _clearTest1IntroTimer() {
   if (window.__mlpTest1IntroTimer) {
@@ -11900,28 +11956,17 @@ function _runTest1HomeIntro() {
                 if (!cFood || cFood.getAttribute('data-test-scope') !== 'test1') return;
                 if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
                 if (!cFood.getAttribute('data-test1-home-animate')) return;
-                cFood.setAttribute('data-test1-home-food-rise', '1');
-                if (window.__mlpTestConfig) {
-                  window.__mlpTestConfig.test1HomeFoodRise = true;
-                  window.__mlpTestConfig.test1HomeInnerRise = true;
-                }
+                _runTest1HomeGleamReveal(function () {
+                  cFood.setAttribute('data-test1-home-food-rise', '1');
+                  if (window.__mlpTestConfig) {
+                    window.__mlpTestConfig.test1HomeFoodRise = true;
+                    window.__mlpTestConfig.test1HomeInnerRise = true;
+                  }
+                });
               } catch (_) {}
             });
           });
         }, TEST1_HOME_FOOD_RISE_MS);
-        if (window.__mlpTest1HomeFoodPulseEndTimer) clearTimeout(window.__mlpTest1HomeFoodPulseEndTimer);
-        window.__mlpTest1HomeFoodPulseEndTimer = setTimeout(function () {
-          window.__mlpTest1HomeFoodPulseEndTimer = null;
-          try {
-            var cPulse = document.getElementById('canvas');
-            if (!cPulse || cPulse.getAttribute('data-test-scope') !== 'test1') return;
-            if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
-            if (!cPulse.getAttribute('data-test1-home-animate')) return;
-            if (window.Test1HomeWidgetFillGL) {
-              try { window.Test1HomeWidgetFillGL.fadeAll(); } catch (_) {}
-            }
-          } catch (_) {}
-        }, TEST1_HOME_FOOD_PULSE_MS);
       } catch (_) {}
     }, TEST1_HOME_EXIT_MS);
   } catch (_) {}

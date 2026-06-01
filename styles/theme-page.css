@@ -19955,9 +19955,9 @@
 
   @keyframes test1HomeGleamSpreadOnce {
     0% {
-      opacity: 0.2;
-      transform: scale(0.34, 0.3);
-      filter: blur(40px);
+      opacity: 0.52;
+      transform: scale(0.46, 0.4);
+      filter: blur(38px);
     }
     48% {
       opacity: 0.76;
@@ -19970,12 +19970,12 @@
       filter: blur(19px);
     }
     78% {
-      opacity: 0.32;
+      opacity: 0.58;
       transform: scale(0.82, 0.74);
       filter: blur(32px);
     }
     100% {
-      opacity: 0;
+      opacity: 0.52;
       transform: scale(0.46, 0.4);
       filter: blur(38px);
     }
@@ -19983,9 +19983,9 @@
 
   @keyframes test1HomeGleamPulseFood {
     0% {
-      opacity: 0.18;
-      transform: scale(0.32, 0.28);
-      filter: blur(44px);
+      opacity: 0.5;
+      transform: scale(0.48, 0.42);
+      filter: blur(42px);
     }
     48% {
       opacity: 0.72;
@@ -19998,12 +19998,12 @@
       filter: blur(19px);
     }
     78% {
-      opacity: 0.28;
+      opacity: 0.54;
       transform: scale(0.86, 0.76);
       filter: blur(34px);
     }
     100% {
-      opacity: 0;
+      opacity: 0.5;
       transform: scale(0.48, 0.42);
       filter: blur(42px);
     }
@@ -20011,9 +20011,9 @@
 
   @keyframes test1HomeGleamSheenOnce {
     0% {
-      opacity: 0.22;
-      transform: scale(0.42, 0.82);
-      filter: blur(26px);
+      opacity: 0.24;
+      transform: scale(0.5, 0.78);
+      filter: blur(28px);
     }
     48% {
       opacity: 0.62;
@@ -20026,30 +20026,20 @@
       filter: blur(13px);
     }
     78% {
-      opacity: 0.24;
+      opacity: 0.3;
       transform: scale(0.72, 0.86);
       filter: blur(22px);
     }
     100% {
-      opacity: 0;
+      opacity: 0.24;
       transform: scale(0.5, 0.78);
       filter: blur(28px);
     }
   }
 
-  @keyframes test1HomeInnerFadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
-  @keyframes test1HomeWidgetReveal {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
   @keyframes test1HomeVeilFade {
-    from { opacity: 1; }
-    to { opacity: 0; }
+    0% { opacity: 1; }
+    100% { opacity: 0; }
   }
 
   @keyframes test1HomeWidgetIn {
@@ -20113,11 +20103,29 @@
   #canvas[data-test-scope="test1"][data-test1-home-animate]:not([data-test1-home-food-rise]):not([data-test1-reveal-all]) #test1-home-message .test1-home-widget__inner,
   #canvas[data-test-scope="test1"][data-test1-home-animate]:not([data-test1-home-food-rise]):not([data-test1-reveal-all]) #test1-home-food .test1-home-widget__inner {
     opacity: 0;
+    visibility: hidden;
+    z-index: 1;
   }
+  #canvas[data-test-scope="test1"][data-test1-home-animate]:not([data-test1-home-food-rise]):not([data-test1-reveal-all]) #test1-home-map .test1-home-widget__bg,
+  #canvas[data-test-scope="test1"][data-test1-home-animate]:not([data-test1-home-food-rise]):not([data-test1-reveal-all]) #test1-home-message .test1-home-widget__bg,
+  #canvas[data-test-scope="test1"][data-test1-home-animate]:not([data-test1-home-food-rise]):not([data-test1-reveal-all]) #test1-home-food .test1-home-widget__bg {
+    opacity: 0;
+  }
+  /* Reveal: final content sits behind gleam at full opacity; only gleam fades out */
   #canvas[data-test-scope="test1"][data-test1-home-animate][data-test1-home-food-rise]:not([data-test1-reveal-all]) #test1-home-map .test1-home-widget__inner,
   #canvas[data-test-scope="test1"][data-test1-home-animate][data-test1-home-food-rise]:not([data-test1-reveal-all]) #test1-home-message .test1-home-widget__inner,
   #canvas[data-test-scope="test1"][data-test1-home-animate][data-test1-home-food-rise]:not([data-test1-reveal-all]) #test1-home-food .test1-home-widget__inner {
-    animation: test1HomeInnerFadeIn var(--test1-home-food-glow-fade, 2.34s) cubic-bezier(0.22, 0.82, 0.24, 1) forwards;
+    opacity: 1;
+    visibility: visible;
+    z-index: 1;
+    transition: none;
+  }
+  #canvas[data-test-scope="test1"][data-test1-home-animate][data-test1-home-food-rise]:not([data-test1-home-bg-settled]):not([data-test1-reveal-all]) #test1-home-map .test1-home-widget__bg,
+  #canvas[data-test-scope="test1"][data-test1-home-animate][data-test1-home-food-rise]:not([data-test1-home-bg-settled]):not([data-test1-reveal-all]) #test1-home-message .test1-home-widget__bg,
+  #canvas[data-test-scope="test1"][data-test1-home-animate][data-test1-home-food-rise]:not([data-test1-home-bg-settled]):not([data-test1-reveal-all]) #test1-home-food .test1-home-widget__bg {
+    opacity: 1;
+    background: #9dc5b7;
+    transition: none;
   }
 
   /* Figma home dock ??Messages / Camera / Notes / Maps (node 5109:13040) */
@@ -20186,14 +20194,12 @@
     background: #9dc5b7;
     opacity: 0;
     overflow: hidden;
-    transition:
-      opacity var(--test1-home-glow-fade, 0.7s) cubic-bezier(0.22, 0.82, 0.24, 1),
-      background var(--test1-home-glow-fade, 0.7s) cubic-bezier(0.22, 0.82, 0.24, 1);
+    transition: none;
   }
   #canvas[data-test-scope="test1"] .test1-home-widget__veil {
     position: absolute;
     inset: 0;
-    z-index: 2;
+    z-index: 4;
     border-radius: inherit;
     overflow: hidden;
     pointer-events: none;
@@ -20203,7 +20209,7 @@
   #canvas[data-test-scope="test1"] .test1-home-widget__veil-gl {
     position: absolute;
     inset: 0;
-    z-index: 5;
+    z-index: 1;
     border-radius: inherit;
     overflow: hidden;
     pointer-events: none;
@@ -20221,6 +20227,16 @@
   }
   #canvas[data-test-scope="test1"] .test1-home-widget--gl-fill .test1-home-widget__veil-gl {
     opacity: 1;
+  }
+  #canvas[data-test-scope="test1"] .test1-home-widget--gleam-out .test1-home-widget__veil {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: none;
+  }
+  #canvas[data-test-scope="test1"] .test1-home-widget--gleam-out .test1-home-widget__veil::before,
+  #canvas[data-test-scope="test1"] .test1-home-widget--gleam-out .test1-home-widget__veil::after,
+  #canvas[data-test-scope="test1"] .test1-home-widget--gleam-out .test1-home-widget__veil-edge {
+    animation: none !important;
   }
   #canvas[data-test-scope="test1"] .test1-home-widget--gl-fill .test1-home-widget__veil::before,
   #canvas[data-test-scope="test1"] .test1-home-widget--gl-fill .test1-home-widget__veil::after,
@@ -20324,6 +20340,7 @@
     --test1-home-gleam-core-h: 56%;
     --test1-home-gleam-blur: 20px;
     --test1-home-gleam-pulse-dur: 5200ms;
+    --test1-home-crossfade: 2000ms;
   }
   /* Bottom food card — single slow gleam spread then reveal */
   #canvas[data-test-scope="test1"] #test1-home-food .test1-home-widget {
@@ -20336,8 +20353,9 @@
     --test1-home-gleam-core-h: 82%;
     --test1-home-gleam-blur: 24px;
     --test1-home-food-gleam-pulse-dur: 5200ms;
-    --test1-home-food-contract-ratio: 0.55;
-    --test1-home-food-glow-fade: calc(var(--test1-home-food-gleam-pulse-dur) * (1 - var(--test1-home-food-contract-ratio)));
+    --test1-home-crossfade: 2000ms;
+    --test1-home-food-contract-ratio: 0.615;
+    --test1-home-food-glow-fade: var(--test1-home-crossfade);
   }
   #canvas[data-test-scope="test1"][data-test1-home-animate]:not([data-test1-home-food-rise]):not([data-test1-reveal-all]) #test1-home-map .test1-home-widget__veil,
   #canvas[data-test-scope="test1"][data-test1-home-animate]:not([data-test1-home-food-rise]):not([data-test1-reveal-all]) #test1-home-message .test1-home-widget__veil,
@@ -20363,18 +20381,6 @@
   #canvas[data-test-scope="test1"][data-test1-home-animate]:not([data-test1-home-food-rise]):not([data-test1-reveal-all]) #test1-home-food .test1-home-widget__veil::after {
     animation: test1HomeGleamPulseFood var(--test1-home-food-gleam-pulse-dur, 5200ms) var(--test1-home-gleam-pulse-ease) 0.24s 1 forwards;
   }
-  #canvas[data-test-scope="test1"][data-test1-home-animate][data-test1-home-food-rise]:not([data-test1-home-bg-settled]):not([data-test1-reveal-all]) #test1-home-map .test1-home-widget__bg,
-  #canvas[data-test-scope="test1"][data-test1-home-animate][data-test1-home-food-rise]:not([data-test1-home-bg-settled]):not([data-test1-reveal-all]) #test1-home-message .test1-home-widget__bg,
-  #canvas[data-test-scope="test1"][data-test1-home-animate][data-test1-home-food-rise]:not([data-test1-home-bg-settled]):not([data-test1-reveal-all]) #test1-home-food .test1-home-widget__bg {
-    opacity: 1;
-    background: #9dc5b7;
-    transition: opacity var(--test1-home-food-glow-fade, 2.34s) cubic-bezier(0.22, 0.82, 0.24, 1);
-  }
-  #canvas[data-test-scope="test1"][data-test1-home-animate][data-test1-home-food-rise]:not([data-test1-home-bg-settled]):not([data-test1-reveal-all]) #test1-home-map .test1-home-widget__veil,
-  #canvas[data-test-scope="test1"][data-test1-home-animate][data-test1-home-food-rise]:not([data-test1-home-bg-settled]):not([data-test1-reveal-all]) #test1-home-message .test1-home-widget__veil,
-  #canvas[data-test-scope="test1"][data-test1-home-animate][data-test1-home-food-rise]:not([data-test1-home-bg-settled]):not([data-test1-reveal-all]) #test1-home-food .test1-home-widget__veil {
-    animation: test1HomeVeilFade var(--test1-home-food-glow-fade, 2.34s) cubic-bezier(0.22, 0.82, 0.24, 1) forwards;
-  }
   #canvas[data-test-scope="test1"][data-test1-home-bg-settled] .test1-home-widget__bg,
   #canvas[data-test-scope="test1"][data-test1-reveal-all] .test1-home-widget__bg {
     opacity: 1;
@@ -20385,6 +20391,11 @@
     opacity: 0 !important;
     visibility: hidden !important;
     animation: none !important;
+  }
+  #canvas[data-test-scope="test1"][data-test1-home-bg-settled] .test1-home-widget__veil-gl,
+  #canvas[data-test-scope="test1"][data-test1-reveal-all] .test1-home-widget__veil-gl {
+    opacity: 0 !important;
+    visibility: hidden !important;
   }
   #canvas[data-test-scope="test1"] .test1-home-map .test1-home-widget__inner,
   #canvas[data-test-scope="test1"] .test1-home-message .test1-home-widget__inner {

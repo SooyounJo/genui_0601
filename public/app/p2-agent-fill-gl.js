@@ -1107,6 +1107,9 @@
 
   Test1HomeWidgetFillGL.prototype._maybeAdvancePhase = function () {};
 
+  var TEST1_HOME_GL_PULSE_MS = 5200;
+  var TEST1_HOME_GL_EXPAND_RATIO = 3200 / 5200;
+
   Test1HomeWidgetFillGL.prototype._getPhaseConfig = function (phaseName) {
     var isFood = this.shellEl && this.shellEl.classList.contains('test1-home-food');
     if (phaseName === 'generating') {
@@ -1114,7 +1117,7 @@
         spread: isFood ? 1.45 : 1.38,
         intensity: isFood ? 0.82 : 0.72,
         fill: 0,
-        duration: 5200
+        duration: TEST1_HOME_GL_PULSE_MS
       };
     }
     if (phaseName === 'fadeOut') {
@@ -1122,7 +1125,7 @@
         spread: isFood ? 1.45 : 1.38,
         intensity: 0,
         fill: 0,
-        duration: isFood ? 950 : 700
+        duration: 2000
       };
     }
     return PHASES[phaseName] || PHASES.idle;
@@ -1142,22 +1145,28 @@
       ? clamp((now - this.phaseStart) / this.phaseDuration, 0, 1)
       : 1;
     var isFood = this.shellEl && this.shellEl.classList.contains('test1-home-food');
+    var expandRatio = TEST1_HOME_GL_EXPAND_RATIO;
     var pulseT;
-    if (t <= 0.55) {
-      var expandT = t / 0.55;
+    var opacityMul = 1;
+    if (t <= expandRatio) {
+      var expandT = t / expandRatio;
       expandT = 1 - Math.pow(1 - expandT, 2.1);
       pulseT = expandT;
     } else {
-      var contractT = (t - 0.55) / 0.45;
+      var contractT = (t - expandRatio) / (1 - expandRatio);
       contractT = contractT * contractT * (3 - 2 * contractT);
       pulseT = 1 - contractT;
     }
+    if (this._crossfadeUntil && now <= this._crossfadeUntil) {
+      var crossT = clamp((now - this._crossfadeStart) / this._crossfadeDur, 0, 1);
+      opacityMul = 1 - crossT;
+    }
     if (isFood) {
       this.values.spread = lerp(0.34, 1.45, pulseT);
-      this.values.intensity = lerp(0.12, 0.82, pulseT);
+      this.values.intensity = lerp(0.12, 0.82, pulseT) * opacityMul;
     } else {
       this.values.spread = lerp(0.28, 1.38, pulseT);
-      this.values.intensity = lerp(0.1, 0.72, pulseT);
+      this.values.intensity = lerp(0.1, 0.72, pulseT) * opacityMul;
     }
     this.values.fill = 0;
     this.values.sweep = 1;
@@ -1334,6 +1343,16 @@
       if (!bindTest1Canvases()) return;
       test1Instances.forEach(function (inst) {
         inst.setPhase('generating');
+      });
+    },
+    crossfadeAll: function (duration) {
+      var dur = duration || 2000;
+      var now = performance.now();
+      test1Instances.forEach(function (inst) {
+        if (!inst.ready) return;
+        inst._crossfadeStart = now;
+        inst._crossfadeDur = dur;
+        inst._crossfadeUntil = now + dur;
       });
     },
     fadeAll: function () {
