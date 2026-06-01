@@ -24,6 +24,7 @@
     'uniform float u_audio;',
     'uniform float u_compact;',
     'uniform float u_virtAspect;',
+    'uniform float u_variant;',
     '',
     'float hash(vec2 p) {',
     '  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);',
@@ -176,6 +177,29 @@
     '  return col * 1.06;',
     '}',
     '',
+    'vec3 meshTest1GleamGradient(vec2 uv, float time, float audio) {',
+    '  float mt = time * (1.36 + audio * 0.08);',
+    '  float warpAmt = 0.034 + audio * 0.010;',
+    '  vec2 warp = vec2(',
+    '    fbm(uv * 2.0 + mt * 0.055) - 0.5,',
+    '    fbm(uv * 2.0 + vec2(11.1, 7.4) + mt * 0.048) - 0.5',
+    '  ) * warpAmt;',
+    '  vec2 u = uv + warp;',
+    '  vec3 sage = vec3(0.808, 0.867, 0.839);',
+    '  vec3 gleam = vec3(0.851, 0.796, 0.914);',
+    '  vec3 white = vec3(1.0, 0.992, 1.0);',
+    '  vec2 a1 = u_origin + vec2(sin(mt * 0.42) * 0.028, cos(mt * 0.36) * 0.024);',
+    '  vec2 a2 = u_origin + vec2(-0.10, 0.12) + vec2(cos(mt * 0.31) * 0.022, sin(mt * 0.28) * 0.020);',
+    '  vec2 a3 = u_origin + vec2(-0.18, 0.20) + vec2(sin(mt * 0.26) * 0.024, cos(mt * 0.30) * 0.018);',
+    '  float falloff = 1.32;',
+    '  float w1 = 1.0 / (pow(length(u - a1), falloff) + 0.065);',
+    '  float w2 = 1.0 / (pow(length(u - a2), falloff) + 0.070);',
+    '  float w3 = 1.0 / (pow(length(u - a3), falloff) + 0.075);',
+    '  float wSum = w1 + w2 + w3;',
+    '  vec3 col = (gleam * w1 + white * w2 + sage * w3) / wSum;',
+    '  return col * 1.08;',
+    '}',
+    '',
     'float edgeRingHandoff(vec2 uv, vec2 p, float sdf, float aspect, float tightness, float time) {',
     '  float maxInward = mix(0.64, 0.28, clamp(tightness, 0.0, 1.0));',
     '  float inward = clamp(-sdf, 0.0, maxInward);',
@@ -249,11 +273,13 @@
     '  float edgeWobble = (fbm(uv * 2.5 + u_time * 0.05) - 0.5) * 0.010 * morph;',
     '  float sdf = sdRoundedBox(p, halfSize, u_radius) + edgeBreath + edgeWobble;',
     '  float morphEarly = smoothstep(0.02, 0.12, morph);',
-    '  float shapeAlpha = mix(',
-    '    1.0 - smoothstep(-0.018, 0.048, sdf),',
-    '    1.0 - smoothstep(-0.042, 0.072, sdf),',
-    '    morphEarly',
-    '  );',
+    '  float shapeAlpha = u_variant >= 1.5',
+    '    ? (1.0 - smoothstep(-0.006, 0.020, sdf))',
+    '    : mix(',
+    '        1.0 - smoothstep(-0.018, 0.048, sdf),',
+    '        1.0 - smoothstep(-0.042, 0.072, sdf),',
+    '        morphEarly',
+    '      );',
     '  if (shapeAlpha < 0.001) discard;',
     '',
     '  float depth = clamp(-sdf / 0.36, 0.0, 1.0);',
@@ -266,7 +292,9 @@
     '  float reveal = organicReveal(uv, rel, sdf, u_spread, u_time, u_audio)',
     '    * smoothstep(0.82, 0.98, u_sweep);',
     '',
-    '  vec3 mesh = meshWarmGradient(uv, u_time, u_audio);',
+    '  vec3 mesh = u_variant >= 1.5',
+    '    ? meshTest1GleamGradient(uv, u_time, u_audio)',
+    '    : meshWarmGradient(uv, u_time, u_audio);',
     '  float sweepMask = edgePerimeterSweep(uv, p, sdf, u_aspect, u_sweep, u_time);',
     '  float tightness = smoothstep(0.38, 0.98, handoffT);',
     '  float spreadShimmer = 1.0 - smoothstep(0.04, 0.78, u_spread);',
@@ -380,6 +408,12 @@
     var canvas = document.getElementById('canvas');
     if (canvas && canvas.getAttribute('data-test-scope') === 'test3') return true;
     return !!(window.__mlpTestConfig && window.__mlpTestConfig.id === 'test3');
+  }
+
+  function isTest1Scope() {
+    var canvas = document.getElementById('canvas');
+    if (canvas && canvas.getAttribute('data-test-scope') === 'test1') return true;
+    return !!(window.__mlpTestConfig && window.__mlpTestConfig.id === 'test1');
   }
 
   function compileShader(gl, type, source) {
@@ -751,6 +785,9 @@
     gl.uniform1f(this.uniforms.audio, this.smoothAudio);
     gl.uniform1f(this.uniforms.compact, this.layout.compact || 0);
     gl.uniform1f(this.uniforms.virtAspect, this.layout.virtAspect || INPUT_VIRT_ASPECT);
+    if (this.uniforms.variant) {
+      gl.uniform1f(this.uniforms.variant, this._meshVariant || 0);
+    }
 
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -871,7 +908,8 @@
       sweep: gl.getUniformLocation(program, 'u_sweep'),
       audio: gl.getUniformLocation(program, 'u_audio'),
       compact: gl.getUniformLocation(program, 'u_compact'),
-      virtAspect: gl.getUniformLocation(program, 'u_virtAspect')
+      virtAspect: gl.getUniformLocation(program, 'u_virtAspect'),
+      variant: gl.getUniformLocation(program, 'u_variant')
     };
 
     this.ready = true;
@@ -1050,6 +1088,225 @@
     },
     destroy: function () {
       test3Instance.destroy();
+    }
+  };
+
+  function Test1HomeWidgetFillGL() {
+    AgentFillGL.call(this);
+    this._meshVariant = 2;
+    this._origin = [0.08, 0.11];
+  }
+  Test1HomeWidgetFillGL.prototype = Object.create(AgentFillGL.prototype);
+  Test1HomeWidgetFillGL.prototype.constructor = Test1HomeWidgetFillGL;
+
+  Test1HomeWidgetFillGL.prototype._getOrigin = function () {
+    return this._origin.slice();
+  };
+
+  Test1HomeWidgetFillGL.prototype._maybeAdvancePhase = function () {};
+
+  Test1HomeWidgetFillGL.prototype._getPhaseConfig = function (phaseName) {
+    var isFood = this.shellEl && this.shellEl.classList.contains('test1-home-food');
+    if (phaseName === 'generating') {
+      return {
+        spread: isFood ? 1.42 : 1.16,
+        intensity: isFood ? 1.04 : 0.78,
+        fill: 0,
+        duration: 2000
+      };
+    }
+    if (phaseName === 'fadeOut') {
+      return {
+        spread: isFood ? 1.42 : 1.16,
+        intensity: 0,
+        fill: 0,
+        duration: 600
+      };
+    }
+    return PHASES[phaseName] || PHASES.idle;
+  };
+
+  Test1HomeWidgetFillGL.prototype._resize = function (force) {
+    AgentFillGL.prototype._resize.call(this, force);
+    var rect = this._fillRect();
+    if (!rect) return;
+    this.layout.radius = Math.min(38, rect.height * 0.5) / rect.height;
+  };
+
+  Test1HomeWidgetFillGL.prototype.setPhase = function (phaseName) {
+    if (!this.ready || prefersReducedMotion()) return;
+    if (phaseName === 'generating') {
+      this.values.sweep = 1;
+      this.values.spread = 0;
+      this.values.intensity = 0;
+      this.values.fill = 0;
+      this.smoothAudio = 0;
+    }
+    AgentFillGL.prototype.setPhase.call(this, phaseName);
+  };
+
+  Test1HomeWidgetFillGL.prototype._setPhaseTargets = function (phaseName) {
+    var next = this._getPhaseConfig(phaseName);
+    this.phase = phaseName;
+    this.phaseStart = performance.now();
+    this._fadeTailDone = false;
+    this.phaseFrom = {
+      spread: this.values.spread,
+      intensity: this.values.intensity,
+      fill: this.values.fill
+    };
+    this.phaseTo = {
+      spread: next.spread,
+      intensity: next.intensity,
+      fill: next.fill
+    };
+    this.phaseDuration = next.duration;
+    if (this.fillEl) {
+      if (phaseName !== 'idle') {
+        this.fillEl.classList.add('p2-agent-fill--gl-active');
+        this.fillEl.classList.remove('p2-agent-fill--gl-fading');
+      } else {
+        this.fillEl.classList.remove('p2-agent-fill--gl-active');
+        this.fillEl.classList.remove('p2-agent-fill--gl-fading');
+      }
+      if (phaseName === 'fadeOut') {
+        this.fillEl.classList.add('p2-agent-fill--gl-fading');
+      }
+    }
+    if (this.shellEl) {
+      if (phaseName === 'generating' || phaseName === 'fadeOut') {
+        this.shellEl.classList.add('test1-home-widget--gl-fill');
+      } else if (phaseName === 'idle') {
+        this.shellEl.classList.remove('test1-home-widget--gl-fill');
+      }
+    }
+  };
+
+  Test1HomeWidgetFillGL.prototype.destroy = function () {
+    AgentFillGL.prototype.destroy.call(this);
+    if (this.shellEl) this.shellEl.classList.remove('test1-home-widget--gl-fill');
+  };
+
+  Test1HomeWidgetFillGL.prototype.bind = function (canvas) {
+    this.destroy();
+    if (!canvas || prefersReducedMotion() || !isTest1Scope()) return false;
+
+    this.canvas = canvas;
+    this.fillEl = canvas.closest('.test1-home-widget__veil-gl');
+    this.shellEl = canvas.closest('.test1-home-widget');
+    if (!this.fillEl || !this.shellEl) return false;
+
+    if (this.shellEl.classList.contains('test1-home-food')) {
+      this._origin = [0.06, 0.07];
+    } else {
+      this._origin = [0.08, 0.11];
+    }
+
+    var gl = canvas.getContext('webgl', {
+      alpha: true,
+      antialias: false,
+      premultipliedAlpha: true,
+      preserveDrawingBuffer: false
+    });
+    if (!gl) {
+      console.warn('[Test1HomeWidgetFillGL] WebGL unavailable');
+      return false;
+    }
+
+    var program = createProgram(gl, VERT_SRC, FRAG_SRC);
+    if (!program) return false;
+
+    var buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+      -1, -1, 1, -1, -1, 1, 1, 1
+    ]), gl.STATIC_DRAW);
+
+    var aPos = gl.getAttribLocation(program, 'a_pos');
+    gl.enableVertexAttribArray(aPos);
+    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+
+    this.gl = gl;
+    this.program = program;
+    this.uniforms = {
+      origin: gl.getUniformLocation(program, 'u_origin'),
+      aspect: gl.getUniformLocation(program, 'u_aspect'),
+      radius: gl.getUniformLocation(program, 'u_radius'),
+      time: gl.getUniformLocation(program, 'u_time'),
+      spread: gl.getUniformLocation(program, 'u_spread'),
+      intensity: gl.getUniformLocation(program, 'u_intensity'),
+      fill: gl.getUniformLocation(program, 'u_fill'),
+      sweep: gl.getUniformLocation(program, 'u_sweep'),
+      audio: gl.getUniformLocation(program, 'u_audio'),
+      compact: gl.getUniformLocation(program, 'u_compact'),
+      virtAspect: gl.getUniformLocation(program, 'u_virtAspect'),
+      variant: gl.getUniformLocation(program, 'u_variant')
+    };
+
+    this.ready = true;
+    this.startTime = performance.now();
+    this._setPhaseTargets('idle');
+    this.fillEl.classList.add('p2-agent-fill--gl-ready');
+    this._resize(true);
+
+    var self = this;
+    if (typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(function () {
+        self._resize(true);
+      });
+      this.resizeObserver.observe(this.fillEl);
+      if (this.shellEl && this.shellEl !== this.fillEl) {
+        this.resizeObserver.observe(this.shellEl);
+      }
+    }
+
+    canvas.addEventListener('webglcontextlost', function (e) {
+      e.preventDefault();
+      self.destroy();
+    }, false);
+
+    return true;
+  };
+
+  var test1Instances = [];
+
+  function bindTest1Canvases() {
+    if (!isTest1Scope() || prefersReducedMotion()) return false;
+    test1Instances.forEach(function (inst) { inst.destroy(); });
+    test1Instances = [];
+    var canvases = document.querySelectorAll(
+      '#canvas[data-test-scope="test1"] .test1-home-widget__veil-gl-canvas'
+    );
+    if (!canvases.length) return false;
+    var ok = false;
+    canvases.forEach(function (canvas) {
+      var inst = new Test1HomeWidgetFillGL();
+      if (inst.bind(canvas)) {
+        test1Instances.push(inst);
+        ok = true;
+      }
+    });
+    return ok;
+  }
+
+  window.Test1HomeWidgetFillGL = {
+    startAll: function () {
+      if (!bindTest1Canvases()) return;
+      test1Instances.forEach(function (inst) {
+        inst.setPhase('generating');
+      });
+    },
+    fadeAll: function () {
+      test1Instances.forEach(function (inst) {
+        if (inst.ready) inst.setPhase('fadeOut');
+      });
+    },
+    destroyAll: function () {
+      test1Instances.forEach(function (inst) { inst.destroy(); });
+      test1Instances = [];
     }
   };
 })();

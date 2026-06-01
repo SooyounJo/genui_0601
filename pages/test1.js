@@ -36,19 +36,21 @@ export default function Test1Page() {
         canvas.removeAttribute("data-test1-shortcuts-animate");
         canvas.removeAttribute("data-test1-pill-out");
         canvas.removeAttribute("data-test1-pill-out-animate");
+        canvas.removeAttribute("data-test1-pill-out-done");
         canvas.removeAttribute("data-test1-gradient-run");
         canvas.removeAttribute("data-test1-gradient-animate");
         canvas.removeAttribute("data-test1-gradient-out");
         canvas.removeAttribute("data-test1-gradient-out-animate");
+        canvas.removeAttribute("data-test1-home-widgets-ready");
         canvas.removeAttribute("data-test1-coda-run");
         canvas.removeAttribute("data-test1-coda-animate");
-        canvas.removeAttribute("data-test1-coda-inner-rise");
         canvas.removeAttribute("data-test1-coda-done");
         canvas.removeAttribute("data-test1-home-prep");
         canvas.removeAttribute("data-test1-home-exit");
         canvas.removeAttribute("data-test1-home-run");
         canvas.removeAttribute("data-test1-home-animate");
         canvas.removeAttribute("data-test1-home-inner-rise");
+        canvas.removeAttribute("data-test1-pill-swipe-armed");
         if (typeof window.__armTest1IntroDelay === "function") {
           window.__armTest1IntroDelay(canvas);
         }

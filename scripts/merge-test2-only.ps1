@@ -53,8 +53,8 @@ Write-Host "theme-page.css: inserted $($test3StartSam - $test2StartSam) samsung 
 
 # User wallpaper override in test2 ::before
 $cssText = [System.IO.File]::ReadAllText("$loc\styles\theme-page.css")
-$cssText = $cssText -replace "url\('/assets/figma/lock-screen/lock-screen-wallpaper\.png'\)", "url('/assets/test2-wallpaper.png?v=2')"
-$cssText = $cssText -replace "url\(""/assets/figma/lock-screen/lock-screen-wallpaper\.png""\)", "url('/assets/test2-wallpaper.png?v=2')"
+$cssText = $cssText -replace "url\('/assets/figma/lock-screen/lock-screen-wallpaper\.png'\)", "url('/assets/test2/test2-wallpaper.png?v=2')"
+$cssText = $cssText -replace "url\(""/assets/figma/lock-screen/lock-screen-wallpaper\.png""\)", "url('/assets/test2/test2-wallpaper.png?v=2')"
 [System.IO.File]::WriteAllText("$loc\styles\theme-page.css", $cssText, $enc)
 
 # surface-layout.js: NEVER splice large regions (renderAtomicForRole contains test3).

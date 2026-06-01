@@ -99,8 +99,8 @@ if (Test-Path $lockSrc) {
   Copy-Item "$lockSrc\*" $lockDst -Force -Recurse
 }
 Copy-Item "$sam\public\assets\figma\lock-screen\*" $lockDst -Force -ErrorAction SilentlyContinue
-if (Test-Path "$loc\public\assets\test2-wallpaper.png") {
-  Copy-Item "$loc\public\assets\test2-wallpaper.png" "$lockDst\lock-screen-wallpaper.png" -Force
+if (Test-Path "$loc\public\assets\test2\test2-wallpaper.png") {
+  Copy-Item "$loc\public\assets\test2\test2-wallpaper.png" "$lockDst\lock-screen-wallpaper.png" -Force
 }
 
 Write-Host 'sync-test2-from-samsung.ps1 done'

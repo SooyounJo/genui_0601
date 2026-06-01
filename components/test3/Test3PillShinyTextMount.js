@@ -28,11 +28,11 @@ function getPillTiming() {
     textStart: 1500,
     emerge: 420,
     gradientSpeed: 2.0,
-    gradientTitleCycles: 1,
-    gradientSubCycles: 1,
+    gradientTitleCycles: 2,
+    gradientSubCycles: 2,
     shinePassMs: 1500,
-    blackAt: 3720,
-    dropAt: 3920,
+    blackAt: 5220,
+    dropAt: 5720,
   };
 }
 
@@ -259,7 +259,10 @@ export function armTest3PillShinyText(canvas) {
         if (el.__test3ShinyRender) {
           el.__test3ShinyRender({ settled: false, emerging: false, onPassesComplete: settleLine });
         }
-      }, startMs + Math.max(timing.emerge || 420, timing.shinePassMs || 1500));
+      }, startMs + Math.max(
+        timing.emerge || 420,
+        (timing.shinePassMs || 1500) * (isTitle ? (timing.gradientTitleCycles || 2) : (timing.gradientSubCycles || 2))
+      ));
 
       if (typeof timing.blackAt === 'number') {
         scheduleFromRevealStart(settleLine, timing.blackAt + (isSub ? SUB_EXTRA_MS : 0));

@@ -11,15 +11,15 @@ const PHONE_RADIUS = 30;
 const HOME_BG = "/assets/bg-new.png?v=2";
 /** Phone canvas backdrop per test (not full-viewport workspace bg). */
 const PHONE_BG_BY_TEST = {
-  test1: "/assets/test1-wallpaper.png?v=1",
-  test2: "/assets/test2-wallpaper.png?v=2",
-  test3: "/assets/test3-wallpaper.png?v=4",
+  test1: "/assets/test1/mobile-bg.png?v=1",
+  test2: "/assets/test2/test2-wallpaper.png?v=2",
+  test3: "/assets/test3/test3-wallpaper.png?v=4",
 };
 /** Full-viewport workspace backdrop per test page (not the phone canvas). */
 const WORKSPACE_BGS = {
   test1: "/assets/test1-workspace-bg.png",
-  test2: "/assets/test2-workspace-bg.png",
-  test3: "/assets/test3-workspace-bg.png",
+  test2: "/assets/test2/test2-workspace-bg.png",
+  test3: "/assets/test3/test3-workspace-bg.png",
 };
 
 /** White conic ring — shared by test1/test2/test3 persona badges. */
@@ -675,7 +675,7 @@ export default function MlpTestPage({
             right: 0 !important;
             padding: 0 40px !important;
             display: flex !important;
-            justify-content: space-between !important;
+            justify-content: flex-end !important;
             align-items: center !important;
             z-index: 2000 !important;
             pointer-events: none !important;
@@ -1634,7 +1634,6 @@ export default function MlpTestPage({
 
       <main className="app-shell mlp-test-page" data-mlp-test={testId}>
         <nav className="page-nav">
-          <Link href="/" className="nav-btn">Back</Link>
           <Link href="/theme" className="nav-btn">Theme</Link>
         </nav>
 

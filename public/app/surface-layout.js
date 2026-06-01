@@ -26,7 +26,17 @@ var TEST3_GOAL_TOP = 62;
 var TEST3_GOAL_H = 245;
 /* Slightly shorter than goal card; Figma 5247:16990 base, tuned −10px */
 var TEST3_MUSIC_EXPAND_H = 218;
-var TEST3_MUSIC_LYRICS_H = TEST3_MUSIC_EXPAND_H + 112;
+/* Figma 5247:16913 expanded — 274.587@320w → ~292@340w (+pill tune) */
+var TEST3_MUSIC_LYRICS_H = Math.round(274.587 * 340 / 320) + 6;
+var TEST3_MUSIC_LYRICS_CONTROLS_H = 72;
+var TEST3_MUSIC_LYRICS_PILL_CONTROLS_GAP = 17;
+var TEST3_MUSIC_LYRICS_PILL_STACK_GAP = 10;
+var TEST3_MUSIC_LYRICS_OPEN_H =
+  TEST3_MUSIC_LYRICS_H -
+  TEST3_MUSIC_LYRICS_CONTROLS_H -
+  TEST3_MUSIC_LYRICS_PILL_CONTROLS_GAP +
+  TEST3_MUSIC_LYRICS_PILL_STACK_GAP +
+  56;
 /* Uniform vertical gap: goal↔music, music↔weather/steps, compact pill stack */
 var TEST3_CARD_GAP_V = 8;
 var TEST3_CARD_GAP_H = 5;
@@ -36,7 +46,7 @@ var TEST3_PILL_SLOT_H = 76;
 // Music mounts as an 82px capsule on row 2; pills drop to sit below it.
 var TEST3_MUSIC_SPAWN_H = 82;
 var TEST3_WEATHER_DROP = TEST3_MUSIC_SPAWN_H + TEST3_CARD_GAP_V;
-var TEST3_WEATHER_PREP_DROP_MS = 520;
+var TEST3_WEATHER_PREP_DROP_MS = 360;
 var TEST3_ROW2_TOP = TEST3_GOAL_TOP + TEST3_GOAL_H + TEST3_CARD_GAP_V;
 // Grid 1×1 half-column — outer shell must match weather/steps column (168px).
 var TEST3_MUSIC_COMPACT = 168;
@@ -57,7 +67,7 @@ var TEST3_MUSIC_BAR_TRACK = Math.round(
 var TEST3_MUSIC_TITLE = '저녁 한강 러닝 플레이리스트\n5km 페이스에 맞춰 준비했어요';
 var TEST3_MUSIC_FOLD_TITLE = '저녁 한강 러닝\n플레이리스트';
 var TEST3_MUSIC_COMPACT_FOLD = '저녁 한강 러닝\n플레이리스트';
-var TEST3_MUSIC_LYRICS_TITLE = '저녁 한강 러닝에 어울리는\nBPM 120-140 신스팝\n플레이리스트';
+var TEST3_MUSIC_LYRICS_TITLE = '저녁 한강에 어울리는\nBPM 120-140 신스팝 플레이리스트';
 var TEST3_MUSIC_SEARCH_LINE1 = '러닝 bgm을 찾고 있어요';
 var TEST3_MUSIC_SEARCH_LINE2 = '5km 페이스에 맞는 음악 선택';
 var TEST3_MUSIC_SEARCH_LINE1_IN_MS = 520;
@@ -73,7 +83,7 @@ var TEST3_MUSIC_DISC_STAR_ONLY_MS = 880;
 /** test2 agent orange orb — sparkle image ↔ dot grid. */
 var TEST2_ORB_SPARKLE_SRC = '/assets/test2-orange-orb-sparkle.png?v=1';
 /** test2 Needs list — Figma app icons (filename = app name + .png). */
-var TEST2_ICONS_DIR = '/assets/test2icons/';
+var TEST2_ICONS_DIR = '/assets/test2/';
 var TEST2_ICON_FILES = {
   'Figma': 'Figma.png',
   'Notion': 'Notion.png',
@@ -263,7 +273,7 @@ function _test3DiscLoaderDrawFrame(canvas, st, dt) {
       (_test3DiscLoaderNoise(v.noiseSeed + 50 + t * 0.45 - i * 0.3) - 0.5) * 2 * 0.45;
     yMix = _test3DiscLoaderLerp(sinY, noiseY, TEST3_DISC_LOADER_BLEND);
     y = cy + ampPx * yMix;
-    swell = 0.84 + 0.12 * (0.5 + 0.5 * Math.sin(t * 1.3 - i * phaseStep * 0.85));
+    swell = 1;
     dotR = baseR * swell;
     positions.push({
       x: x,
@@ -279,7 +289,7 @@ function _test3DiscLoaderDrawFrame(canvas, st, dt) {
   }
 
   for (i = 0; i < TEST3_DISC_LOADER_N; i++) {
-    var pulse = 0.94 + 0.06 * Math.sin(t * 1.5 - i * phaseStep * 0.7);
+    var pulse = 1;
     var a = Math.min(1, Math.max(0.52, positions[i].alpha * pulse));
     ctx.fillStyle = 'rgba(255, 255, 255, ' + a.toFixed(3) + ')';
     ctx.beginPath();
@@ -348,121 +358,19 @@ function _syncTest3MusicDiscLoaderAfterRender() {
   }
 }
 
-/** GenSketches 13-ai-sparkle — Galaxy AI 4-star morph (test3 disc star phase). */
+/** test3 disc star phase — reuses test1 Galaxy AI logo motion (white-only). */
 var TEST3_DISC_SPARKLE_PX = 112;
-var TEST3_SPARKLE_POS_SCALE = 0.32;
-var TEST3_SPARKLE_BL_HOME = { x: -5, y: 5 };
-var TEST3_SPARKLE_TR_HOME = { x: 65, y: -55 };
-var TEST3_SPARKLE_TL_HOME = { x: -55, y: -45 };
-var TEST3_SPARKLE_BR_HOME = { x: 60, y: 40 };
-var TEST3_SPARKLE_SIZE_BL = 75;
-var TEST3_SPARKLE_SIZE_TR = 32;
-var TEST3_SPARKLE_SIZE_TL = 18;
-var TEST3_SPARKLE_SIZE_BR = 22;
 
 function renderTest3MusicDiscSparkleHtml() {
   return '<canvas class="test3-music-disc__sparkleCanvas" width="' + TEST3_DISC_SPARKLE_PX +
     '" height="' + TEST3_DISC_SPARKLE_PX + '" aria-hidden="true"></canvas>';
 }
 
-function _test3SparkleScalePos(v) {
-  return { x: v.x * TEST3_SPARKLE_POS_SCALE, y: v.y * TEST3_SPARKLE_POS_SCALE };
-}
-function _test3SparkleDrawDenseMorph(ctx, size, morph) {
-  var s = size * TEST3_SPARKLE_POS_SCALE;
-  var steps = 20;
-  var q;
-  var i;
-  var t;
-  var starX;
-  var starY;
-  var angle;
-  var circX;
-  var circY;
-  var x;
-  var y;
-  ctx.beginPath();
-  for (q = 0; q < 4; q++) {
-    for (i = 0; i <= steps; i++) {
-      t = i / steps;
-      if (q === 0) {
-        starX = s * (t * t);
-        starY = -s * ((1 - t) * (1 - t));
-        angle = t * Math.PI / 2;
-        circX = s * Math.sin(angle);
-        circY = -s * Math.cos(angle);
-      } else if (q === 1) {
-        starX = s * ((1 - t) * (1 - t));
-        starY = s * (t * t);
-        angle = Math.PI / 2 + t * Math.PI / 2;
-        circX = s * Math.sin(angle);
-        circY = -s * Math.cos(angle);
-      } else if (q === 2) {
-        starX = -s * (t * t);
-        starY = s * ((1 - t) * (1 - t));
-        angle = Math.PI + t * Math.PI / 2;
-        circX = s * Math.sin(angle);
-        circY = -s * Math.cos(angle);
-      } else {
-        starX = -s * ((1 - t) * (1 - t));
-        starY = -s * (t * t);
-        angle = Math.PI * 1.5 + t * Math.PI / 2;
-        circX = s * Math.sin(angle);
-        circY = -s * Math.cos(angle);
-      }
-      x = _test3DiscLoaderLerp(starX, circX, morph);
-      y = _test3DiscLoaderLerp(starY, circY, morph);
-      if (q === 0 && i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    }
-  }
-  ctx.closePath();
-  ctx.fill();
-}
-function _test3SparkleDrawAt(ctx, pos, size, morph, scale, alpha) {
-  ctx.save();
-  ctx.translate(pos.x, pos.y);
-  ctx.scale(scale, scale);
-  ctx.globalAlpha = alpha;
-  ctx.fillStyle = '#ffffff';
-  _test3SparkleDrawDenseMorph(ctx, size, morph);
-  ctx.restore();
-}
-function _test3SparkleDrawFrame(canvas, st, dt) {
-  var ctx = canvas.getContext('2d');
-  if (!ctx) return;
-  var px = canvas.width || TEST3_DISC_SPARKLE_PX;
-  var cx = px / 2;
-  var cy = px / 2;
-  var t = st.time;
-  var rot = Math.sin(t * 0.5) * (1.5 * Math.PI / 180);
-  var morph = 0.2 + Math.sin(t * 1.15) * 0.1;
-  var bl = _test3SparkleScalePos(TEST3_SPARKLE_BL_HOME);
-  var tr = _test3SparkleScalePos(TEST3_SPARKLE_TR_HOME);
-  var tl = _test3SparkleScalePos(TEST3_SPARKLE_TL_HOME);
-  var br = _test3SparkleScalePos(TEST3_SPARKLE_BR_HOME);
-  var pulseBig = 1 + Math.sin(t * 4) * 0.12;
-  var pulseTR = 1 + Math.sin(t * 5 + 2.35) * 0.15;
-  var pulseTL = 1 + Math.sin(t * 4.5 + 0.78) * 0.14;
-  var pulseBR = 1 + Math.sin(t * 3.5 + 1.57) * 0.14;
-
-  st.time += dt;
-  ctx.clearRect(0, 0, px, px);
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.rotate(rot);
-  _test3SparkleDrawAt(ctx, tl, TEST3_SPARKLE_SIZE_TL, morph, pulseTL, 0.88);
-  _test3SparkleDrawAt(ctx, br, TEST3_SPARKLE_SIZE_BR, morph, pulseBR, 0.92);
-  _test3SparkleDrawAt(ctx, tr, TEST3_SPARKLE_SIZE_TR, morph, pulseTR, 0.96);
-  _test3SparkleDrawAt(ctx, bl, TEST3_SPARKLE_SIZE_BL, morph, pulseBig, 1);
-  ctx.restore();
-}
 function _test3SparkleStopCanvas(canvas) {
-  if (!canvas || !canvas.__test3DiscSparkle) return;
-  if (canvas.__test3DiscSparkle.rafId) {
-    cancelAnimationFrame(canvas.__test3DiscSparkle.rafId);
+  if (!canvas) return;
+  if (window.__test1GalaxyAiLogo && typeof window.__test1GalaxyAiLogo.unmountCanvas === 'function') {
+    window.__test1GalaxyAiLogo.unmountCanvas(canvas);
   }
-  delete canvas.__test3DiscSparkle;
 }
 function _stopTest3MusicDiscSparkle(music) {
   var canvases;
@@ -475,25 +383,15 @@ function _stopTest3MusicDiscSparkle(music) {
   canvases = document.querySelectorAll('#test3-music .test3-music-disc__sparkleCanvas');
   for (i = 0; i < canvases.length; i++) _test3SparkleStopCanvas(canvases[i]);
 }
-function _test3SparkleTick(canvas) {
-  var st = canvas.__test3DiscSparkle;
-  if (!st || !canvas.isConnected) {
-    _test3SparkleStopCanvas(canvas);
-    return;
-  }
-  var now = performance.now();
-  var dt = st.lastTs ? (now - st.lastTs) / 1000 : 0;
-  st.lastTs = now;
-  _test3SparkleDrawFrame(canvas, st, dt);
-  st.rafId = requestAnimationFrame(function () {
-    _test3SparkleTick(canvas);
-  });
-}
 function _startTest3MusicDiscSparkleCanvas(canvas) {
   if (!canvas) return;
   _test3SparkleStopCanvas(canvas);
-  canvas.__test3DiscSparkle = { time: 0, lastTs: 0, rafId: 0 };
-  _test3SparkleTick(canvas);
+  _ensureTest1GalaxyAiLogoScript(function () {
+    if (!canvas.isConnected) return;
+    if (window.__test1GalaxyAiLogo && typeof window.__test1GalaxyAiLogo.mountCanvas === 'function') {
+      window.__test1GalaxyAiLogo.mountCanvas(canvas, { whiteOnly: true, fixedLayout: true });
+    }
+  });
 }
 function _startTest3MusicDiscSparkle(music) {
   music = music || document.querySelector('#test3-music');
@@ -583,7 +481,7 @@ function _syncTest3MusicDiscLayersAfterRender() {
     { instant: true }
   );
 }
-/** test3 capsule left disc — 13-ai-sparkle star, then breathing-chord loader on fill (no star return). */
+/** test3 capsule left disc — test1 Galaxy AI star motion (white), then breathing-chord loader on fill. */
 function renderTest3MusicDiscInnerHtml() {
   return '' +
     '<div class="test3-music-disc__layer test3-music-disc__layer--star" aria-hidden="true">' +
@@ -595,7 +493,7 @@ function renderTest3MusicDiscInnerHtml() {
 }
 
 function renderTest3MusicDiscHtml() {
-  return '<div class="dot-icon11 dot-icon11--orange dot-icon11--music-orb dot-icon11--test3-disc" aria-hidden="true">' +
+  return '<div class="dot-icon11 dot-icon11--music-orb dot-icon11--test3-disc" aria-hidden="true">' +
     renderTest3MusicDiscInnerHtml() +
   '</div>';
 }
@@ -607,6 +505,42 @@ var TEST3_SPOTIFY_ICON_HTML =
     '<path d="M9.25342 7.82623C9.65653 8.00033 10.7049 8.61237 10.9907 8.42303C11.714 7.94393 11.0058 7.40954 10.5977 7.22348C8.96119 6.47759 6.87635 6.01825 5.08436 6.20696C4.62431 6.25421 3.13645 6.39568 2.84267 6.74445C2.75059 6.85224 2.70512 6.99186 2.7162 7.13284C2.78342 7.95056 3.9342 7.41623 4.4051 7.34243C5.97675 7.09606 7.76948 7.2589 9.25342 7.82623Z" fill="#000000"/>' +
     '<path d="M8.75917 9.80906C8.98673 9.9119 9.21754 10.0181 9.43906 10.1329C9.83925 10.3401 10.0337 10.5068 10.3741 10.1144C10.5968 9.27238 8.12506 8.65416 7.48305 8.56506C6.77238 8.46643 5.71392 8.40662 5.01204 8.49677C4.39488 8.57243 3.64746 8.61305 3.11564 8.90671C2.92508 9.19821 2.97454 9.42426 3.30689 9.58505C3.63824 9.63279 4.25197 9.46203 4.61372 9.41002C6.00746 9.19975 7.4319 9.3369 8.75917 9.80906Z" fill="#000000"/>' +
   '</svg>';
+function _test3MusicLyricsHeight(music) {
+  music = music || document.querySelector('#test3-music');
+  if (music && music.getAttribute('data-test3-playlist-open') === '1') {
+    return TEST3_MUSIC_LYRICS_OPEN_H;
+  }
+  return TEST3_MUSIC_LYRICS_H;
+}
+function _test3MusicPlaylistPillHtml(modifier, title, meta, thumbMod) {
+  modifier = modifier || '';
+  title = title || '3,2,1 러닝 시작';
+  meta = meta || '10곡 · 38분 34초';
+  var modClass = modifier ? (' dot-music3__playlistPill--' + modifier) : '';
+  var hidden = modifier === 'secondary' ? ' aria-hidden="true"' : '';
+  var thumbClass = 'dot-music3__playlistThumb' + (thumbMod ? (' dot-music3__playlistThumb--' + thumbMod) : '');
+  return (
+    '<div class="dot-music3__playlistPill' + modClass + '"' + hidden + '>' +
+      '<span class="' + thumbClass + '" aria-hidden="true"></span>' +
+      '<div class="dot-music3__playlistCopy">' +
+        '<span class="dot-music3__playlistTitle">' + title + '</span>' +
+        '<span class="dot-music3__playlistMeta">' + meta + '</span>' +
+      '</div>' +
+      '<span class="dot-music3__playlistChevron" aria-hidden="true"></span>' +
+    '</div>'
+  );
+}
+function _toggleTest3PlaylistOpen(music) {
+  music = music || document.querySelector('#test3-music');
+  if (!music) return;
+  if ((music.getAttribute('data-music-state') || 'normal') !== 'lyrics') return;
+  if (music.getAttribute('data-test3-playlist-open') === '1') return;
+  music.setAttribute('data-test3-playlist-open', '1');
+  if (typeof _applyTest3MusicLyricsLayout === 'function') {
+    _applyTest3MusicLyricsLayout(music);
+  }
+  if (typeof _layoutTest3Cards === 'function') _layoutTest3Cards();
+}
 var TEST3_GOAL_SHELL_MS = 520;
 /* Expanded chrome (map + copy) appears once after shell height finishes — not during rise. */
 var TEST3_GOAL_CONTENT_REVEAL_MS = TEST3_GOAL_SHELL_MS;
@@ -617,24 +551,25 @@ var TEST3_GOAL_UNIFIED_RISE_MS = TEST3_GOAL_SHELL_MS + TEST3_GOAL_INNER_LAST_DEL
 var TEST3_GOAL_EXPAND_START_MS = 120;
 var TEST3_PILL_REVEAL_LOAD_MS = 0;
 var TEST3_PILL_REVEAL_ICON_MS = 480;
-/* Circle hold before horizontal widen — icon pop (480ms) + hold = 1.5s total. */
-var TEST3_PILL_PRE_EXPAND_WAIT_MS = 1500;
+/* Circle hold before horizontal widen — icon pop (480ms) + hold = 1.2s total. */
+var TEST3_PILL_PRE_EXPAND_WAIT_MS = 1200;
 var TEST3_PILL_REVEAL_ICON_HOLD_MS = TEST3_PILL_PRE_EXPAND_WAIT_MS - TEST3_PILL_REVEAL_ICON_MS;
-/* Pill copy: widen → text emerge → 2s hold → drop (shine runs in parallel, snaps on drop). */
+/* Pill copy: widen → text emerge → hold → drop (shine runs in parallel, snaps on drop). */
 var TEST3_PILL_TEXT_EMERGE_MS = 720;
-var TEST3_PILL_SHINE_PASS_MS = 1500;
-var TEST3_PILL_SHINE_TITLE_PASSES = 1;
-var TEST3_PILL_SHINE_SUB_PASSES = 1;
+var TEST3_PILL_SHINE_PASS_MS = 900;
+var TEST3_PILL_SHINE_TITLE_PASSES = 2;
+var TEST3_PILL_SHINE_SUB_PASSES = 2;
 var TEST3_PILL_SHINY_ACTIVE_MS =
   TEST3_PILL_TEXT_EMERGE_MS + TEST3_PILL_SHINE_PASS_MS * TEST3_PILL_SHINE_TITLE_PASSES;
 var TEST3_PILL_TEXT_SETTLE_MS = 480;
-var TEST3_PILL_TEXT_HOLD_BEFORE_DROP_MS = 2000;
+var TEST3_PILL_TEXT_HOLD_BEFORE_DROP_MS = 800;
 var TEST3_PILL_TEXT_START_MS = TEST3_PILL_PRE_EXPAND_WAIT_MS;
 var TEST3_PILL_TEXT_READY_MS = TEST3_PILL_TEXT_START_MS + TEST3_PILL_TEXT_EMERGE_MS;
-/* Let gradient finish one shine pass after copy emerges before locking to ink. */
+/* Lock to ink after all shine passes finish. */
 var TEST3_PILL_BLACK_AT_MS =
-  TEST3_PILL_TEXT_READY_MS + TEST3_PILL_SHINE_PASS_MS;
-var TEST3_PILL_DROP_AT_MS = TEST3_PILL_TEXT_READY_MS + TEST3_PILL_TEXT_HOLD_BEFORE_DROP_MS;
+  TEST3_PILL_TEXT_READY_MS + TEST3_PILL_SHINE_PASS_MS * TEST3_PILL_SHINE_TITLE_PASSES;
+var TEST3_PILL_DROP_AFTER_BLACK_MS = 150;
+var TEST3_PILL_DROP_AT_MS = TEST3_PILL_BLACK_AT_MS + TEST3_PILL_DROP_AFTER_BLACK_MS;
 var TEST3_PILL_REVEAL_TEXT_MS =
   TEST3_PILL_TEXT_EMERGE_MS + TEST3_PILL_TEXT_HOLD_BEFORE_DROP_MS;
 var TEST3_PILL_REVEAL_TOTAL_MS =
@@ -674,10 +609,74 @@ var TEST3_MUSIC_GLOW_FADE_MS = 1000;
 var TEST3_MUSIC_FILL_FADE_MS = 1400;
 var TEST3_MUSIC_ENTRANCE_END_MS = TEST3_MUSIC_MOTION_MS;
 
+/** Figma 5436:15945 — test1 status bar (time + live pill + system icons). */
+function renderTest1HealthStatusBar(props) {
+  var p = props || {};
+  var asset = 'assets/test1/status-bar/';
+  var time = p.time || '9:41';
+  var liveTimer = p.liveTimer || '1:02:59';
+  var fill = 'width:100%;height:100%;box-sizing:border-box;';
+  return '<div class="test1-status-bar" style="' + fill + '">' +
+           '<div class="test1-status-bar__left">' +
+             '<span class="test1-status-bar__time">' + time + '</span>' +
+             '<div class="test1-status-bar__live" aria-hidden="true">' +
+               '<span class="test1-status-bar__live-icon">' +
+                 '<img src="' + asset + 'phone-live.svg" alt="" />' +
+               '</span>' +
+               '<span class="test1-status-bar__live-timer">' + liveTimer + '</span>' +
+             '</div>' +
+           '</div>' +
+           '<div class="test1-status-bar__right">' +
+             '<div class="test1-status-bar__icon test1-status-bar__icon--wifi" aria-hidden="true">' +
+               '<img src="' + asset + 'wifi.svg" alt="" />' +
+             '</div>' +
+             '<div class="test1-status-bar__icon test1-status-bar__icon--cell" aria-hidden="true">' +
+               '<img src="' + asset + 'cellular.svg" alt="" />' +
+             '</div>' +
+             '<div class="test1-status-bar__battery" aria-hidden="true">' +
+               '<img class="test1-status-bar__battery-left" src="' + asset + 'battery-left.svg" alt="" />' +
+               '<img class="test1-status-bar__battery-right" src="' + asset + 'battery-right.svg" alt="" />' +
+             '</div>' +
+           '</div>' +
+         '</div>';
+}
+
+/** Figma 5436:15945 — test2 status bar (time + live pill + system icons). */
+function renderTest2HealthStatusBar(props) {
+  var p = props || {};
+  var asset = 'assets/test2/status-bar/';
+  var time = p.time || '9:41';
+  var liveTimer = p.liveTimer || '1:02:59';
+  var fill = 'width:100%;height:100%;box-sizing:border-box;';
+  return '<div class="test2-status-bar" style="' + fill + '">' +
+           '<div class="test2-status-bar__left">' +
+             '<span class="test2-status-bar__time">' + time + '</span>' +
+             '<div class="test2-status-bar__live" aria-hidden="true">' +
+               '<span class="test2-status-bar__live-icon">' +
+                 '<img src="' + asset + 'phone-live.svg" alt="" />' +
+               '</span>' +
+               '<span class="test2-status-bar__live-timer">' + liveTimer + '</span>' +
+             '</div>' +
+           '</div>' +
+           '<div class="test2-status-bar__right">' +
+             '<div class="test2-status-bar__icon test2-status-bar__icon--wifi" aria-hidden="true">' +
+               '<img src="' + asset + 'wifi.svg" alt="" />' +
+             '</div>' +
+             '<div class="test2-status-bar__icon test2-status-bar__icon--cell" aria-hidden="true">' +
+               '<img src="' + asset + 'cellular.svg" alt="" />' +
+             '</div>' +
+             '<div class="test2-status-bar__battery" aria-hidden="true">' +
+               '<img class="test2-status-bar__battery-left" src="' + asset + 'battery-left.svg" alt="" />' +
+               '<img class="test2-status-bar__battery-right" src="' + asset + 'battery-right.svg" alt="" />' +
+             '</div>' +
+           '</div>' +
+         '</div>';
+}
+
 /** Figma 5436:15945 — test3 status bar (time + live pill + system icons). */
 function renderTest3HealthStatusBar(props) {
   var p = props || {};
-  var asset = 'assets/test3-status/';
+  var asset = 'assets/test3/';
   var time = p.time || '9:41';
   var liveTimer = p.liveTimer || '1:03:59';
   var fill = 'width:100%;height:100%;box-sizing:border-box;';
@@ -1025,17 +1024,18 @@ window.composeSurfacePlan = function composeSurfacePlan(surfaceType, layout) {
         };
       }
       if (window.__mlpTestConfig && window.__mlpTestConfig.id === 'test1') {
-        // Persona 1 — home screen (clean wallpaper via CSS; lock intro optional)
+        // Persona 1 — lockscreen intro + pre-mounted home widgets (revealed on pill swipe)
         var test1RevealAll = !!(window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll);
         var test1StackGap = 16;
         var test1LotteY = test1RevealAll ? (411 + 72 + test1StackGap) : 411;
-        var test1PillY = test1LotteY + 72 + 6;
         var test1TransitScale = 1.177;
         var test1TransitVisW = Math.round(294 * test1TransitScale);
         var test1TransitVisH = Math.round(134 * test1TransitScale);
         var test1TransitX = Math.round((388 - test1TransitVisW) / 2) - 2;
+        var test1ShortcutY = 797;
+        var test1TransitGapAboveShortcut = test1StackGap;
+        var test1TransitY = test1ShortcutY - test1TransitGapAboveShortcut - test1TransitVisH;
         var test1LotteStackY = test1LotteY + 88;
-        // Home widgets — 346px column (matches now-bar width), centered sizes
         var test1HomeColX = 21;
         var test1HomeColW = 346;
         var test1HomeHeaderY = 72;
@@ -1049,36 +1049,35 @@ window.composeSurfacePlan = function composeSurfacePlan(surfaceType, layout) {
         var test1HomeFoodY = test1HomeRowY + test1HomeSmallH + 10;
         var test1HomeFoodH = 662 - test1HomeFoodY - 8;
         var test1HomeFoodX = test1HomeColX + Math.round((test1HomeColW - test1HomeFoodW) / 2);
-        // Figma 5287:13389 — lock clock + widgets stack, centered on 388 canvas
         var test1LockStackW = 236;
         var test1LockStackX = Math.round((388 - test1LockStackW) / 2);
         return {
           surfaceType,
           components: [
+            { id: 'test1-lock-indicator', role: 'lockIndicator', zone: 'viewing',
+              _rect: { x: Math.round((388 - 24) / 2), y: 56, w: 24, h: 24 } },
+            { id: 'test1-lock-stack', role: 'test1-lock-stack', zone: 'viewing',
+              _rect: { x: test1LockStackX, y: 114, w: test1LockStackW, h: 248 } },
             { id: 'test1-now-bar-b', role: 'test1-now-bar-b', zone: 'viewing',
               _rect: { x: 21, y: 421, w: 346, h: 72 } },
             { id: 'test1-now-bar', role: 'test1-now-bar', zone: 'viewing',
               _rect: { x: 21, y: test1LotteY, w: 346, h: 72 } },
-            { id: 'test1-assist-pill', role: 'test1-assist-pill', zone: 'viewing',
-              _rect: { x: 130, y: test1PillY, w: 127, h: 36 } },
             { id: 'test1-transit-card', role: 'test1-transit-card', zone: 'viewing',
-              _rect: { x: test1TransitX, y: 701, w: test1TransitVisW, h: test1TransitVisH } },
+              _rect: { x: test1TransitX, y: test1TransitY, w: test1TransitVisW, h: test1TransitVisH } },
             { id: 'test1-gradient-sweep-a', role: 'test1-gradient-sweep', zone: 'viewing',
-              _rect: { x: 21, y: 421, w: 346, h: 72 }, variant: { sweepShape: 'bar' } },
+              _rect: { x: test1HomeRowX, y: test1HomeRowY, w: test1HomeSmallW, h: test1HomeSmallH }, variant: { sweepShape: 'home-widget' } },
             { id: 'test1-gradient-sweep-b', role: 'test1-gradient-sweep', zone: 'viewing',
-              _rect: { x: 21, y: test1LotteStackY, w: 346, h: 72 }, variant: { sweepShape: 'bar' } },
+              _rect: { x: test1HomeRowX + test1HomeSmallW + test1HomeSmallGap, y: test1HomeRowY, w: test1HomeSmallW, h: test1HomeSmallH }, variant: { sweepShape: 'home-widget' } },
             { id: 'test1-gradient-sweep-c', role: 'test1-gradient-sweep', zone: 'viewing',
-              _rect: { x: test1TransitX, y: 701, w: test1TransitVisW, h: test1TransitVisH }, variant: { sweepShape: 'card' } },
+              _rect: { x: test1HomeFoodX, y: test1HomeFoodY, w: test1HomeFoodW, h: test1HomeFoodH }, variant: { sweepShape: 'home-widget' } },
             { id: 'test1-l-shortcut', role: 'test1-lock-shortcut-l', zone: 'bottomNav',
-              _rect: { x: 28, y: 797, w: 60, h: 59 } },
+              _rect: { x: 16.5, y: 795, w: 64, h: 57 } },
             { id: 'test1-r-shortcut', role: 'test1-lock-shortcut-r', zone: 'bottomNav',
-              _rect: { x: 300, y: 797, w: 60, h: 59 } },
+              _rect: { x: 307.5, y: 795, w: 64, h: 57 } },
             { id: 'test1-bottom-pill', role: 'test1-bottom-pill', zone: 'bottomNav',
-              _rect: { x: Math.round((388 - 215) / 2), y: 797, w: 215, h: 57 } },
-            { id: 'test1-lock-stack', role: 'test1-lock-stack', zone: 'viewing',
-              _rect: { x: test1LockStackX, y: 114, w: test1LockStackW, h: 248 } },
+              _rect: { x: 96.5, y: 797, w: 215, h: 57 } },
             { id: 'status-bar', role: 'status-bar', zone: 'topSystem',
-              variant: { theme: 'light', carrier: '12:45', battery: 69 } },
+              variant: { time: '9:41', liveTimer: '1:02:59' } },
             { id: 'test1-home-header', role: 'test1-home-header', zone: 'viewing',
               _rect: { x: test1HomeColX, y: test1HomeHeaderY, w: test1HomeColW, h: test1HomeHeaderH } },
             { id: 'test1-home-map', role: 'test1-home-map', zone: 'viewing',
@@ -2632,6 +2631,18 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
     }
     case 'status-bar':
       var sbv = (comp && comp.variant) || {};
+      if (window.__mlpTestConfig && window.__mlpTestConfig.id === 'test1') {
+        return renderTest1HealthStatusBar({
+          time: sbv.time || '9:41',
+          liveTimer: sbv.liveTimer || '1:02:59'
+        });
+      }
+      if (window.__mlpTestConfig && window.__mlpTestConfig.id === 'test2') {
+        return renderTest2HealthStatusBar({
+          time: sbv.time || '9:41',
+          liveTimer: sbv.liveTimer || '1:02:59'
+        });
+      }
       if (sbv.layout === 'test3-health' || (window.__mlpTestConfig && window.__mlpTestConfig.id === 'test3')) {
         return renderTest3HealthStatusBar({
           time: sbv.time || '9:41',
@@ -4686,8 +4697,8 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
             '<div class="dot-goal__map-leaflet" data-map-init="0"></div>' +
           '</div>' +
           '<div class="dot-goal__map-light" aria-hidden="true">' +
-            '<img class="dot-goal__map-photo" src="/assets/test3-goal-map-expanded.png" alt="" />' +
-            '<img class="dot-goal__map-pin" src="/assets/test3-goal-map-pin.svg" alt="" />' +
+            '<img class="dot-goal__map-photo" src="/assets/test3/test3-goal-map-expanded.png" alt="" />' +
+            '<img class="dot-goal__map-pin" src="/assets/test3/test3-goal-map-pin.svg" alt="" />' +
           '</div>';
         mapLightMainHtml =
           '<div class="dot-goal__main dot-goal__main--light" aria-hidden="true">' +
@@ -5398,16 +5409,21 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
           // tap cycle is: normal → lyrics (tap 1) → square (tap 2) →
           // normal (tap 3). Cycle handler lives in surface-layout.js.
           lyricsBlockHtml +
-          '<div class="dot-music3__playlistPill" aria-hidden="true">' +
-            '<span class="dot-music3__playlistThumb" aria-hidden="true">' +
-              '<span class="dot-music3__playlistThumbBadge" aria-hidden="true">' + TEST3_SPOTIFY_ICON_HTML + '</span>' +
-            '</span>' +
-            '<div class="dot-music3__playlistCopy">' +
-              '<span class="dot-music3__playlistTitle">3,2,1 러닝 시작</span>' +
-              '<span class="dot-music3__playlistMeta">10곡 · 38분 34초</span>' +
-            '</div>' +
-            '<span class="dot-music3__playlistChevron" aria-hidden="true"></span>' +
-          '</div>' +
+          (isTest3Music
+            ? ('<div class="dot-music3__playlistStack">' +
+                _test3MusicPlaylistPillHtml('primary') +
+                _test3MusicPlaylistPillHtml('secondary', '쿨다운 스트레치', '6곡 · 24분 08초', 'cooldown') +
+              '</div>')
+            : ('<div class="dot-music3__playlistPill" aria-hidden="true">' +
+                '<span class="dot-music3__playlistThumb" aria-hidden="true">' +
+                  '<span class="dot-music3__playlistThumbBadge" aria-hidden="true">' + TEST3_SPOTIFY_ICON_HTML + '</span>' +
+                '</span>' +
+                '<div class="dot-music3__playlistCopy">' +
+                  '<span class="dot-music3__playlistTitle">3,2,1 러닝 시작</span>' +
+                  '<span class="dot-music3__playlistMeta">10곡 · 38분 34초</span>' +
+                '</div>' +
+                '<span class="dot-music3__playlistChevron" aria-hidden="true"></span>' +
+              '</div>')) +
           '<div class="dot-music3__foldTitle" aria-hidden="true">' + String(foldTitle3).replace(/\n/g, '<br/>') + '</div>' +
           '<div class="dot-music__bottom dot-music3__bottom">' +
             // Name row pairs the artist/song marquee on the left with
@@ -5438,7 +5454,29 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
               '<div class="dot-music__barFill" aria-hidden="true"></div>' +
               '<div class="dot-music__barTrack" aria-hidden="true"></div>' +
             '</div>' +
-            '<div class="dot-music3__transport" aria-hidden="true"></div>' +
+            (isTest3Music
+              ? ('<div class="dot-music3__transport dot-music3__transport--interactive" aria-hidden="true">' +
+                  '<span class="dot-music3__transportSide dot-music3__transportSide--prev" aria-hidden="true">' +
+                    '<svg width="11" height="16" viewBox="0 0 10.4248 14.4799" fill="none" aria-hidden="true">' +
+                      '<path d="M0.893555 1.75699C0.400126 1.75699 0 2.15712 0 2.65055V14.5627C0.000232513 15.0559 0.40027 15.4562 0.893555 15.4562C1.38671 15.4561 1.78688 15.0558 1.78711 14.5627V9.99527L8.57227 14.5197C9.36382 15.0474 10.4246 14.4797 10.4248 13.5285V3.68473C10.4246 2.73344 9.36384 2.1658 8.57227 2.69352L1.78711 7.21695V2.65055C1.78711 2.15722 1.38685 1.75715 0.893555 1.75699Z" fill="#4C5B17"/>' +
+                    '</svg>' +
+                  '</span>' +
+                  '<button type="button" class="dot-music3__transportPlay dot-music3__playBtn" data-music-playing="1" aria-label="Pause">' +
+                    '<svg class="dot-music3__transportIcon dot-music3__transportIcon--play" width="14" height="18" viewBox="0 0 13.7123 16.8256" fill="none" aria-hidden="true">' +
+                      '<path d="M0.712891 15.7178V1.10879C0.712891 0.071902 1.85762 -0.556488 2.73242 0.00021L13.4252 6.80471C14.2366 7.32107 14.2366 8.50556 13.4252 9.02192L2.73242 15.8264C1.85762 16.3831 0.712891 15.7547 0.712891 14.7178Z" fill="#4C5B17"/>' +
+                    '</svg>' +
+                    '<svg class="dot-music3__transportIcon dot-music3__transportIcon--pause" width="14" height="16" viewBox="0 0 14 16" fill="none" aria-hidden="true">' +
+                      '<rect x="1" y="0" width="4" height="16" rx="1" fill="#4C5B17"/>' +
+                      '<rect x="9" y="0" width="4" height="16" rx="1" fill="#4C5B17"/>' +
+                    '</svg>' +
+                  '</button>' +
+                  '<span class="dot-music3__transportSide dot-music3__transportSide--next" aria-hidden="true">' +
+                    '<svg width="11" height="16" viewBox="0 0 10.4268 14.4799" fill="none" aria-hidden="true">' +
+                      '<path d="M9.5332 1.75699C10.0266 1.75702 10.4268 2.15714 10.4268 2.65055V14.5627C10.4268 15.0561 10.0266 15.4562 9.5332 15.4562C9.03981 15.4562 8.63965 15.0561 8.63965 14.5627V9.9943L1.85352 14.5197C1.06197 15.0475 0.00109863 14.4799 0.00109863 13.5285V3.6857C0.00109863 2.73427 1.06197 2.16673 1.85352 2.69449L8.63965 7.21793V2.65055C8.63965 2.15712 9.03981 1.75699 9.5332 1.75699Z" fill="#4C5B17"/>' +
+                    '</svg>' +
+                  '</span>' +
+                '</div>')
+              : '<div class="dot-music3__transport" aria-hidden="true"></div>') +
             (isTest3Lyrics
               ? '<div class="dot-music3__albumCredit" aria-hidden="true">Hurry Up, We\'re Dreaming.</div>'
               : '') +
@@ -5718,7 +5756,7 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
           '<div class="dot-steps21__pillLoadSpin" aria-hidden="true"></div>';
         var ppIconHtml =
           '<div class="dot-steps21__pillIcon" aria-hidden="true">' +
-            '<img class="dot-steps21__pillIconImg" src="/assets/test3-pace-route-icon.png" alt="" aria-hidden="true">' +
+            '<img class="dot-steps21__pillIconImg" src="/assets/test3/test3-pace-route-icon.png" alt="" aria-hidden="true">' +
           '</div>';
         var ppCopyHtml =
           '<div class="dot-steps21__pillCopy">' +
@@ -6006,7 +6044,7 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
           '<div class="dot-w21__pillLoadSpin" aria-hidden="true"></div>';
         var plIconHtml =
           '<div class="dot-w21__pillIcon" aria-hidden="true">' +
-            '<img class="dot-w21__pillIconImg" src="/assets/test3-party-pace-icon.png" alt="" aria-hidden="true">' +
+            '<img class="dot-w21__pillIconImg" src="/assets/test3/test3-party-pace-icon.png" alt="" aria-hidden="true">' +
           '</div>';
         var plCopyHtml =
           '<div class="dot-w21__pillCopy">' +
@@ -6554,7 +6592,7 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
           '<span class="test1-assist-pill-shell" aria-hidden="true"></span>' +
           '<div class="test1-assist-pill-body">' +
             '<svg class="test1-assist-pill-svg" viewBox="0 0 98 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-              '<rect class="test1-assist-pill-bg" width="97.5364" height="27.6699" rx="13.835" fill="#17171A" fill-opacity="0.6"/>' +
+              '<rect class="test1-assist-pill-bg" width="97.5364" height="27.6699" rx="13.835" fill="#155E75"/>' +
               '<g class="test1-assist-pill-icon test1-assist-pill-icon--1">' +
                 '<path fill-rule="evenodd" clip-rule="evenodd" d="M10.2584 16.3014L11.426 15.4394H11.4298L11.8942 17.8988L10.2584 16.3014ZM15.3574 12.0561C15.7556 12.0561 15.8218 11.1257 15.8328 10.8201C15.835 10.7653 15.8087 10.7045 15.7643 10.6722C15.6417 10.5824 15.6548 10.4712 15.6543 10.2916C15.6543 10.2741 15.6537 10.256 15.6537 10.2369L15.663 10.0096L15.6718 9.81956C15.674 9.57094 15.5929 9.33545 15.456 9.1279V9.12681C15.2983 8.88694 15.0245 8.68377 14.7173 8.5381C14.6148 8.48991 14.5092 8.44829 14.4024 8.41324C14.2485 8.36888 14.0858 8.34424 13.9177 8.34424C12.9517 8.34424 12.1691 9.12735 12.1691 10.0934C12.1691 10.187 12.1768 10.2796 12.191 10.3699C12.2036 10.4302 12.2179 10.491 12.2359 10.5523C12.289 10.733 12.3701 10.8968 12.4588 11.0528H11.9583C11.3942 11.0682 10.8471 11.296 10.4419 11.7023L9.91451 12.2302C9.83784 12.3036 9.61933 12.526 9.37235 12.2439L9.61934 12.526C10.0728 13.0654 10.886 13.0895 11.3696 12.578L12.57 11.2396C12.6297 11.3387 12.6899 11.4373 12.7452 11.5353L12.7688 11.578C12.7912 11.6191 12.8131 11.6607 12.8328 11.7029C12.9654 11.9811 12.9845 12.4082 12.8701 12.7812C12.7507 12.751 12.628 12.7352 12.5054 12.7352C12.4156 12.7352 12.3257 12.7434 12.237 12.7604C12.1582 12.7751 12.0881 12.7943 12.0311 12.8184C11.8066 12.9005 11.6122 13.0309 11.4676 13.1881L8.93479 15.8802C8.57445 16.2285 8.63743 16.8243 9.05582 17.0993L11.1894 18.6512C11.6363 18.9251 12.1587 19.1846 12.6483 19.2799C12.9347 19.3101 13.226 19.3259 13.5223 19.3259C14.1143 19.3259 14.6888 19.2646 15.237 19.1501C15.3246 19.1211 15.4637 19.0664 15.6307 18.9787V18.9815C15.6439 18.9738 15.6586 18.9645 15.6729 18.9563C15.6866 18.9486 15.6992 18.9426 15.7134 18.9349V18.9322C15.8689 18.8391 16.0414 18.7203 16.2194 18.5647L17.9171 16.8134C18.0124 16.7165 18.0814 16.6414 18.1334 16.5746C18.2254 16.4854 18.2823 16.3616 18.2823 16.2241V15.3331C18.2823 15.3123 18.2807 15.2932 18.2791 15.2745C18.278 15.2647 18.2763 15.2548 18.2747 15.245L18.2698 15.2225C18.267 15.2121 18.2643 15.2017 18.2615 15.1913C18.1761 14.9257 17.859 14.9043 17.859 14.9043C17.8541 14.9038 17.8492 14.9038 17.8453 14.9038C17.8004 14.9038 17.7539 14.912 17.7062 14.9257C17.4735 14.9931 17.2287 15.1918 17.2199 15.1984L17.2188 15.199C17.1088 15.2888 17.0381 15.4246 17.0381 15.5768L17.1602 16.2241C17.1602 16.2723 17.1674 16.3178 17.1805 16.3616L15.7134 17.4673V17.1321L15.6548 14.964L15.6526 14.9668C15.5874 14.1639 14.674 13.4389 14.6148 13.3929L14.8744 12.0561H15.3574Z" fill="white"/>' +
               '</g>' +
@@ -6579,34 +6617,7 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
 
     case 'test1-transit-card': {
       return '<div class="test1-transit-card">' +
-        '<div class="test1-transit-card__bg" aria-hidden="true"></div>' +
-        '<div class="test1-transit-card__avatar">' +
-          '<img class="test1-transit-card__avatar-img" src="/test1-bus-avatar.png" alt="" draggable="false" />' +
-        '</div>' +
-        '<div class="test1-transit-card__close" aria-hidden="true">' +
-          '<span class="test1-transit-card__close-circle"></span>' +
-          '<svg class="test1-transit-card__close-icon" viewBox="249 49 17 21" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-            '<path d="M262.743 66.9492H251.258C251.258 67.0703 251.259 67.1871 251.258 67.3038C251.256 67.5357 251.265 67.7692 251.244 67.9999C251.19 68.5931 250.589 69.0495 250.005 68.9743C249.52 68.9118 249.094 68.5178 249.019 68.0215C249.007 67.939 249.001 67.8549 249.001 67.7714C249 62.7694 249 57.7675 249 52.7655C249 51.9787 249.537 51.3203 250.301 51.1665C250.38 51.151 250.461 51.146 250.541 51.146C251.349 51.1443 252.157 51.1443 252.964 51.146C253.017 51.146 253.041 51.1327 253.062 51.0813C253.122 50.9291 253.236 50.8207 253.368 50.7321C253.656 50.5407 253.976 50.4228 254.304 50.3277C254.82 50.1777 255.347 50.093 255.88 50.0388C256.442 49.9824 257.005 49.9674 257.569 49.9979C258.38 50.041 259.18 50.1478 259.953 50.4123C260.195 50.4953 260.431 50.5944 260.643 50.7432C260.775 50.8361 260.887 50.949 260.943 51.1062C260.959 51.1515 260.99 51.1449 261.022 51.1449C261.536 51.1449 262.05 51.1449 262.564 51.1449C262.846 51.1449 263.127 51.1438 263.409 51.1449C264.289 51.1471 264.995 51.8537 264.998 52.7445C265.002 54.0664 264.999 55.3877 264.999 56.7096C264.999 60.4062 265 64.1035 265 67.8002C265 68.3778 264.639 68.8393 264.096 68.9571C263.458 69.096 262.806 68.6196 262.756 67.9623C262.732 67.6552 262.746 67.3453 262.743 67.0366C262.743 67.0106 262.743 66.984 262.743 66.9486V66.9492ZM251.261 58.6412H262.737V53.8113H251.261V58.6412ZM251.258 62.5819C251.256 63.0898 251.651 63.4993 252.144 63.502C252.659 63.5048 253.062 63.1059 253.065 62.5924C253.067 62.0712 252.675 61.6667 252.164 61.665C251.661 61.6634 251.259 62.0695 251.258 62.5819ZM262.743 62.5891C262.743 62.0761 262.349 61.6661 261.855 61.665C261.338 61.6639 260.937 62.0656 260.937 62.5824C260.938 63.0948 261.337 63.5004 261.841 63.4998C262.343 63.4998 262.743 63.0953 262.743 62.5885V62.5891Z" fill="#FFFFFF"/>' +
-          '</svg>' +
-        '</div>' +
-        '<div class="test1-transit-card__copy">' +
-          '<div class="test1-transit-card__title">이번 정류장에서 하차</div>' +
-          '<div class="test1-transit-card__subtitle">진천청구 타운 앞</div>' +
-        '</div>' +
-        '<div class="test1-transit-card__end">안내 종료</div>' +
-        '<div class="test1-transit-card__progress">' +
-          '<div class="test1-transit-card__track"></div>' +
-          '<div class="test1-transit-card__fill"></div>' +
-          '<div class="test1-transit-card__thumb">' +
-            '<svg class="test1-transit-card__send" viewBox="0 0 27 27" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-              '<g clip-path="url(#clip0_test1_transit_send)">' +
-                '<path fill-rule="evenodd" clip-rule="evenodd" d="M11.2481 13.1411C11.366 13.3603 11.3743 13.621 11.2707 13.8472L9.44457 17.8188C9.11377 18.5614 9.34802 18.9516 9.51752 19.1204C9.83042 19.4302 10.3843 19.4472 10.9999 19.1671L21.7171 14.3855C22.2884 14.1224 22.6121 13.6338 22.5955 13.1319C22.5795 12.6306 22.2258 12.1642 21.6383 11.9376L10.6388 7.8488C10.0061 7.60914 9.45437 7.66149 9.16192 7.99176C9.00463 8.16985 8.7941 8.5748 9.17275 9.29472L11.2481 13.1411ZM16.4516 13.3288L11.4362 13.4891Z" fill="white"/>' +
-                '<path d="M16.4516 13.3288L11.4362 13.4891M11.2481 13.1411C11.366 13.3603 11.3743 13.621 11.2707 13.8472L9.44457 17.8188C9.11377 18.5614 9.34802 18.9516 9.51752 19.1204C9.83042 19.4302 10.3843 19.4472 10.9999 19.1671L21.7171 14.3855C22.2884 14.1224 22.6121 13.6338 22.5955 13.1319C22.5795 12.6306 22.2258 12.1642 21.6383 11.9376L10.6388 7.8488C10.0061 7.60914 9.45437 7.66149 9.16192 7.99176C9.00463 8.16985 8.7941 8.5748 9.17275 9.29472L11.2481 13.1411Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' +
-              '</g>' +
-              '<defs><clipPath id="clip0_test1_transit_send"><rect width="19" height="19" fill="white" transform="translate(13) rotate(43.1698)"/></clipPath></defs>' +
-            '</svg>' +
-          '</div>' +
-        '</div>' +
+        '<img class="test1-transit-card__svg" src="/test1-transit-card.svg?v=solid-green-1" alt="" draggable="false" aria-hidden="true" />' +
       '</div>';
     }
 
@@ -6623,13 +6634,22 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
 
     case 'test1-lock-shortcut-l': {
       return '<div class="test1-lock-shortcut-l">' +
-        '<img class="test1-lock-shortcut-l__icon" src="/assets/test1/lock-shortcut-camera.png" alt="" draggable="false" />' +
+        '<div class="test1-lock-shortcut-l__disc" aria-hidden="true">' +
+          '<svg class="test1-lock-shortcut-l__glyph" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+            '<path d="M5 4h3l2 5-2.5 1.5a11 11 0 0 0 5 5L14 13l5 2v3a2 2 0 0 1-2 2 17 17 0 0 1-16-16 2 2 0 0 1 2-2z" fill="#FFFFFF"/>' +
+          '</svg>' +
+        '</div>' +
       '</div>';
     }
 
     case 'test1-lock-shortcut-r': {
       return '<div class="test1-lock-shortcut-r">' +
-        '<img class="test1-lock-shortcut-r__icon" src="/assets/test1/lock-shortcut-phone.png" alt="" draggable="false" />' +
+        '<div class="test1-lock-shortcut-r__disc" aria-hidden="true">' +
+          '<svg class="test1-lock-shortcut-r__glyph" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+            '<path d="M4 7h3l2-2h6l2 2h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z" stroke="#FFFFFF" stroke-width="1.6" fill="none"/>' +
+            '<circle cx="12" cy="13" r="3.5" stroke="#FFFFFF" stroke-width="1.6" fill="none"/>' +
+          '</svg>' +
+        '</div>' +
       '</div>';
     }
 
@@ -6639,7 +6659,7 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
         { w: 173, h: 20 }
       );
       var tlsClock = window.renderAtomicForRole(
-        { role: 'clock', variant: { HH: '12', MM: '45', fontSize: 73, lineHeight: 54, gap: 10 } },
+        { role: 'clock', variant: { HH: '03', MM: '23', fontSize: 73, lineHeight: 54, gap: 10 } },
         { w: 173, h: 120 }
       );
       var tlsWidgets = window.renderAtomicForRole({ role: 'lock-widgets' }, { w: 236, h: 50 });
@@ -6650,12 +6670,16 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
     }
 
     case 'test1-bottom-pill': {
-      var test1bpTextAPathD = "M64.9217 12.5759V22.6187H63.6752V12.5759H64.9217ZM56.3299 17.2434C57.6 17.2434 59.047 17.2316 60.498 17.1608C60.73 15.9222 60.7811 14.9784 60.7929 14.2942H57.1792V13.2994H62.0237V13.8106C62.0198 14.4908 62.0198 15.5801 61.7642 17.0861C62.1967 17.0546 62.6253 17.0192 63.0461 16.9721L63.1365 17.8961C62.177 18.0259 61.1901 18.1124 60.2228 18.1674V22.0524H58.9802V18.2225C58.1072 18.25 57.2657 18.2618 56.4872 18.2618L56.3299 17.2434ZM74.1108 12.5759V16.5002H75.6011V17.5265H74.1108V22.6029H72.8722V12.5759H74.1108ZM66.1874 19.8583C68.6333 18.6314 69.9545 16.9249 70.1983 14.6363H66.7222V13.6179H71.4566C71.4487 16.571 70.2258 19.1662 66.8834 20.8099L66.1874 19.8583ZM87.4453 13.6533V14.6521H79.2349V13.6533H82.7424V12.5483H83.9693V13.6533H87.4453ZM78.7827 20.0785V19.0718H87.9722V20.0785H83.9693V22.6344H82.7424V20.0785H78.7827ZM79.9545 16.8148C79.9466 15.7098 81.2246 15.1082 83.3558 15.1082C85.4792 15.1082 86.7572 15.7098 86.7611 16.8148C86.7572 17.9079 85.4792 18.5095 83.3558 18.5135C81.2246 18.5095 79.9466 17.9079 79.9545 16.8148ZM81.2403 16.8148C81.2325 17.322 81.9639 17.5894 83.3558 17.5855C84.74 17.5894 85.4714 17.322 85.4792 16.8148C85.4714 16.2957 84.74 16.0283 83.3558 16.0283C81.9639 16.0283 81.2325 16.2957 81.2403 16.8148ZM99.7614 12.5759V22.6423H98.5188V17.1411H96.5881V16.1306H98.5188V12.5759H99.7614ZM91.1932 19.7403C92.8014 18.9853 93.753 17.0822 93.757 15.2458V14.5695H91.6061V13.5668H97.178V14.5695H95.0192V15.2458C95.0153 16.9799 95.959 18.8162 97.5751 19.528L96.8437 20.5071C95.6759 19.9526 94.8422 18.8398 94.4018 17.5108C93.9614 18.9303 93.1042 20.1257 91.9324 20.7155L91.1932 19.7403ZM102.97 13.146V17.2316C104.373 17.2237 105.474 17.1529 106.717 16.9288L106.866 17.9354C105.455 18.2107 104.181 18.2775 102.517 18.2775H101.747V13.146H102.97ZM102.714 20.0431V19.0443H109.588V22.6187H108.353V20.0431H102.714ZM105.754 16.4019V15.4582H108.353V14.6167H105.754V13.6769H108.353V12.5759H109.588V18.6078H108.353V16.4019H105.754ZM122.049 13.032V14.015H119.131C119.245 14.9666 120.472 15.8671 122.415 16.0991L121.955 17.0743C120.15 16.8541 118.821 16.0637 118.282 14.9824C117.743 16.0598 116.426 16.8541 114.625 17.0743L114.173 16.0991C116.111 15.8671 117.327 14.9627 117.444 14.015H114.55V13.032H122.049ZM113.701 18.6314V17.6327H122.891V18.6314H119.01V20.4678H117.787V18.6314H113.701ZM114.814 22.4299V19.5398H116.049V21.4272H121.876V22.4299H114.814ZM131.918 12.5759V22.6423H130.672V12.5759H131.918ZM124.082 20.2672V13.3938H125.32V15.9064H127.754V13.3938H128.977V20.2672H124.082ZM125.32 19.2527H127.754V16.8737H125.32V19.2527ZM64.3476 27.5759V31.7243H65.7553V32.7506H64.3476V37.6187H63.105V27.5759H64.3476ZM56.2748 34.8386C57.0377 34.8386 57.9224 34.8347 58.8465 34.8111V33.8674C57.7494 33.6826 57.0337 32.9984 57.0377 32.0507C57.0337 30.9222 58.0286 30.1672 59.4756 30.1672C60.903 30.1672 61.9136 30.9222 61.9215 32.0507C61.9136 32.9984 61.1822 33.6865 60.0891 33.8713V34.7639C60.9305 34.7206 61.776 34.6499 62.5663 34.5398L62.6489 35.4481C60.4901 35.8374 58.1623 35.857 56.4518 35.857L56.2748 34.8386ZM56.4636 29.711V28.7319H58.8465V27.6152H60.0891V28.7319H62.4562V29.711H56.4636ZM58.2095 32.0507C58.2055 32.6327 58.7128 32.9748 59.4756 32.9708C60.2267 32.9748 60.7339 32.6327 60.7339 32.0507C60.7339 31.4687 60.2267 31.1148 59.4756 31.1148C58.7128 31.1148 58.2055 31.4687 58.2095 32.0507ZM71.3937 28.4134V29.2195H73.4227V27.5837H74.6574V34.8976H73.4227V32.3692H71.3937V33.2343H66.675V28.4134H71.3937ZM67.9019 32.263H70.1786V29.4004H67.9019V32.263ZM68.0316 37.4299V34.2213H69.2821V36.4272H74.8776V37.4299H68.0316ZM71.3937 31.3783H73.4227V30.2262H71.3937V31.3783ZM80.6535 27.7292C82.942 27.7292 84.2711 28.3387 84.2711 29.4476C84.2711 30.5722 82.942 31.1817 80.6535 31.1856C78.365 31.1817 77.028 30.5722 77.032 29.4476C77.028 28.3387 78.365 27.7292 80.6535 27.7292ZM76.0804 32.7113V31.7243H85.2384V32.7113H76.0804ZM77.1578 34.3038V33.3837H84.0981V35.8453H78.3807V36.5924H84.3734V37.5361H77.1696V34.9684H82.8791V34.3038H77.1578ZM78.3257 29.4476C78.3178 30.006 79.12 30.2616 80.6535 30.2655C82.2028 30.2616 83.001 30.006 83.001 29.4476C83.001 28.9325 82.2028 28.6415 80.6535 28.6415C79.12 28.6415 78.3178 28.9325 78.3257 29.4476ZM96.6619 28.1854V29.0819C96.6619 30.0217 96.6619 31.0519 96.3945 32.4714H97.7826V33.4781H93.7914V37.6344H92.5449V33.4781H88.6245V32.4714H95.1441C95.4194 31.103 95.4312 30.0807 95.4312 29.1802H89.7098V28.1854H96.6619ZM102.147 29.0111C102.139 30.3874 102.941 31.6339 104.51 32.1333L103.846 33.1006C102.752 32.7113 101.982 31.9799 101.553 31.0244C101.113 32.1215 100.275 32.9826 99.0601 33.4073L98.3995 32.4125C100.063 31.8659 100.896 30.5211 100.904 29.0662V28.1185H102.147V29.0111ZM100.063 35.688C100.059 34.4651 101.36 33.7533 103.484 33.7533C105.611 33.7533 106.913 34.4651 106.913 35.688C106.913 36.9148 105.611 37.6147 103.484 37.6108C101.36 37.6147 100.059 36.9148 100.063 35.688ZM101.294 35.688C101.286 36.3014 102.084 36.6435 103.484 36.6396C104.888 36.6435 105.682 36.3014 105.686 35.688C105.682 35.0549 104.888 34.7167 103.484 34.7167C102.084 34.7167 101.286 35.0549 101.294 35.688ZM103.649 30.5329V29.5184H105.65V27.5759H106.885V33.482H105.65V30.5329H103.649ZM116.18 27.5759V31.5788H117.73V32.5973H116.18V37.6187H114.958V27.5759H116.18ZM108.253 30.1121V29.1134H110.628V27.7174H111.863V29.1134H114.183V30.1121H108.253ZM108.717 33.1281C108.709 31.7401 109.787 30.7609 111.253 30.7609C112.7 30.7609 113.774 31.7401 113.782 33.1281C113.774 34.5162 112.7 35.4914 111.253 35.4914C109.787 35.4914 108.709 34.5162 108.717 33.1281ZM109.901 33.1281C109.893 33.9539 110.467 34.4769 111.253 34.469C112.028 34.4769 112.59 33.9539 112.598 33.1281C112.59 32.3142 112.028 31.7754 111.253 31.7754C110.467 31.7754 109.893 32.3142 109.901 33.1281ZM126.294 30.4149V31.394H119.326V27.9376H120.557V30.4149H126.294ZM118.138 33.541V32.5658H127.328V33.541H118.138ZM119.243 37.3906V34.4297H120.478V36.3879H126.356V37.3906H119.243ZM139.852 32.1844V33.1832H135.881V34.0364C137.674 34.1505 138.739 34.7718 138.743 35.8177C138.739 36.9699 137.426 37.6147 135.259 37.6108C133.069 37.6147 131.76 36.9699 131.76 35.8177C131.76 34.7678 132.829 34.1426 134.654 34.0325V33.1832H130.694V32.1844H139.852ZM131.135 30.7531C132.983 30.5801 134.194 29.829 134.402 29.0033H131.532V28.0163H139.03V29.0033H136.136C136.337 29.8329 137.532 30.5801 139.424 30.7531L138.987 31.7283C137.163 31.5434 135.81 30.8199 135.263 29.7976C134.721 30.816 133.384 31.5434 131.555 31.7283L131.135 30.7531ZM133.018 35.8177C133.01 36.3682 133.801 36.6749 135.259 36.6671C136.703 36.6749 137.501 36.3682 137.509 35.8177C137.501 35.2554 136.703 34.9644 135.259 34.9566C133.801 34.9644 133.01 35.2554 133.018 35.8177Z";
       return '<div class="test1-bottom-pill" aria-hidden="true">' +
         '<div class="test1-bottom-pill__bg">' +
           '<div class="test1-bottom-pill__bg-base"></div>' +
           '<div class="test1-bottom-pill__bg-blue"></div>' +
           '<div class="test1-bottom-pill__bg-blue-cover"></div>' +
+          '<div class="test1-bottom-pill__grad-sweep test1-bottom-pill__grad-sweep--pre">' +
+            '<div class="test1-bottom-pill__grad-sweep-track test1-bottom-pill__grad-sweep-track--1"></div>' +
+            '<div class="test1-bottom-pill__grad-sweep-track test1-bottom-pill__grad-sweep-track--2"></div>' +
+            '<div class="test1-bottom-pill__grad-sweep-track test1-bottom-pill__grad-sweep-track--3"></div>' +
+          '</div>' +
           '<div class="test1-bottom-pill__grad-sweep">' +
             '<div class="test1-bottom-pill__grad-sweep-track test1-bottom-pill__grad-sweep-track--1"></div>' +
             '<div class="test1-bottom-pill__grad-sweep-track test1-bottom-pill__grad-sweep-track--2"></div>' +
@@ -6665,48 +6689,29 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
         '<svg class="test1-bottom-pill__svg" viewBox="0 0 200 53" fill="none" xmlns="http://www.w3.org/2000/svg">' +
           '<defs>' +
             '<style>' +
-              '@font-face{font-family:\'Pretendard SB\';src:url(\'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/packages/pretendard/dist/web/static/woff2/Pretendard-SemiBold.woff2\') format(\'woff2\');font-weight:600;font-style:normal;}' +
-              '.test1-bottom-pill__text--b,.test1-bottom-pill__text--b tspan{font-family:\'Pretendard SB\',sans-serif;font-weight:600;font-synthesis:none;}' +
+              '@font-face{font-family:\'Pretendard B\';src:url(\'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/packages/pretendard/dist/web/static/woff2/Pretendard-Bold.woff2\') format(\'woff2\');font-weight:700;font-style:normal;}' +
+              '.test1-bottom-pill__text--b,.test1-bottom-pill__text--b tspan{font-family:\'Pretendard B\',sans-serif;font-weight:700;font-synthesis:none;}' +
             '</style>' +
-            '<linearGradient id="test1bp_paint1" x1="14.5547" y1="7" x2="34.0547" y2="46" gradientUnits="userSpaceOnUse">' +
-              '<stop stop-color="#EECBFF"/>' +
-              '<stop offset="1" stop-color="white"/>' +
-            '</linearGradient>' +
-            '<linearGradient id="test1bp_text_a_highlight" gradientUnits="objectBoundingBox" x1="0" y1="0" x2="1" y2="0">' +
-              '<stop offset="0%" stop-color="white" stop-opacity="0"/>' +
-              '<stop offset="10%" stop-color="white" stop-opacity="0"/>' +
-              '<stop offset="24%" stop-color="white" stop-opacity="0.28"/>' +
-              '<stop offset="38%" stop-color="white" stop-opacity="0.72"/>' +
-              '<stop offset="50%" stop-color="white" stop-opacity="1"/>' +
-              '<stop offset="62%" stop-color="white" stop-opacity="0.72"/>' +
-              '<stop offset="76%" stop-color="white" stop-opacity="0.28"/>' +
-              '<stop offset="90%" stop-color="white" stop-opacity="0"/>' +
-              '<stop offset="100%" stop-color="white" stop-opacity="0"/>' +
-            '</linearGradient>' +
-            '<mask id="test1bp_text_a_mask" maskUnits="userSpaceOnUse" x="0" y="0" width="200" height="53">' +
-              '<path d="' + test1bpTextAPathD + '" fill="white"/>' +
-            '</mask>' +
           '</defs>' +
-          '<circle class="test1-bottom-pill__icon" cx="26.2791" cy="26.2791" r="19.2713" fill="url(#test1bp_paint1)"/>' +
+          '<g class="test1-bottom-pill__icon-wrap">' +
+            '<circle class="test1-bottom-pill__icon" cx="26.2791" cy="26.2791" r="19.2713" fill="#155E75"/>' +
+            '<foreignObject x="7.0078" y="7.0078" width="38.5426" height="38.5426">' +
+              '<div xmlns="http://www.w3.org/1999/xhtml" class="test1-bottom-pill__ai-logo-slot">' +
+                '<canvas class="test1-bottom-pill__ai-logo"></canvas>' +
+              '</div>' +
+            '</foreignObject>' +
+            '<circle class="test1-bottom-pill__icon-ring" cx="26.2791" cy="26.2791" r="19.2713" fill="none" stroke="#FFFFFF" stroke-width="0.93"/>' +
+          '</g>' +
           '<g class="test1-bottom-pill__text-stage">' +
+              '<g class="test1-bottom-pill__text-b-slot"></g>' +
               '<g class="test1-bottom-pill__text-a-stage">' +
-              '<path class="test1-bottom-pill__text test1-bottom-pill__text--a" d="' + test1bpTextAPathD + '" fill="white"/>' +
-              '<g class="test1-bottom-pill__text-a-highlight" mask="url(#test1bp_text_a_mask)">' +
-                '<g class="test1-bottom-pill__text-a-highlight-track test1-bottom-pill__text-a-highlight-track--1">' +
-                  '<rect x="-54" y="9" width="108" height="35" fill="url(#test1bp_text_a_highlight)"/>' +
-                '</g>' +
-                '<g class="test1-bottom-pill__text-a-highlight-track test1-bottom-pill__text-a-highlight-track--2">' +
-                  '<rect x="-54" y="9" width="108" height="35" fill="url(#test1bp_text_a_highlight)"/>' +
-                '</g>' +
-                '<g class="test1-bottom-pill__text-a-highlight-track test1-bottom-pill__text-a-highlight-track--3">' +
-                  '<rect x="-54" y="9" width="108" height="35" fill="url(#test1bp_text_a_highlight)"/>' +
-                '</g>' +
-              '</g>' +
+              '<foreignObject x="56" y="10" width="140" height="38" class="test1-bottom-pill__text-a-fo">' +
+                '<div xmlns="http://www.w3.org/1999/xhtml" class="test1-bottom-pill__text-a-shiny">' +
+                  '<span class="test1-bottom-pill__text-a-shiny-line">귀가 후 저녁 준비</span>' +
+                  '<span class="test1-bottom-pill__text-a-shiny-line">화면 구성 중</span>' +
+                '</div>' +
+              '</foreignObject>' +
             '</g>' +
-            '<text class="test1-bottom-pill__text test1-bottom-pill__text--b" fill="white" font-family="Pretendard SB, sans-serif" font-size="10.2" font-weight="600" letter-spacing="-0.02em">' +
-              '<tspan x="58" y="21.2" font-family="Pretendard SB, sans-serif" font-weight="600">저녁 식사 준비를 돕는</tspan>' +
-              '<tspan x="58" y="37.2" font-family="Pretendard SB, sans-serif" font-weight="600">화면을 구성했어요.</tspan>' +
-            '</text>' +
           '</g>' +
         '</svg>' +
         '<div class="test1-bottom-pill__text-sweep">' +
@@ -6734,7 +6739,7 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
 
     case 'test1-home-header': {
       return '<div class="test1-home-header">' +
-        '<div class="test1-home-header__title">장 보고 돌아오는 중이에요</div>' +
+        '<div class="test1-home-header__title">장을 보고 돌아오는 중이에요</div>' +
         '<div class="test1-home-header__sub">저녁 준비를 돕는 화면을 구성했습니다</div>' +
       '</div>';
     }
@@ -6742,9 +6747,16 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
     case 'test1-home-map': {
       return '<div class="test1-home-widget test1-home-map">' +
         '<div class="test1-home-widget__bg" aria-hidden="true"></div>' +
+        '<div class="test1-home-widget__veil" aria-hidden="true">' +
+          '<div class="test1-home-widget__veil-gl p2-agent-fill">' +
+            '<canvas class="test1-home-widget__veil-gl-canvas p2-agent-fill__gl"></canvas>' +
+          '</div>' +
+          '<span class="test1-home-widget__veil-base"></span>' +
+          '<span class="test1-home-widget__veil-edge"></span>' +
+        '</div>' +
         '<div class="test1-home-widget__inner">' +
           '<div class="test1-home-map__top">' +
-            '<span class="test1-home-widget__chip test1-home-widget__chip--map">네이버지도</span>' +
+            '<span class="test1-home-widget__chip test1-home-widget__chip--map"><img class="test1-home-widget__chip-icon" src="/assets/test1/home/naver-map-icon.png" alt="" draggable="false" />네이버지도</span>' +
             '<img class="test1-home-map__bus" src="/assets/test1/home/naver-map-chip-icon.png" alt="" draggable="false" />' +
           '</div>' +
           '<div class="test1-home-map__time"><span class="test1-home-map__time-num">5</span><span class="test1-home-map__time-unit">분 뒤</span></div>' +
@@ -6762,6 +6774,13 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
     case 'test1-home-message': {
       return '<div class="test1-home-widget test1-home-message">' +
         '<div class="test1-home-widget__bg" aria-hidden="true"></div>' +
+        '<div class="test1-home-widget__veil" aria-hidden="true">' +
+          '<div class="test1-home-widget__veil-gl p2-agent-fill">' +
+            '<canvas class="test1-home-widget__veil-gl-canvas p2-agent-fill__gl"></canvas>' +
+          '</div>' +
+          '<span class="test1-home-widget__veil-base"></span>' +
+          '<span class="test1-home-widget__veil-edge"></span>' +
+        '</div>' +
         '<div class="test1-home-widget__inner">' +
           '<div class="test1-home-message__top">' +
             '<span class="test1-home-widget__chip"><img class="test1-home-widget__chip-icon" src="/assets/test1/home/message-icon.png" alt="" draggable="false" />메시지</span>' +
@@ -6780,9 +6799,11 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
     }
 
     case 'test1-home-food': {
-      var foodRow = function (iconClass, title, sub) {
+      var foodRow = function (thumbSrc, title, sub) {
         return '<div class="test1-home-food__row">' +
-          '<span class="test1-home-food__icon ' + iconClass + '" aria-hidden="true"></span>' +
+          '<span class="test1-home-food__thumb">' +
+            '<img class="test1-home-food__thumb-img" src="' + thumbSrc + '" alt="" draggable="false" />' +
+          '</span>' +
           '<div class="test1-home-food__copy">' +
             '<p class="test1-home-food__title">' + title + '</p>' +
             '<p class="test1-home-food__sub">' + sub + '</p>' +
@@ -6792,6 +6813,13 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
       };
       return '<div class="test1-home-widget test1-home-food">' +
         '<div class="test1-home-widget__bg" aria-hidden="true"></div>' +
+        '<div class="test1-home-widget__veil" aria-hidden="true">' +
+          '<div class="test1-home-widget__veil-gl p2-agent-fill">' +
+            '<canvas class="test1-home-widget__veil-gl-canvas p2-agent-fill__gl"></canvas>' +
+          '</div>' +
+          '<span class="test1-home-widget__veil-base"></span>' +
+          '<span class="test1-home-widget__veil-edge"></span>' +
+        '</div>' +
         '<div class="test1-home-widget__inner">' +
           '<span class="test1-home-widget__chip test1-home-widget__chip--food"><img class="test1-home-widget__chip-icon" src="/assets/test1/home/smartthings-icon.png" alt="" draggable="false" />SmartThings Food</span>' +
           '<div class="test1-home-food__head">' +
@@ -6799,12 +6827,12 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
             '<p class="test1-home-food__desc">냉장고 속 식재료로 저녁 메뉴를 추천합니다</p>' +
           '</div>' +
           '<div class="test1-home-food__rows">' +
-            foodRow('test1-home-food__icon--tofu', '두부', '오늘 구매한 식재료') +
-            foodRow('test1-home-food__icon--zucchini', '애호박', '보관 4일째 · 우선 사용') +
-            foodRow('test1-home-food__icon--onion', '대파', '신선칸 보관 중') +
+            foodRow('/assets/test1/home/food-tofu.png', '두부', '오늘 구매한 식재료') +
+            foodRow('/assets/test1/home/food-zucchini.png', '애호박', '보관 4일째 · 우선 사용') +
+            foodRow('/assets/test1/home/food-onion.png', '대파', '신선칸 보관 중') +
           '</div>' +
           '<div class="test1-home-food__actions">' +
-            '<button type="button" class="test1-home-food__btn">다른 메뉴 추천</button>' +
+            '<button type="button" class="test1-home-food__btn test1-home-food__btn--alt">다른 메뉴 추천</button>' +
             '<button type="button" class="test1-home-food__btn">레시피 보기</button>' +
           '</div>' +
         '</div>' +
@@ -8244,13 +8272,176 @@ function _stopTest3MusicAudioFade() {
   }
 }
 function _ensureTest3MusicAudio() {
-  if (window.__mlpTest3MusicAudio) return window.__mlpTest3MusicAudio;
-  var audio = new Audio(_test3MusicAudioSrc());
-  audio.preload = 'auto';
-  audio.loop = false;
-  audio.volume = 0;
-  window.__mlpTest3MusicAudio = audio;
-  return audio;
+  if (!window.__mlpTest3MusicAudio) {
+    var audio = new Audio(_test3MusicAudioSrc());
+    audio.preload = 'auto';
+    audio.loop = false;
+    audio.volume = 0;
+    window.__mlpTest3MusicAudio = audio;
+  }
+  if (typeof _bindTest3MusicAudioEvents === 'function') {
+    _bindTest3MusicAudioEvents();
+  }
+  return window.__mlpTest3MusicAudio;
+}
+function _fmtTest3MusicTime(sec) {
+  sec = Math.max(0, Math.floor(sec));
+  var m = Math.floor(sec / 60);
+  var s = sec % 60;
+  return (m < 10 ? '0' + m : String(m)) + ':' + (s < 10 ? '0' + s : String(s));
+}
+function _test3MusicTrackDurationSec() {
+  var audio = window.__mlpTest3MusicAudio;
+  if (audio && isFinite(audio.duration) && audio.duration > 0) {
+    return audio.duration;
+  }
+  return TEST3_MUSIC_ELAPSED_S + TEST3_MUSIC_REMAINING_S;
+}
+function _test3MusicBarFullWidth(music) {
+  music = music || document.querySelector('#test3-music');
+  if (!music) return TEST3_MUSIC_BAR_W;
+  var state = music.getAttribute('data-music-state') || 'normal';
+  if (state === 'compact') return TEST3_MUSIC_COMPACT_BAR_W;
+  var bar = music.querySelector('.dot-music1__icon .dot-music3__bar');
+  if (!bar) return TEST3_MUSIC_BAR_W;
+  var inline = parseFloat(bar.style.getPropertyValue('--bar-w'));
+  if (inline > 0) return inline;
+  var computed = parseFloat(getComputedStyle(bar).getPropertyValue('--bar-w'));
+  if (computed > 0) return computed;
+  return TEST3_MUSIC_BAR_W;
+}
+function _test3MusicProgressInteractive(music) {
+  if (!music || !window.__mlpTest3MusicShifted) return false;
+  if (music.getAttribute('data-test3-music-loading') === '1') return false;
+  if (music.getAttribute('data-test3-music-settling') === '1') return false;
+  if (music.getAttribute('data-test3-music-settled') !== '1') return false;
+  if (music.getAttribute('data-music-state') === 'lyrics') return true;
+  var state = music.getAttribute('data-music-state') || 'normal';
+  return state === 'normal' || state === 'compact';
+}
+function _applyTest3MusicProgressUI(music, currentSec, durationSec) {
+  music = music || document.querySelector('#test3-music');
+  if (!music) return;
+  durationSec = durationSec || _test3MusicTrackDurationSec();
+  currentSec = Math.max(0, Math.min(currentSec, durationSec));
+  var barFull = _test3MusicBarFullWidth(music);
+  var trackW = durationSec > 0 ? Math.round(barFull * currentSec / durationSec) : 0;
+  var bar = music.querySelector('.dot-music1__icon .dot-music3__bar');
+  if (bar) {
+    bar.style.setProperty('--bar-w', barFull + 'px');
+    bar.style.setProperty('--bar-track', trackW + 'px');
+    var track = bar.querySelector('.dot-music__barTrack');
+    if (track) {
+      track.style.setProperty('animation', 'none', 'important');
+      track.style.setProperty('width', trackW + 'px', 'important');
+    }
+  }
+  var remaining = Math.max(0, durationSec - currentSec);
+  music.querySelectorAll('.dot-music1__icon .dot-music3__time--current').forEach(function (el) {
+    el.textContent = _fmtTest3MusicTime(currentSec);
+  });
+  music.querySelectorAll('.dot-music1__icon .dot-music3__time--total').forEach(function (el) {
+    el.textContent = _fmtTest3MusicTime(remaining);
+  });
+  window.__mlpTest3MusicElapsed = currentSec;
+}
+function _stopTest3MusicProgressLoop() {
+  if (window.__mlpTest3MusicProgressRaf) {
+    cancelAnimationFrame(window.__mlpTest3MusicProgressRaf);
+    window.__mlpTest3MusicProgressRaf = null;
+  }
+}
+function _startTest3MusicProgressLoop() {
+  _stopTest3MusicProgressLoop();
+  function tick() {
+    window.__mlpTest3MusicProgressRaf = null;
+    var card = document.querySelector('#test3-music');
+    var audio = window.__mlpTest3MusicAudio;
+    if (!card || !audio || audio.paused || window.__mlpTest3MusicScrubbing) return;
+    if (typeof _test3MusicProgressInteractive === 'function' && !_test3MusicProgressInteractive(card)) return;
+    _applyTest3MusicProgressUI(card, audio.currentTime);
+    window.__mlpTest3MusicProgressRaf = requestAnimationFrame(tick);
+  }
+  window.__mlpTest3MusicProgressRaf = requestAnimationFrame(tick);
+}
+function _seekTest3MusicAudioTo(seconds) {
+  var audio = window.__mlpTest3MusicAudio;
+  if (!audio) return;
+  function apply() {
+    try { audio.currentTime = seconds; } catch (_) {}
+  }
+  if (audio.readyState >= 1) apply();
+  else audio.addEventListener('loadedmetadata', apply, { once: true });
+}
+function _setTest3MusicProgress(currentSec, opts) {
+  opts = opts || {};
+  var music = opts.music || document.querySelector('#test3-music');
+  var durationSec = _test3MusicTrackDurationSec();
+  currentSec = Math.max(0, Math.min(currentSec, durationSec));
+  if (opts.syncAudio !== false) {
+    _seekTest3MusicAudioTo(currentSec);
+  }
+  _applyTest3MusicProgressUI(music, currentSec, durationSec);
+}
+function _syncTest3MusicPlayState(card, playing) {
+  if (!card) return;
+  var val = playing ? '1' : '0';
+  card.setAttribute('data-music-playing', val);
+  card.querySelectorAll('.dot-music3__playBtn, .dot-music3__transportPlay').forEach(function (btn) {
+    btn.setAttribute('data-music-playing', val);
+    btn.setAttribute('aria-label', playing ? 'Pause' : 'Play');
+  });
+}
+function _bindTest3MusicAudioEvents() {
+  var audio = window.__mlpTest3MusicAudio;
+  if (!audio) return;
+  if (window.__mlpTest3MusicAudioBound === audio) return;
+  window.__mlpTest3MusicAudioBound = audio;
+  audio.addEventListener('timeupdate', function () {
+    var card = document.querySelector('#test3-music');
+    if (!card || window.__mlpTest3MusicScrubbing) return;
+    if (audio.paused) return;
+    if (!_test3MusicProgressInteractive(card)) return;
+    _applyTest3MusicProgressUI(card, audio.currentTime);
+  });
+  audio.addEventListener('loadedmetadata', function () {
+    var card = document.querySelector('#test3-music');
+    if (!card) return;
+    if (card.getAttribute('data-test3-music-settled') === '1') {
+      var t = audio.currentTime > 0 ? audio.currentTime : TEST3_MUSIC_ELAPSED_S;
+      _applyTest3MusicProgressUI(card, t);
+    }
+    if (!audio.paused) _startTest3MusicProgressLoop();
+  });
+  audio.addEventListener('pause', function () {
+    _stopTest3MusicProgressLoop();
+  });
+  audio.addEventListener('play', function () {
+    _startTest3MusicProgressLoop();
+  });
+}
+function _test3MusicScrubFromEvent(bar, clientX) {
+  var music = bar && bar.closest ? bar.closest('#test3-music') : null;
+  if (!music || !_test3MusicProgressInteractive(music)) return;
+  var rect = bar.getBoundingClientRect();
+  var ratio = rect.width > 0 ? (clientX - rect.left) / rect.width : 0;
+  ratio = Math.max(0, Math.min(1, ratio));
+  _setTest3MusicProgress(ratio * _test3MusicTrackDurationSec(), { music: music });
+}
+/** Play / scrub controls must not advance normal ↔ lyrics ↔ compact. */
+function _test3MusicExpandControlHit(e) {
+  if (!e || !e.target || !e.target.closest) return false;
+  return !!(
+    e.target.closest('.dot-music3__playBtn, .dot-music3__transportPlay') ||
+    e.target.closest('#test3-music .dot-music3__bar')
+  );
+}
+function _test3MusicSuppressExpandClickBriefly() {
+  window.__mlpTest3MusicSuppressExpandClick = true;
+  clearTimeout(window.__mlpTest3MusicSuppressExpandClickT);
+  window.__mlpTest3MusicSuppressExpandClickT = setTimeout(function () {
+    window.__mlpTest3MusicSuppressExpandClick = false;
+  }, 400);
 }
 function _fadeTest3MusicAudioTo(targetVol, durationMs) {
   var audio = window.__mlpTest3MusicAudio;
@@ -8283,11 +8474,13 @@ function _startTest3MusicAudioFadeIn() {
   if (playPromise && typeof playPromise.then === 'function') {
     playPromise.then(function () {
       _fadeTest3MusicAudioTo(TEST3_MUSIC_AUDIO_TARGET_VOL, TEST3_MUSIC_AUDIO_FADE_MS);
+      _startTest3MusicProgressLoop();
     }).catch(function () {
       window.__mlpTest3MusicAudioPending = true;
     });
   } else {
     _fadeTest3MusicAudioTo(TEST3_MUSIC_AUDIO_TARGET_VOL, TEST3_MUSIC_AUDIO_FADE_MS);
+    _startTest3MusicProgressLoop();
   }
 }
 function _setTest3MusicAudioPlaying(playing) {
@@ -8310,10 +8503,14 @@ function _setTest3MusicAudioPlaying(playing) {
     }
     _stopTest3MusicAudioFade();
     var resumePromise = audio.play();
-    if (resumePromise && typeof resumePromise.catch === 'function') {
-      resumePromise.catch(function () {
+    if (resumePromise && typeof resumePromise.then === 'function') {
+      resumePromise.then(function () {
+        _startTest3MusicProgressLoop();
+      }).catch(function () {
         window.__mlpTest3MusicAudioPending = true;
       });
+    } else {
+      _startTest3MusicProgressLoop();
     }
     if (audio.volume < TEST3_MUSIC_AUDIO_TARGET_VOL * 0.5) {
       _fadeTest3MusicAudioTo(TEST3_MUSIC_AUDIO_TARGET_VOL, 400);
@@ -8323,11 +8520,14 @@ function _setTest3MusicAudioPlaying(playing) {
   } else {
     _stopTest3MusicAudioFade();
     audio.pause();
+    _stopTest3MusicProgressLoop();
   }
 }
 function _stopTest3MusicAudio() {
   _stopTest3MusicAudioFade();
+  _stopTest3MusicProgressLoop();
   window.__mlpTest3MusicAudioPending = false;
+  window.__mlpTest3MusicAudioBound = null;
   var audio = window.__mlpTest3MusicAudio;
   if (!audio) return;
   try {
@@ -8370,16 +8570,11 @@ function _startTest3MusicTimeTicker() {
 function _freezeTest3MusicSettledProgress(music) {
   music = music || document.querySelector('#test3-music');
   if (!music) return;
-  window.__mlpTest3MusicElapsed = TEST3_MUSIC_ELAPSED_S;
-  var bar = music.querySelector('.dot-music1__icon .dot-music3__bar');
-  if (bar) {
-    bar.style.setProperty('--bar-w', TEST3_MUSIC_BAR_W + 'px');
-    bar.style.setProperty('--bar-track', TEST3_MUSIC_BAR_TRACK + 'px');
-    var track = bar.querySelector('.dot-music__barTrack');
-    if (track) {
-      track.style.setProperty('animation', 'none', 'important');
-      track.style.setProperty('width', TEST3_MUSIC_BAR_TRACK + 'px', 'important');
-    }
+  _applyTest3MusicProgressUI(music, TEST3_MUSIC_ELAPSED_S);
+  _seekTest3MusicAudioTo(TEST3_MUSIC_ELAPSED_S);
+  var audio = window.__mlpTest3MusicAudio;
+  if (audio && !audio.paused) {
+    _startTest3MusicProgressLoop();
   }
 }
 function _stopTest3MusicTimeTicker() {
@@ -8496,7 +8691,11 @@ function _layoutTest3Cards() {
   // phase-2 starts so weather/steps glide below the growing player.
   var musicH = inMusicEntrance
     ? (inExpand ? _test3MusicMeasuredH(music) : TEST3_MUSIC_SPAWN_H)
-    : ((musicState === 'lyrics') ? TEST3_MUSIC_LYRICS_H : TEST3_MUSIC_EXPAND_H);
+    : ((musicState === 'lyrics')
+        ? (music && music.getAttribute('data-test3-playlist-open') === '1'
+            ? TEST3_MUSIC_LYRICS_OPEN_H
+            : TEST3_MUSIC_LYRICS_H)
+        : TEST3_MUSIC_EXPAND_H);
   var weatherExp = weather.classList.contains('is-expanded');
   var stepsExp   = steps.classList.contains('is-expanded');
   var musicCompact = (musicState === 'compact');
@@ -8827,7 +9026,7 @@ function _applyTest3MusicLyricsLayout(music) {
   if (typeof _clearTest3MusicLayoutOverrides === 'function') {
     _clearTest3MusicLayoutOverrides(music);
   }
-  var lyricsH = TEST3_MUSIC_LYRICS_H + 'px';
+  var lyricsH = _test3MusicLyricsHeight(music) + 'px';
   music.style.setProperty('animation', 'none', 'important');
   music.style.setProperty('width', '340px', 'important');
   music.style.setProperty('height', lyricsH, 'important');
@@ -8854,7 +9053,7 @@ function _applyTest3MusicLyricsLayout(music) {
     player.style.setProperty('display', 'flex', 'important');
     player.style.setProperty('flex-direction', 'column', 'important');
   }
-  music.querySelectorAll('.dot-music3__compactHeader, .dot-music3__playlistPill, .dot-music3__playlistThumb, .dot-music3__playlistChevron, .dot-music3__bottom, .dot-music3__transport').forEach(function (el) {
+  music.querySelectorAll('.dot-music3__compactHeader, .dot-music3__playlistPill, .dot-music3__playlistThumb, .dot-music3__playlistChevron, .dot-music3__name, .dot-music3__bottom, .dot-music3__transport').forEach(function (el) {
     el.style.removeProperty('opacity');
     el.style.removeProperty('visibility');
     el.style.removeProperty('display');
@@ -8914,7 +9113,7 @@ function _applyTest3MusicSettledLayout(music) {
     icon.style.visibility = 'visible';
     icon.style.pointerEvents = 'auto';
   }
-  music.querySelectorAll('.dot-music1__icon .dot-music3__icon, .dot-music1__icon .dot-music3__iconBg, .dot-music1__icon .dot-music3__playBtn').forEach(function (el) {
+  music.querySelectorAll('.dot-music1__icon .dot-music3__icon, .dot-music1__icon .dot-music3__iconBg, .dot-music1__icon .dot-music3__playBtn:not(.dot-music3__transportPlay)').forEach(function (el) {
     el.style.setProperty('animation', 'none', 'important');
     el.style.display = 'none';
     el.style.opacity = '0';
@@ -9041,8 +9240,8 @@ function _armTest3PillsReveal(canvas) {
     textStart: TEST3_PILL_TEXT_START_MS,
     emerge: TEST3_PILL_TEXT_EMERGE_MS,
     gradientSpeed: 2.0,
-    gradientTitleCycles: 1,
-    gradientSubCycles: 1,
+    gradientTitleCycles: TEST3_PILL_SHINE_TITLE_PASSES,
+    gradientSubCycles: TEST3_PILL_SHINE_SUB_PASSES,
     shinePassMs: TEST3_PILL_SHINE_PASS_MS,
     shineTitlePasses: TEST3_PILL_SHINE_TITLE_PASSES,
     shineSubPasses: TEST3_PILL_SHINE_SUB_PASSES,
@@ -9112,7 +9311,7 @@ function _armTest3PillsReveal(canvas) {
       c.setAttribute('data-test3-pills-black-hold', '1');
     } catch (_) {}
   }, TEST3_PILL_BLACK_AT_MS);
-  /* Row drop + music handoff after 2s black hold (~6.6s). */
+  /* Row drop + music handoff after shine settles (~3.9s). */
   window.__mlpTest3PillsDropTimer = setTimeout(function () {
     window.__mlpTest3PillsDropTimer = null;
     try {
@@ -9742,48 +9941,90 @@ function _initTest3HoverPause() {
   // playing] selector. aria-label flips to match so screen readers
   // announce the right action.
   phone.addEventListener('click', function (e) {
-    var btn = e.target && e.target.closest && e.target.closest('.dot-music3__playBtn');
+    var btn = e.target && e.target.closest && e.target.closest('.dot-music3__playBtn, .dot-music3__transportPlay');
     if (!btn) return;
     e.stopPropagation();
-    var playing = btn.getAttribute('data-music-playing') === '1';
-    var next = playing ? '0' : '1';
-    btn.setAttribute('data-music-playing', next);
-    btn.setAttribute('aria-label', next === '1' ? 'Pause' : 'Play');
-    // Mirror the state on #test3-music so the CSS rule on the bar's
-    // ::track animation-play-state can pause/resume in sync, and the
-    // current-time ticker (which checks the same attribute) freezes
-    // / resumes together with the bar's visible fill.
+    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
     var card = btn.closest('#test3-music');
-    if (card) card.setAttribute('data-music-playing', next);
-    if (typeof _setTest3MusicAudioPlaying === 'function') {
-      _setTest3MusicAudioPlaying(next === '1');
+    if (!card || !window.__mlpTest3MusicShifted) return;
+    if (card.getAttribute('data-test3-music-loading') === '1') return;
+    var playing = btn.getAttribute('data-music-playing') === '1';
+    var nextPlaying = !playing;
+    if (typeof _syncTest3MusicPlayState === 'function') {
+      _syncTest3MusicPlayState(card, nextPlaying);
     }
-    // Quick white-50% flash on the disc background to give the play/
-    // pause toggle a visible "click" beat. The .is-blinking class
-    // runs a 320ms one-shot keyframe (in theme-page.css); strip it
-    // a touch after the animation finishes so the next click can
-    // re-trigger.
-    var iconEl = btn.closest('.dot-music3__icon');
-    if (iconEl) {
-      iconEl.classList.remove('is-blinking');
-      // Force reflow so the re-added class restarts the animation
-      // when the user clicks twice in quick succession.
-      void iconEl.offsetWidth;
-      iconEl.classList.add('is-blinking');
-      setTimeout(function () { iconEl.classList.remove('is-blinking'); }, 360);
+    if (typeof _setTest3MusicAudioPlaying === 'function') {
+      _setTest3MusicAudioPlaying(nextPlaying);
+    }
+    if (!btn.classList.contains('dot-music3__transportPlay')) {
+      var iconEl = btn.closest('.dot-music3__icon');
+      if (iconEl) {
+        iconEl.classList.remove('is-blinking');
+        void iconEl.offsetWidth;
+        iconEl.classList.add('is-blinking');
+        setTimeout(function () { iconEl.classList.remove('is-blinking'); }, 360);
+      }
     }
   });
-  // Card-body tap cycle: tapping anywhere on the music card OUTSIDE
-  // the play button advances the state machine:
+  phone.addEventListener('click', function (e) {
+    if (!e.target || !e.target.closest) return;
+    if (!e.target.closest('#test3-music .dot-music3__bar')) return;
+    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+    e.stopPropagation();
+  }, true);
+  phone.addEventListener('pointerdown', function (e) {
+    var bar = e.target && e.target.closest && e.target.closest('#test3-music .dot-music3__bar');
+    if (!bar) return;
+    var music = bar.closest('#test3-music');
+    if (!music || !window.__mlpTest3MusicShifted) return;
+    if (!music || typeof _test3MusicProgressInteractive !== 'function' || !_test3MusicProgressInteractive(music)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+    _test3MusicSuppressExpandClickBriefly();
+    window.__mlpTest3MusicScrubbing = true;
+    if (bar.setPointerCapture) bar.setPointerCapture(e.pointerId);
+    _test3MusicScrubFromEvent(bar, e.clientX);
+    function onMove(ev) {
+      if (ev.pointerId !== e.pointerId) return;
+      _test3MusicScrubFromEvent(bar, ev.clientX);
+    }
+    function onUp(ev) {
+      if (ev.pointerId !== e.pointerId) return;
+      window.__mlpTest3MusicScrubbing = false;
+      if (bar.releasePointerCapture) {
+        try { bar.releasePointerCapture(ev.pointerId); } catch (_) {}
+      }
+      bar.removeEventListener('pointermove', onMove);
+      bar.removeEventListener('pointerup', onUp);
+      bar.removeEventListener('pointercancel', onUp);
+    }
+    bar.addEventListener('pointermove', onMove);
+    bar.addEventListener('pointerup', onUp);
+    bar.addEventListener('pointercancel', onUp);
+  });
+  phone.addEventListener('click', function (e) {
+    if (window.__mlpTest3MusicSuppressExpandClick) return;
+    var pill = e.target && e.target.closest && e.target.closest('#test3-music .dot-music3__playlistPill');
+    if (!pill) return;
+    var card = pill.closest('#test3-music');
+    if (!card || !window.__mlpTest3MusicShifted) return;
+    if (card.getAttribute('data-test3-music-loading') === '1') return;
+    if ((card.getAttribute('data-music-state') || 'normal') !== 'lyrics') return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+    _toggleTest3PlaylistOpen(card);
+  }, true);
+  // Card-body tap cycle: tapping the card body (not play / progress bar)
+  // advances the state machine:
   //   normal  → lyrics (tap 1: show lyric block, card grows taller)
   //   lyrics  → compact (tap 2: shrink to 168×168 square)
   //   compact → normal (tap 3: back to the post-shift default)
-  // The play button's own handler above stops propagation so the
-  // card-body listener never fires when the user is hitting play.
   phone.addEventListener('click', function (e) {
-    // Skip when the click is on the play button — that handler ran
-    // already (and stopped propagation, but be defensive).
-    if (e.target && e.target.closest && e.target.closest('.dot-music3__playBtn')) return;
+    if (window.__mlpTest3MusicSuppressExpandClick) return;
+    if (_test3MusicExpandControlHit(e)) return;
+    if (e.target && e.target.closest && e.target.closest('#test3-music .dot-music3__playlistPill')) return;
     var card = e.target && e.target.closest && e.target.closest('#test3-music');
     if (!card) return;
     // Block the cycle during the initial mount animations (first ~4s
@@ -9802,6 +10043,7 @@ function _initTest3HoverPause() {
     var next = cur === 'normal' ? 'lyrics'
              : cur === 'lyrics' ? 'compact'
              : 'normal';
+    if (next !== 'lyrics') card.removeAttribute('data-test3-playlist-open');
     card.setAttribute('data-music-state', next);
     if (typeof _resetTest3MusicCopy === 'function') {
       _resetTest3MusicCopy(card);
@@ -9817,7 +10059,7 @@ function _initTest3HoverPause() {
   // so the OTHER card drops to a new row when one expands (and vice
   // versa).
   phone.addEventListener('click', function (e) {
-    if (e.target && e.target.closest && e.target.closest('.dot-music3__playBtn')) return;
+    if (_test3MusicExpandControlHit(e)) return;
     if (e.target && e.target.closest && e.target.closest('#test3-music')) return;
     var card = e.target && e.target.closest && (
       e.target.closest('#test3-weather') || e.target.closest('#test3-steps')
@@ -10987,53 +11229,73 @@ function installTest2P2TransitionBridge(canvas) {
   }).observe(canvas, { attributes: true, attributeFilter: ['class'] });
 }
 
-var TEST1_INTRO_DELAY_MS = 1300;
-var TEST1_LOTTE_INTRO_MS = 400;
-var TEST1_PILL_AFTER_LOTTE_MS = 550;
-var TEST1_PILL_ANIM_MS = 2000;
-var TEST1_GREEN_AFTER_PILL_MS = 650;
-var TEST1_SHORTCUTS_FADE_MS = 320;
-var TEST1_STACK_AFTER_GREEN_MS = 1600;
-var TEST1_STACK_INTRO_MS = 480;
-var TEST1_AFTER_STACK_MS = 3000;
-var TEST1_PILL_OUT_FADE_MS = 800;
-var TEST1_PILL_OUT_GAP_MS = 200;
-var TEST1_CODA_STACK_OUT_MS = 500;
-var TEST1_GRADIENT_HOLD_MS = 3000;
-var TEST1_GRADIENT_OUT_FADE_MS = 1000;
-var TEST1_AFTER_GRADIENT_CODA_MS = 0;
-var TEST1_PILL_BG_DELAY_MS = 550;
+var TEST1_INTRO_DELAY_MS = 3000;
+var TEST1_LOTTE_INTRO_MS = 720;
+var TEST1_GREEN_AFTER_LOTTE_MS = 1800;
+var TEST1_STACK_AFTER_GREEN_MS = 1200;
+var TEST1_STACK_INTRO_MS = 720;
+var TEST1_AFTER_STACK_MS = 1500;
+var TEST1_PILL_BG_DELAY_MS = 350;
 var TEST1_PILL_BG_IN_MS = 950;
-var TEST1_PILL_ICON_TEXT_DELAY_MS = TEST1_PILL_BG_DELAY_MS;
-var TEST1_PILL_TEXT_A_IN_MS = TEST1_PILL_BG_IN_MS;
+var TEST1_PILL_TEXT_A_IN_MS = 1520;
 var TEST1_PILL_TEXT_HOLD_MS = 3000;
+var TEST1_TOP_GRADIENT_VER3_ENABLED = true;
 var TEST1_PASS_DUR_MS = 1667;
 var TEST1_PASS_OVERLAP_MS = 240;
 var TEST1_PASS_STEP_MS = TEST1_PASS_DUR_MS - TEST1_PASS_OVERLAP_MS;
-var TEST1_GRADIENT_SWEEP_MS = 200 + TEST1_PASS_STEP_MS * 2 + TEST1_PASS_DUR_MS;
+var TEST1_GRADIENT_PASS_DUR_MS = 2350;
+var TEST1_GRADIENT_PASS_OVERLAP_MS = 520;
+var TEST1_GRADIENT_PASS_STEP_MS = TEST1_GRADIENT_PASS_DUR_MS - TEST1_GRADIENT_PASS_OVERLAP_MS;
+var TEST1_GRADIENT_COMP_STAGGER_MS = 140;
+var TEST1_GRADIENT_HOLD_MS = 320;
+var TEST1_GRADIENT_COMP_FADE_DUR_MS = 880;
+var TEST1_GRADIENT_COMP_FADE_GAP_MS = 220;
+var TEST1_GRADIENT_COMP_FADE_TOTAL_MS = TEST1_GRADIENT_COMP_FADE_GAP_MS * 2 + TEST1_GRADIENT_COMP_FADE_DUR_MS;
+var TEST1_GRADIENT_OUT_FADE_MS = TEST1_GRADIENT_COMP_FADE_TOTAL_MS + 120;
+var TEST1_GRADIENT_THIRD_PASS_START_MS = TEST1_GRADIENT_PASS_STEP_MS * 2 + TEST1_GRADIENT_COMP_STAGGER_MS * 2;
+/* 3 fill passes (track 1+2+3), fade out starts after slow sweep completes */
+var TEST1_GRADIENT_FLOW_MS = TEST1_GRADIENT_COMP_STAGGER_MS * 2 + TEST1_GRADIENT_PASS_STEP_MS * 2 + TEST1_GRADIENT_PASS_DUR_MS;
 var TEST1_PILL_GRAD_PASS_OVERLAP_MS = 620;
 var TEST1_PILL_GRAD_PASS_STEP_MS = TEST1_PASS_DUR_MS - TEST1_PILL_GRAD_PASS_OVERLAP_MS;
 var TEST1_PILL_TEXT_SWEEP_MS = TEST1_PASS_DUR_MS + TEST1_PASS_STEP_MS * 2;
 var TEST1_PILL_TEXT_A_OUT_MS = 1150;
-var TEST1_PILL_CROSSFADE_LEAD_MS = 350;
 var TEST1_PILL_PINK_FLOW_MS = TEST1_PASS_DUR_MS + TEST1_PILL_GRAD_PASS_STEP_MS * 2;
 var TEST1_PILL_TEXT_B_DUR_MS = 1400;
-var TEST1_PILL_TEXT_B_LEAD_MS = 850;
+var TEST1_PILL_TEXT_B_GAP_AFTER_PINK_MS = 80;
 var TEST1_PILL_TEXT_A_SHIMMER_DELAY_MS = 1000;
-var TEST1_PILL_TEXT_A_SHIMMER_START_MS = TEST1_PILL_ICON_TEXT_DELAY_MS + TEST1_PILL_TEXT_A_IN_MS + TEST1_PILL_TEXT_A_SHIMMER_DELAY_MS;
+var TEST1_PILL_ICON_AFTER_SHELL_MS = 220;
+var TEST1_PILL_PRE_PINK_AFTER_ICON_MS = 280;
+var TEST1_PILL_AI_LOGO_AFTER_ICON_GAP_MS = 120;
+var TEST1_PILL_ICON_TEXT_DELAY_MS = TEST1_PILL_BG_DELAY_MS + TEST1_PILL_BG_IN_MS + TEST1_PILL_ICON_AFTER_SHELL_MS;
+var TEST1_PILL_AI_LOGO_START_MS = TEST1_PILL_BG_DELAY_MS + TEST1_PILL_BG_IN_MS + TEST1_PILL_AI_LOGO_AFTER_ICON_GAP_MS;
+var TEST1_PILL_AI_LOGO_FADE_MS = 480;
+var TEST1_TOP_GRADIENT_TOTAL_MS = TEST1_GRADIENT_THIRD_PASS_START_MS + TEST1_GRADIENT_OUT_FADE_MS;
+var TEST1_PILL_PRE_PINK_START_MS = TEST1_PILL_ICON_TEXT_DELAY_MS + TEST1_PILL_BG_IN_MS + TEST1_PILL_PRE_PINK_AFTER_ICON_MS;
+var TEST1_PILL_TEXT_A_REVEAL_START_MS = TEST1_PILL_PRE_PINK_START_MS;
+var TEST1_PILL_TEXT_A_SHIMMER_START_MS = TEST1_PILL_TEXT_A_REVEAL_START_MS;
 var TEST1_PILL_TEXT_A_HIGHLIGHT_PASS_MS = 2850;
 var TEST1_PILL_TEXT_A_HIGHLIGHT_STEP_MS = 500;
 var TEST1_PILL_TEXT_A_HIGHLIGHT_OVERLAP_MS = TEST1_PILL_TEXT_A_HIGHLIGHT_PASS_MS - TEST1_PILL_TEXT_A_HIGHLIGHT_STEP_MS;
 var TEST1_PILL_TEXT_A_SHIMMER_DUR_MS = TEST1_PILL_TEXT_A_HIGHLIGHT_PASS_MS + TEST1_PILL_TEXT_A_HIGHLIGHT_STEP_MS * 2;
 var TEST1_PILL_PINK_FLOW_DELAY_MS = TEST1_PILL_TEXT_A_SHIMMER_START_MS + TEST1_PILL_TEXT_A_SHIMMER_DUR_MS;
 var TEST1_PILL_PINK_SWEEP_START_MS = TEST1_PILL_PINK_FLOW_DELAY_MS;
-var TEST1_PILL_TEXT_B_DELAY_MS = TEST1_PILL_PINK_FLOW_DELAY_MS + TEST1_PILL_PINK_FLOW_MS - TEST1_PILL_TEXT_B_LEAD_MS;
+var TEST1_PILL_TEXT_B_DELAY_MS = TEST1_PILL_PINK_FLOW_DELAY_MS + TEST1_PILL_PINK_FLOW_MS + TEST1_PILL_TEXT_B_GAP_AFTER_PINK_MS;
+var TEST1_PILL_TEXT_A_OUT_START_MS = TEST1_PILL_PINK_SWEEP_START_MS - TEST1_PILL_TEXT_A_OUT_MS;
+/* ver3 — start with text-a out, finish lift-fade when text-b mounts */
+var TEST1_VER3_GRADIENT_START_MS = TEST1_PILL_TEXT_A_OUT_START_MS;
+var TEST1_VER3_OUT_TRIGGER_MS = Math.max(
+  TEST1_PILL_TEXT_B_DELAY_MS - TEST1_PILL_TEXT_A_OUT_START_MS - TEST1_GRADIENT_OUT_FADE_MS,
+  TEST1_GRADIENT_FLOW_MS + TEST1_GRADIENT_HOLD_MS - TEST1_GRADIENT_OUT_FADE_MS
+);
+var TEST1_PILL_AI_LOGO_PAUSE_MS = TEST1_PILL_TEXT_B_DELAY_MS;
 var TEST1_CODA_FADE_IN_MS = TEST1_PILL_TEXT_B_DELAY_MS + TEST1_PILL_TEXT_B_DUR_MS + 500;
-var TEST1_HOME_AFTER_CODA_MS = 1600;
-var TEST1_HOME_EXIT_MS = 560;
-var TEST1_HOME_FADE_MS = 720;
 var TEST1_STACK_ITEM_GAP_PX = 16;
 var TEST1_STACK_SHIFT_PX = 72 + TEST1_STACK_ITEM_GAP_PX;
+var TEST1_HOME_EXIT_MS = 560;
+var TEST1_HOME_GLOW_HOLD_MS = 2000;
+var TEST1_HOME_GLOW_FADE_MS = 600;
+var TEST1_HOME_BG_SETTLE_MS = TEST1_HOME_GLOW_HOLD_MS + TEST1_HOME_GLOW_FADE_MS;
+var TEST1_HOME_INNER_RISE_MS = TEST1_HOME_GLOW_HOLD_MS;
 
 function _clearTest1IntroTimer() {
   if (window.__mlpTest1IntroTimer) {
@@ -11076,21 +11338,27 @@ function _clearTest1IntroTimer() {
     clearTimeout(window.__mlpTest1GradientOutTimer);
     window.__mlpTest1GradientOutTimer = null;
   }
+  if (window.__mlpTest1GradientCompAnims && window.__mlpTest1GradientCompAnims.length) {
+    window.__mlpTest1GradientCompAnims.forEach(function (anim) {
+      try { if (anim) anim.cancel(); } catch (_) {}
+    });
+    window.__mlpTest1GradientCompAnims = null;
+  }
   if (window.__mlpTest1CodaTimer) {
     clearTimeout(window.__mlpTest1CodaTimer);
     window.__mlpTest1CodaTimer = null;
   }
+  if (window.__mlpTest1CodaAfterStackTimer) {
+    clearTimeout(window.__mlpTest1CodaAfterStackTimer);
+    window.__mlpTest1CodaAfterStackTimer = null;
+  }
+  if (window.__mlpTest1GradientSyncTimer) {
+    clearTimeout(window.__mlpTest1GradientSyncTimer);
+    window.__mlpTest1GradientSyncTimer = null;
+  }
   if (window.__mlpTest1CodaEndTimer) {
     clearTimeout(window.__mlpTest1CodaEndTimer);
     window.__mlpTest1CodaEndTimer = null;
-  }
-  if (window.__mlpTest1CodaAnimateTimer) {
-    clearTimeout(window.__mlpTest1CodaAnimateTimer);
-    window.__mlpTest1CodaAnimateTimer = null;
-  }
-  if (window.__mlpTest1CodaInnerRiseTimer) {
-    clearTimeout(window.__mlpTest1CodaInnerRiseTimer);
-    window.__mlpTest1CodaInnerRiseTimer = null;
   }
   if (window.__mlpTest1PinkFlowTimer) {
     clearTimeout(window.__mlpTest1PinkFlowTimer);
@@ -11112,48 +11380,229 @@ function _clearTest1IntroTimer() {
     clearTimeout(window.__mlpTest1PinkFlowStopTimer);
     window.__mlpTest1PinkFlowStopTimer = null;
   }
-  if (window.__mlpTest1HomeTimer) {
-    clearTimeout(window.__mlpTest1HomeTimer);
-    window.__mlpTest1HomeTimer = null;
+  if (window.__mlpTest1TextBMountTimer) {
+    clearTimeout(window.__mlpTest1TextBMountTimer);
+    window.__mlpTest1TextBMountTimer = null;
+  }
+  _unmountTest1BottomPillTextB();
+  _unmountTest1BottomPillAiLogo();
+  if (window.__mlpTest1AiLogoMountTimer) {
+    clearTimeout(window.__mlpTest1AiLogoMountTimer);
+    window.__mlpTest1AiLogoMountTimer = null;
+  }
+  if (window.__mlpTest1AiLogoPauseTimer) {
+    clearTimeout(window.__mlpTest1AiLogoPauseTimer);
+    window.__mlpTest1AiLogoPauseTimer = null;
   }
   if (window.__mlpTest1HomeExitTimer) {
     clearTimeout(window.__mlpTest1HomeExitTimer);
     window.__mlpTest1HomeExitTimer = null;
   }
+  if (window.__mlpTest1HomeBgSettleTimer) {
+    clearTimeout(window.__mlpTest1HomeBgSettleTimer);
+    window.__mlpTest1HomeBgSettleTimer = null;
+  }
+  if (window.__mlpTest1HomeInnerRiseTimer) {
+    clearTimeout(window.__mlpTest1HomeInnerRiseTimer);
+    window.__mlpTest1HomeInnerRiseTimer = null;
+  }
+  if (window.Test1HomeWidgetFillGL) {
+    try { window.Test1HomeWidgetFillGL.destroyAll(); } catch (_) {}
+  }
+  window.__mlpTest1Transitioning = false;
+}
+
+function _unmountTest1BottomPillAiLogo() {
+  try {
+    var pill = document.querySelector('#test1-bottom-pill');
+    if (pill && window.__test1GalaxyAiLogo && typeof window.__test1GalaxyAiLogo.unmount === 'function') {
+      window.__test1GalaxyAiLogo.unmount(pill);
+    }
+  } catch (_) {}
+}
+
+function _isMlpLocalDevHost() {
+  try {
+    var h = typeof window !== 'undefined' && window.location && window.location.hostname;
+    return h === 'localhost' || h === '127.0.0.1';
+  } catch (_) {
+    return false;
+  }
+}
+
+function _ensureTest1GalaxyAiLogoScript(done) {
+  var dev = _isMlpLocalDevHost();
+  if (!dev && window.__test1GalaxyAiLogo && typeof window.__test1GalaxyAiLogo.mount === 'function') {
+    done();
+    return;
+  }
+  if (window.__mlpTest1GalaxyAiLogoLoading) {
+    window.__mlpTest1GalaxyAiLogoLoading.push(done);
+    return;
+  }
+  if (dev) {
+    _unmountTest1BottomPillAiLogo();
+    delete window.__test1GalaxyAiLogo;
+    var oldScript = document.querySelector('script[data-mlp-test1-galaxy-ai-logo]');
+    if (oldScript) oldScript.remove();
+  } else if (window.__test1GalaxyAiLogo && typeof window.__test1GalaxyAiLogo.mount === 'function') {
+    done();
+    return;
+  }
+  window.__mlpTest1GalaxyAiLogoLoading = [done];
+  var script = document.createElement('script');
+  script.src = '/app/test1-galaxy-ai-logo.js' + (dev ? ('?t=' + Date.now()) : '?v=27');
+  script.setAttribute('data-mlp-test1-galaxy-ai-logo', '1');
+  script.onload = function () {
+    var queue = window.__mlpTest1GalaxyAiLogoLoading || [];
+    window.__mlpTest1GalaxyAiLogoLoading = null;
+    queue.forEach(function (fn) { try { fn(); } catch (_) {} });
+  };
+  script.onerror = function () {
+    window.__mlpTest1GalaxyAiLogoLoading = null;
+  };
+  document.head.appendChild(script);
+}
+
+function _getTest1BottomPillSvg() {
+  var wrap = document.querySelector('#test1-bottom-pill');
+  if (!wrap) return null;
+  return wrap.querySelector('.test1-bottom-pill__svg');
+}
+
+function _unmountTest1BottomPillTextB() {
+  try {
+    var svg = _getTest1BottomPillSvg();
+    if (svg) {
+      var stage = svg.querySelector('.test1-bottom-pill__text-b-stage');
+      if (stage && stage.parentNode) {
+        var slot = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        slot.setAttribute('class', 'test1-bottom-pill__text-b-slot');
+        stage.parentNode.replaceChild(slot, stage);
+      }
+      var textAStage = svg.querySelector('.test1-bottom-pill__text-a-stage');
+      if (textAStage) {
+        textAStage.style.display = '';
+        textAStage.style.visibility = '';
+        textAStage.style.opacity = '';
+      }
+    }
+    var canvas = document.getElementById('canvas');
+    if (canvas) canvas.removeAttribute('data-test1-pill-text-b');
+  } catch (_) {}
+}
+
+function _ensureTest1BottomPillTextBDone(canvas) {
+  try {
+    if (!canvas || canvas.getAttribute('data-test-scope') !== 'test1') return;
+    canvas.setAttribute('data-test1-pill-text-b', 'done');
+    var svg = _getTest1BottomPillSvg();
+    if (!svg) return;
+    if (!svg.querySelector('.test1-bottom-pill__text-b-stage')) {
+      _mountTest1BottomPillTextB(true);
+    }
+  } catch (_) {}
+}
+
+function _mountTest1BottomPillTextB(showFinal) {
+  try {
+    var canvas = document.getElementById('canvas');
+    if (!canvas || canvas.getAttribute('data-test-scope') !== 'test1') return;
+    if (!showFinal && !canvas.getAttribute('data-test1-coda-animate')) return;
+    var svg = _getTest1BottomPillSvg();
+    if (!svg) return;
+    if (svg.querySelector('.test1-bottom-pill__text-b-stage')) {
+      if (showFinal) canvas.setAttribute('data-test1-pill-text-b', 'done');
+      return;
+    }
+    var slot = svg.querySelector('.test1-bottom-pill__text-b-slot');
+    if (!slot || !slot.parentNode) return;
+
+    var stage = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    stage.setAttribute('class', 'test1-bottom-pill__text-b-stage');
+    var fo = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
+    fo.setAttribute('x', '56');
+    fo.setAttribute('y', '10');
+    fo.setAttribute('width', '140');
+    fo.setAttribute('height', '38');
+    fo.setAttribute('class', 'test1-bottom-pill__text-b-fo');
+    fo.innerHTML =
+      '<div xmlns="http://www.w3.org/1999/xhtml" class="test1-bottom-pill__text-b-shiny">' +
+        '<span class="test1-bottom-pill__text-b-shiny-line">저녁 식사 준비를 돕는</span>' +
+        '<span class="test1-bottom-pill__text-b-shiny-line">화면을 구성했어요.</span>' +
+      '</div>';
+    stage.appendChild(fo);
+    slot.parentNode.replaceChild(stage, slot);
+    var textAStage = svg.querySelector('.test1-bottom-pill__text-a-stage');
+    if (textAStage) {
+      textAStage.style.display = 'none';
+      textAStage.style.visibility = 'hidden';
+      textAStage.style.opacity = '0';
+    }
+    canvas.setAttribute('data-test1-pill-text-b', showFinal ? 'done' : '1');
+  } catch (_) {}
+}
+
+function _armTest1BottomPillTextBMount() {
+  if (window.__mlpTest1TextBMountTimer) {
+    clearTimeout(window.__mlpTest1TextBMountTimer);
+    window.__mlpTest1TextBMountTimer = null;
+  }
+  window.__mlpTest1TextBMountTimer = setTimeout(function () {
+    window.__mlpTest1TextBMountTimer = null;
+    _mountTest1BottomPillTextB(false);
+  }, TEST1_PILL_TEXT_B_DELAY_MS);
+}
+
+function _armTest1BottomPillAiLogoMount() {
+  if (window.__mlpTest1AiLogoMountTimer) {
+    clearTimeout(window.__mlpTest1AiLogoMountTimer);
+    window.__mlpTest1AiLogoMountTimer = null;
+  }
+  if (window.__mlpTest1AiLogoPauseTimer) {
+    clearTimeout(window.__mlpTest1AiLogoPauseTimer);
+    window.__mlpTest1AiLogoPauseTimer = null;
+  }
+  window.__mlpTest1AiLogoMountTimer = setTimeout(function () {
+    window.__mlpTest1AiLogoMountTimer = null;
+    _mountTest1BottomPillAiLogo();
+  }, TEST1_PILL_AI_LOGO_START_MS);
+  window.__mlpTest1AiLogoPauseTimer = setTimeout(function () {
+    window.__mlpTest1AiLogoPauseTimer = null;
+    _pauseTest1BottomPillAiLogo();
+  }, TEST1_PILL_AI_LOGO_PAUSE_MS);
+}
+
+function _pauseTest1BottomPillAiLogo() {
+  try {
+    var pill = document.querySelector('#test1-bottom-pill');
+    if (!pill) return;
+    if (window.__test1GalaxyAiLogo && typeof window.__test1GalaxyAiLogo.pause === 'function') {
+      window.__test1GalaxyAiLogo.pause(pill);
+      return;
+    }
+    _ensureTest1GalaxyAiLogoScript(function () {
+      if (window.__test1GalaxyAiLogo && typeof window.__test1GalaxyAiLogo.pause === 'function') {
+        window.__test1GalaxyAiLogo.pause(pill);
+      }
+    });
+  } catch (_) {}
+}
+
+function _mountTest1BottomPillAiLogo() {
+  try {
+    var pill = document.querySelector('#test1-bottom-pill');
+    if (!pill) return;
+    _ensureTest1GalaxyAiLogoScript(function () {
+      if (window.__test1GalaxyAiLogo && typeof window.__test1GalaxyAiLogo.mount === 'function') {
+        window.__test1GalaxyAiLogo.mount(pill);
+      }
+    });
+  } catch (_) {}
 }
 
 function _runTest1ShortcutsFade() {
-  try {
-    var c = document.getElementById('canvas');
-    if (!c || c.getAttribute('data-test-scope') !== 'test1') return;
-    if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
-    if (c.getAttribute('data-test1-shortcuts-out')) return;
-    c.setAttribute('data-test1-shortcuts-out', '1');
-    c.setAttribute('data-test1-shortcuts-animate', '1');
-    if (window.__mlpTestConfig) window.__mlpTestConfig.test1ShortcutsOut = true;
-  } catch (_) {}
-}
-
-function _runTest1PillIntro() {
-  try {
-    var c = document.getElementById('canvas');
-    if (!c || c.getAttribute('data-test-scope') !== 'test1') return;
-    if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
-    c.removeAttribute('data-test1-pill-run');
-    c.setAttribute('data-test1-pill-prep', '1');
-    requestAnimationFrame(function () {
-      requestAnimationFrame(function () {
-        try {
-          var canvas = document.getElementById('canvas');
-          if (!canvas || canvas.getAttribute('data-test-scope') !== 'test1') return;
-          if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
-          canvas.removeAttribute('data-test1-pill-prep');
-          canvas.setAttribute('data-test1-pill-run', '1');
-          _armTest1GreenDelay(canvas);
-        } catch (_) {}
-      });
-    });
-  } catch (_) {}
+  /* shortcuts stay visible for full test1 flow — no mid-sequence fade-out */
 }
 
 function _runTest1GreenIntro() {
@@ -11173,73 +11622,112 @@ function _runTest1StackIntro() {
     if (!c || c.getAttribute('data-test-scope') !== 'test1') return;
     if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
     c.setAttribute('data-test1-stack-run', '1');
+    c.setAttribute('data-test1-stack-animate', '1');
     if (window.__mlpTestConfig) window.__mlpTestConfig.test1StackRun = true;
-    void c.offsetWidth;
-    requestAnimationFrame(function () {
-      requestAnimationFrame(function () {
-        try {
-          var canvas = document.getElementById('canvas');
-          if (!canvas || canvas.getAttribute('data-test-scope') !== 'test1') return;
-          if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
-          if (!canvas.getAttribute('data-test1-stack-run')) return;
-          canvas.setAttribute('data-test1-stack-animate', '1');
-          _armTest1PillOutDelay(canvas);
-        } catch (_) {}
-      });
-    });
+    _armTest1CodaAfterStack(c);
   } catch (_) {}
 }
 
-function _armTest1PillOutDelay(canvas) {
+function _armTest1CodaAfterStack(canvas) {
   if (!canvas || canvas.getAttribute('data-test-scope') !== 'test1') return;
   if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
+  if (canvas.getAttribute('data-test1-coda-run')) return;
   if (!canvas.getAttribute('data-test1-stack-run')) return;
-  if (canvas.getAttribute('data-test1-pill-out') || canvas.getAttribute('data-test1-pill-out-animate')) return;
-  if (window.__mlpTest1PillOutDelayTimer) return;
-  window.__mlpTest1PillOutDelayTimer = setTimeout(function () {
-    window.__mlpTest1PillOutDelayTimer = null;
-    _runTest1PillOut();
+  if (window.__mlpTest1CodaAfterStackTimer) {
+    clearTimeout(window.__mlpTest1CodaAfterStackTimer);
+  }
+  window.__mlpTest1CodaAfterStackTimer = setTimeout(function () {
+    window.__mlpTest1CodaAfterStackTimer = null;
+    _runTest1CodaIntro();
   }, TEST1_AFTER_STACK_MS);
 }
 
-function _runTest1PillOut() {
-  try {
-    var c = document.getElementById('canvas');
-    if (!c || c.getAttribute('data-test-scope') !== 'test1') return;
-    if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
-    if (c.getAttribute('data-test1-pill-out') || c.getAttribute('data-test1-pill-out-animate')) return;
-    if (window.__mlpTestConfig) window.__mlpTestConfig.test1PillOut = true;
-    void c.offsetWidth;
-    requestAnimationFrame(function () {
-      requestAnimationFrame(function () {
-        try {
-          var c2 = document.getElementById('canvas');
-          if (!c2 || c2.getAttribute('data-test-scope') !== 'test1') return;
-          if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
-          c2.setAttribute('data-test1-pill-out-animate', '1');
-        } catch (_) {}
-      });
+function _finishTest1GradientOut(canvas) {
+  if (!canvas || canvas.getAttribute('data-test-scope') !== 'test1') return;
+  if (window.__mlpTest1GradientCompAnims && window.__mlpTest1GradientCompAnims.length) {
+    window.__mlpTest1GradientCompAnims.forEach(function (anim) {
+      try { if (anim) anim.cancel(); } catch (_) {}
     });
-    if (window.__mlpTest1PillOutEndTimer) clearTimeout(window.__mlpTest1PillOutEndTimer);
-    window.__mlpTest1PillOutEndTimer = setTimeout(function () {
-      window.__mlpTest1PillOutEndTimer = null;
-      try {
-        var pillCanvas = document.getElementById('canvas');
-        if (pillCanvas && pillCanvas.getAttribute('data-test-scope') === 'test1') {
-          pillCanvas.removeAttribute('data-test1-pill-out-animate');
-          pillCanvas.setAttribute('data-test1-pill-out', '1');
-        }
-      } catch (_) {}
-    }, TEST1_PILL_OUT_FADE_MS);
-    if (window.__mlpTest1GradientStartTimer) return;
-    window.__mlpTest1GradientStartTimer = setTimeout(function () {
-      window.__mlpTest1GradientStartTimer = null;
-      _runTest1GradientSweep();
-    }, TEST1_PILL_OUT_FADE_MS + TEST1_PILL_OUT_GAP_MS);
-  } catch (_) {}
+    window.__mlpTest1GradientCompAnims = null;
+  }
+  canvas.setAttribute('data-test1-gradient-out', '1');
+  if (window.__mlpTestConfig) window.__mlpTestConfig.test1GradientOut = true;
+  canvas.removeAttribute('data-test1-gradient-animate');
+  canvas.removeAttribute('data-test1-gradient-out-animate');
+  if (window.__mlpTestConfig) window.__mlpTestConfig.test1GradientDone = true;
+}
+
+function _test1GradientFadeVisual(canvas, itemId) {
+  if (!canvas || !itemId) return null;
+  var item = canvas.querySelector('#' + itemId);
+  if (!item) return null;
+  return item.querySelector('.test1-home-widget') || item;
+}
+
+function _runTest1GradientCompLiftFade(el, delayMs) {
+  if (!el || typeof el.animate !== 'function') return null;
+  el.style.opacity = '1';
+  return el.animate(
+    [
+      { opacity: 1, transform: 'translate3d(0, 0, 0)' },
+      { opacity: 0, transform: 'translate3d(0, -10px, 0)' }
+    ],
+    {
+      duration: TEST1_GRADIENT_COMP_FADE_DUR_MS,
+      delay: delayMs,
+      easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+      fill: 'forwards'
+    }
+  );
+}
+
+function _beginTest1GradientOutAnimate(canvas) {
+  if (!canvas || canvas.getAttribute('data-test-scope') !== 'test1') return;
+  if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
+  if (canvas.getAttribute('data-test1-gradient-out-animate')) return;
+  canvas.setAttribute('data-test1-gradient-out-animate', '1');
+  if (window.__mlpTest1GradientCompAnims && window.__mlpTest1GradientCompAnims.length) {
+    window.__mlpTest1GradientCompAnims.forEach(function (anim) {
+      try { if (anim) anim.cancel(); } catch (_) {}
+    });
+  }
+  window.__mlpTest1GradientCompAnims = [];
+  var fadeOrder = [
+    { compId: 'test1-home-map', sweepId: 'test1-gradient-sweep-a', delay: 0 },
+    { compId: 'test1-home-message', sweepId: 'test1-gradient-sweep-b', delay: TEST1_GRADIENT_COMP_FADE_GAP_MS },
+    { compId: 'test1-home-food', sweepId: 'test1-gradient-sweep-c', delay: TEST1_GRADIENT_COMP_FADE_GAP_MS * 2 }
+  ];
+  fadeOrder.forEach(function (entry) {
+    var sweepItem = canvas.querySelector('#' + entry.sweepId);
+    var sweepAnim = _runTest1GradientCompLiftFade(sweepItem, entry.delay);
+    if (sweepAnim) window.__mlpTest1GradientCompAnims.push(sweepAnim);
+  });
+  if (window.__mlpTest1GradientOutTimer) return;
+  window.__mlpTest1GradientOutTimer = setTimeout(function () {
+    window.__mlpTest1GradientOutTimer = null;
+    try {
+      var finishCanvas = document.getElementById('canvas');
+      if (!finishCanvas || finishCanvas.getAttribute('data-test-scope') !== 'test1') return;
+      _finishTest1GradientOut(finishCanvas);
+    } catch (_) {}
+  }, TEST1_GRADIENT_OUT_FADE_MS);
+}
+
+function _armTest1TopGradientSync(canvas) {
+  if (!TEST1_TOP_GRADIENT_VER3_ENABLED) return;
+  if (!canvas || canvas.getAttribute('data-test-scope') !== 'test1') return;
+  if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
+  if (window.__mlpTest1GradientSyncTimer) {
+    clearTimeout(window.__mlpTest1GradientSyncTimer);
+  }
+  window.__mlpTest1GradientSyncTimer = setTimeout(function () {
+    window.__mlpTest1GradientSyncTimer = null;
+    _runTest1GradientSweep();
+  }, TEST1_VER3_GRADIENT_START_MS);
 }
 
 function _runTest1GradientSweep() {
+  if (!TEST1_TOP_GRADIENT_VER3_ENABLED) return;
   try {
     var c = document.getElementById('canvas');
     if (!c || c.getAttribute('data-test-scope') !== 'test1') return;
@@ -11257,43 +11745,12 @@ function _runTest1GradientSweep() {
           if (window.__mlpTest1GradientEndTimer) return;
           window.__mlpTest1GradientEndTimer = setTimeout(function () {
             window.__mlpTest1GradientEndTimer = null;
-            requestAnimationFrame(function () {
-              requestAnimationFrame(function () {
-                try {
-                  var c2 = document.getElementById('canvas');
-                  if (!c2 || c2.getAttribute('data-test-scope') !== 'test1') return;
-                  if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
-                  c2.setAttribute('data-test1-gradient-out-animate', '1');
-                  _runTest1CodaIntro();
-                } catch (_) {}
-              });
-            });
-            if (window.__mlpTest1GradientOutTimer) return;
-            window.__mlpTest1GradientOutTimer = setTimeout(function () {
-              window.__mlpTest1GradientOutTimer = null;
-              canvas.setAttribute('data-test1-gradient-out', '1');
-              if (window.__mlpTestConfig) window.__mlpTestConfig.test1GradientOut = true;
-              canvas.removeAttribute('data-test1-gradient-animate');
-              canvas.removeAttribute('data-test1-gradient-out-animate');
-              if (window.__mlpTestConfig) window.__mlpTestConfig.test1GradientDone = true;
-              _armTest1CodaDelay(canvas);
-            }, TEST1_GRADIENT_OUT_FADE_MS);
-          }, TEST1_GRADIENT_SWEEP_MS + TEST1_GRADIENT_HOLD_MS);
+            _beginTest1GradientOutAnimate(canvas);
+          }, TEST1_VER3_OUT_TRIGGER_MS);
         } catch (_) {}
       });
     });
   } catch (_) {}
-}
-
-function _armTest1CodaDelay(canvas) {
-  if (!canvas || canvas.getAttribute('data-test-scope') !== 'test1') return;
-  if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
-  if (canvas.getAttribute('data-test1-coda-run')) return;
-  if (window.__mlpTest1CodaTimer) return;
-  window.__mlpTest1CodaTimer = setTimeout(function () {
-    window.__mlpTest1CodaTimer = null;
-    _runTest1CodaIntro();
-  }, TEST1_AFTER_GRADIENT_CODA_MS);
 }
 
 function _beginTest1CodaChromeRise() {
@@ -11307,6 +11764,8 @@ function _beginTest1CodaChromeRise() {
         cRise.setAttribute('data-test1-coda-animate', '1');
         cRise.setAttribute('data-test1-coda-inner-rise', '1');
         void cRise.offsetWidth;
+        _armTest1BottomPillAiLogoMount();
+        _armTest1BottomPillTextBMount();
       } catch (_) {}
     });
   });
@@ -11318,31 +11777,15 @@ function _runTest1CodaIntro() {
     if (!c || c.getAttribute('data-test-scope') !== 'test1') return;
     if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
     if (c.getAttribute('data-test1-coda-run')) return;
-    c.removeAttribute('data-test1-shortcuts-out');
-    c.removeAttribute('data-test1-shortcuts-animate');
+    _unmountTest1BottomPillTextB();
     c.removeAttribute('data-test1-coda-inner-rise');
     c.removeAttribute('data-test1-coda-animate');
-    if (c.getAttribute('data-test1-stack-run') && !c.getAttribute('data-test1-gradient-out-animate')) {
-      c.setAttribute('data-test1-gradient-run', '1');
-      c.setAttribute('data-test1-gradient-out-animate', '1');
-      if (window.__mlpTestConfig) window.__mlpTestConfig.test1GradientRun = true;
-    }
     c.setAttribute('data-test1-coda-run', '1');
     void c.offsetWidth;
     if (window.__mlpTestConfig) {
-      window.__mlpTestConfig.test1ShortcutsOut = false;
       window.__mlpTestConfig.test1CodaRun = true;
     }
     _beginTest1CodaChromeRise();
-    setTimeout(function () {
-      try {
-        var cOut = document.getElementById('canvas');
-        if (!cOut || cOut.getAttribute('data-test-scope') !== 'test1') return;
-        cOut.setAttribute('data-test1-gradient-out', '1');
-        cOut.removeAttribute('data-test1-gradient-out-animate');
-        if (window.__mlpTestConfig) window.__mlpTestConfig.test1GradientOut = true;
-      } catch (_) {}
-    }, TEST1_CODA_STACK_OUT_MS);
     if (window.__mlpTest1CodaEndTimer) clearTimeout(window.__mlpTest1CodaEndTimer);
     window.__mlpTest1CodaEndTimer = setTimeout(function () {
       window.__mlpTest1CodaEndTimer = null;
@@ -11350,26 +11793,29 @@ function _runTest1CodaIntro() {
           var c2 = document.getElementById('canvas');
           if (!c2 || c2.getAttribute('data-test-scope') !== 'test1') return;
           c2.setAttribute('data-test1-coda-done', '1');
+          _ensureTest1BottomPillTextBDone(c2);
           c2.removeAttribute('data-test1-coda-animate');
           c2.removeAttribute('data-test1-coda-inner-rise');
           if (window.__mlpTestConfig) window.__mlpTestConfig.test1CodaDone = true;
-          if (typeof _armTest1HomeDelay === 'function') {
-            _armTest1HomeDelay(c2);
-          }
+          _installTest1BottomPillSwipe(c2);
         } catch (_) {}
     }, TEST1_CODA_FADE_IN_MS);
   } catch (_) {}
 }
 
-function _armTest1HomeDelay(canvas) {
-  if (!canvas || canvas.getAttribute('data-test-scope') !== 'test1') return;
-  if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
-  if (canvas.getAttribute('data-test1-home-run')) return;
-  if (window.__mlpTest1HomeTimer) return;
-  window.__mlpTest1HomeTimer = setTimeout(function () {
-    window.__mlpTest1HomeTimer = null;
-    _runTest1HomeIntro();
-  }, TEST1_HOME_AFTER_CODA_MS);
+
+function _applyTest1HomeStatusBar() {
+  try {
+    var canvas = document.getElementById('canvas');
+    if (!canvas || canvas.getAttribute('data-test-scope') !== 'test1') return;
+    if (!canvas.getAttribute('data-test1-home-run')) return;
+    var sb = document.getElementById('status-bar');
+    if (!sb) return;
+    var time = sb.querySelector('.test1-status-bar__time');
+    if (time) time.textContent = '12:45';
+    var live = sb.querySelector('.test1-status-bar__live');
+    if (live) live.style.display = 'none';
+  } catch (_) {}
 }
 
 function _runTest1HomeIntro() {
@@ -11378,6 +11824,8 @@ function _runTest1HomeIntro() {
     if (!c || c.getAttribute('data-test-scope') !== 'test1') return;
     if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
     if (c.getAttribute('data-test1-home-run')) return;
+    c.removeAttribute('data-test1-pill-swipe-armed');
+    c.removeAttribute('data-test1-pill-swipe-out');
     c.setAttribute('data-test1-home-prep', '1');
     c.setAttribute('data-test1-home-exit', '1');
     c.removeAttribute('data-test1-coda-run');
@@ -11393,14 +11841,39 @@ function _runTest1HomeIntro() {
         if (!c2 || c2.getAttribute('data-test-scope') !== 'test1') return;
         if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
         c2.removeAttribute('data-test1-home-exit');
+        c2.removeAttribute('data-test1-home-inner-rise');
+        c2.removeAttribute('data-test1-home-bg-settled');
         c2.setAttribute('data-test1-home-run', '1');
         c2.setAttribute('data-test1-home-animate', '1');
         void c2.offsetWidth;
+        if (window.Test1HomeWidgetFillGL) {
+          try { window.Test1HomeWidgetFillGL.startAll(); } catch (_) {}
+        }
         if (window.__mlpTestConfig) {
           window.__mlpTestConfig.test1HomeRun = true;
+          window.__mlpTestConfig.test1HomeBgSettled = false;
+          window.__mlpTestConfig.test1HomeInnerRise = false;
         }
-        var homeShellMs = 520;
-        setTimeout(function () {
+        window.__mlpTest1Transitioning = false;
+        _applyTest1HomeStatusBar();
+        if (window.__mlpTest1HomeBgSettleTimer) clearTimeout(window.__mlpTest1HomeBgSettleTimer);
+        window.__mlpTest1HomeBgSettleTimer = setTimeout(function () {
+          window.__mlpTest1HomeBgSettleTimer = null;
+          try {
+            var cBg = document.getElementById('canvas');
+            if (!cBg || cBg.getAttribute('data-test-scope') !== 'test1') return;
+            if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
+            if (!cBg.getAttribute('data-test1-home-animate')) return;
+            cBg.setAttribute('data-test1-home-bg-settled', '1');
+            if (window.__mlpTestConfig) window.__mlpTestConfig.test1HomeBgSettled = true;
+            if (window.Test1HomeWidgetFillGL) {
+              try { window.Test1HomeWidgetFillGL.destroyAll(); } catch (_) {}
+            }
+          } catch (_) {}
+        }, TEST1_HOME_BG_SETTLE_MS);
+        if (window.__mlpTest1HomeInnerRiseTimer) clearTimeout(window.__mlpTest1HomeInnerRiseTimer);
+        window.__mlpTest1HomeInnerRiseTimer = setTimeout(function () {
+          window.__mlpTest1HomeInnerRiseTimer = null;
           requestAnimationFrame(function () {
             requestAnimationFrame(function () {
               try {
@@ -11409,13 +11882,129 @@ function _runTest1HomeIntro() {
                 if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
                 if (!c3.getAttribute('data-test1-home-animate')) return;
                 c3.setAttribute('data-test1-home-inner-rise', '1');
+                if (window.__mlpTestConfig) window.__mlpTestConfig.test1HomeInnerRise = true;
+                if (window.Test1HomeWidgetFillGL) {
+                  try { window.Test1HomeWidgetFillGL.fadeAll(); } catch (_) {}
+                }
               } catch (_) {}
             });
           });
-        }, homeShellMs);
+        }, TEST1_HOME_INNER_RISE_MS);
       } catch (_) {}
     }, TEST1_HOME_EXIT_MS);
   } catch (_) {}
+}
+
+window.__mlpTest1GoHome = function __mlpTest1GoHome() {
+  if (!window.__mlpTestConfig || window.__mlpTestConfig.id !== 'test1') return false;
+  if (window.__mlpTestConfig.test1HomeRun) return true;
+  if (window.__mlpTest1Transitioning) return true;
+  window.__mlpTest1Transitioning = true;
+  _runTest1HomeIntro();
+  return true;
+};
+
+function _installTest1BottomPillSwipe(canvas) {
+  if (!canvas || canvas.getAttribute('data-test-scope') !== 'test1') return;
+  if (canvas.getAttribute('data-test1-pill-swipe-armed')) return;
+  if (window.__mlpTestConfig && window.__mlpTestConfig.test1HomeRun) return;
+  if (!canvas.getAttribute('data-test1-coda-done')) return;
+  canvas.setAttribute('data-test1-pill-swipe-armed', '1');
+
+  var pillEl = document.getElementById('test1-bottom-pill');
+  if (!pillEl) return;
+  var pillItem = pillEl.closest('.canvas-item') || pillEl;
+  var SWIPE_THRESHOLD = 56;
+  var dragging = false;
+  var swipeFinishing = false;
+  var startX = 0;
+  var lastDx = 0;
+
+  function getSlideOffTx(fromDx) {
+    var canvasEl = document.getElementById('canvas');
+    if (!canvasEl) return fromDx - 420;
+    var canvasRect = canvasEl.getBoundingClientRect();
+    var itemRect = pillItem.getBoundingClientRect();
+    var offBy = itemRect.left - canvasRect.left + itemRect.width + 24;
+    return fromDx - offBy;
+  }
+
+  function applyDrag(dx) {
+    lastDx = Math.min(0, dx);
+    pillItem.style.transition = 'none';
+    pillItem.style.opacity = '1';
+    pillItem.style.transform = 'translate3d(' + lastDx + 'px, 0, 0)';
+  }
+
+  function resetDrag() {
+    lastDx = 0;
+    pillItem.style.transition = 'transform 260ms cubic-bezier(0.22, 0.82, 0.24, 1)';
+    pillItem.style.opacity = '1';
+    pillItem.style.transform = 'translate3d(0, 0, 0)';
+  }
+
+  function finishSwipe() {
+    if (swipeFinishing || window.__mlpTest1Transitioning) return;
+    swipeFinishing = true;
+    dragging = false;
+    var targetTx = getSlideOffTx(lastDx);
+    pillItem.style.transition = 'transform 340ms cubic-bezier(0.22, 0.82, 0.24, 1)';
+    pillItem.style.opacity = '1';
+    pillItem.style.transform = 'translate3d(' + targetTx + 'px, 0, 0)';
+    var done = false;
+    function complete() {
+      if (done) return;
+      done = true;
+      pillItem.style.visibility = 'hidden';
+      pillItem.style.pointerEvents = 'none';
+      canvas.setAttribute('data-test1-pill-swipe-out', '1');
+      if (window.__mlpTest1Transitioning) return;
+      window.__mlpTest1Transitioning = true;
+      _runTest1HomeIntro();
+    }
+    pillItem.addEventListener('transitionend', function onEnd(e) {
+      if (e.target !== pillItem || e.propertyName !== 'transform') return;
+      pillItem.removeEventListener('transitionend', onEnd);
+      complete();
+    });
+    setTimeout(complete, 400);
+  }
+
+  function onDown(e) {
+    if (swipeFinishing || window.__mlpTest1Transitioning || window.__mlpTestConfig.test1HomeRun) return;
+    dragging = true;
+    startX = e.clientX;
+    if (pillItem.setPointerCapture) {
+      try { pillItem.setPointerCapture(e.pointerId); } catch (_) {}
+    }
+  }
+
+  function onMove(e) {
+    if (!dragging || swipeFinishing) return;
+    applyDrag(e.clientX - startX);
+  }
+
+  function onUp(e) {
+    if (!dragging || swipeFinishing) return;
+    dragging = false;
+    if (pillItem.releasePointerCapture) {
+      try { pillItem.releasePointerCapture(e.pointerId); } catch (_) {}
+    }
+    var dx = e.clientX - startX;
+    if (dx < -SWIPE_THRESHOLD) {
+      finishSwipe();
+    } else {
+      resetDrag();
+    }
+  }
+
+  pillItem.style.setProperty('pointer-events', 'auto', 'important');
+  pillItem.style.touchAction = 'pan-y';
+  pillItem.style.cursor = 'grab';
+  pillItem.addEventListener('pointerdown', onDown);
+  pillItem.addEventListener('pointermove', onMove);
+  pillItem.addEventListener('pointerup', onUp);
+  pillItem.addEventListener('pointercancel', onUp);
 }
 
 function _armTest1StackDelay(canvas) {
@@ -11430,34 +12019,16 @@ function _armTest1StackDelay(canvas) {
   }, TEST1_STACK_AFTER_GREEN_MS);
 }
 
-function _armTest1GreenDelay(canvas) {
+function _armTest1GreenAfterLotte(canvas) {
   if (!canvas || canvas.getAttribute('data-test-scope') !== 'test1') return;
   if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
-  if (!canvas.getAttribute('data-test1-pill-run')) return;
-  var greenDelay = TEST1_PILL_ANIM_MS + TEST1_GREEN_AFTER_PILL_MS;
-  var shortcutDelay = Math.max(0, greenDelay - TEST1_SHORTCUTS_FADE_MS);
-  if (!canvas.getAttribute('data-test1-green-run') && !window.__mlpTest1GreenTimer) {
-    window.__mlpTest1GreenTimer = setTimeout(function () {
-      window.__mlpTest1GreenTimer = null;
-      _runTest1GreenIntro();
-    }, greenDelay);
-  }
-  if (!canvas.getAttribute('data-test1-shortcuts-out') && !window.__mlpTest1ShortcutFadeTimer) {
-    window.__mlpTest1ShortcutFadeTimer = setTimeout(function () {
-      window.__mlpTest1ShortcutFadeTimer = null;
-      _runTest1ShortcutsFade();
-    }, shortcutDelay);
-  }
-}
-
-function _armTest1PillDelay(canvas) {
-  if (!canvas || canvas.getAttribute('data-test-scope') !== 'test1') return;
-  if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
-  if (window.__mlpTest1PillTimer) return;
-  window.__mlpTest1PillTimer = setTimeout(function () {
-    window.__mlpTest1PillTimer = null;
-    _runTest1PillIntro();
-  }, TEST1_LOTTE_INTRO_MS + TEST1_PILL_AFTER_LOTTE_MS);
+  if (!canvas.getAttribute('data-test1-intro-run')) return;
+  if (canvas.getAttribute('data-test1-green-run')) return;
+  if (window.__mlpTest1GreenTimer) return;
+  window.__mlpTest1GreenTimer = setTimeout(function () {
+    window.__mlpTest1GreenTimer = null;
+    _runTest1GreenIntro();
+  }, TEST1_GREEN_AFTER_LOTTE_MS);
 }
 
 function _armTest1IntroDelay(canvas) {
@@ -11471,9 +12042,39 @@ function _armTest1IntroDelay(canvas) {
       if (!c || c.getAttribute('data-test-scope') !== 'test1') return;
       if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
       c.setAttribute('data-test1-intro-run', '1');
-      _armTest1PillDelay(c);
+      _armTest1GreenAfterLotte(c);
     } catch (_) {}
   }, TEST1_INTRO_DELAY_MS);
+}
+
+/** First-mount lock/intro entry — down+blur stagger; skips re-render replays. */
+function _armTestScopeEntry(canvas) {
+  if (!canvas) return;
+  var cfg = window.__mlpTestConfig;
+  var testScope = cfg && cfg.id;
+  if (!testScope || (testScope !== 'test1' && testScope !== 'test2' && testScope !== 'test3')) return;
+  if (testScope === 'test1' && cfg.test1RevealAll) return;
+  if (testScope === 'test3' && cfg.homeStage === 'home') return;
+  var doneKey = testScope === 'test1' ? '__mlpTest1EntryDone'
+    : testScope === 'test2' ? '__mlpTest2EntryDone'
+    : '__mlpTest3IntroEntryDone';
+  if (window[doneKey]) return;
+  canvas.setAttribute('data-test-entry', '1');
+  canvas.removeAttribute('data-test-entry-done');
+  if (window.__mlpTestEntryTimer) {
+    clearTimeout(window.__mlpTestEntryTimer);
+    window.__mlpTestEntryTimer = null;
+  }
+  window.__mlpTestEntryTimer = setTimeout(function () {
+    window.__mlpTestEntryTimer = null;
+    try {
+      var c = document.getElementById('canvas');
+      if (!c) return;
+      c.setAttribute('data-test-entry-done', '1');
+      c.removeAttribute('data-test-entry');
+      window[doneKey] = true;
+    } catch (_) {}
+  }, 900);
 }
 
 window.__armTest1IntroDelay = _armTest1IntroDelay;
@@ -11483,9 +12084,6 @@ window.test1RevealAllComponents = function test1RevealAllComponents() {
   if (!window.__mlpTestConfig || window.__mlpTestConfig.id !== 'test1') return;
   _clearTest1IntroTimer();
   window.__mlpTestConfig.test1RevealAll = true;
-  window.__mlpTestConfig.test1HomeRun = true;
-  window.__mlpTestConfig.test1HomePrep = true;
-  window.__mlpTestConfig.test1CodaDone = true;
   if (typeof window.generateSurfaceScenario === 'function') {
     window.generateSurfaceScenario(window.currentSurfaceType || 'tab-root');
   }
@@ -11523,6 +12121,8 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
         canvas.setAttribute('data-test1-reveal-all', '1');
         canvas.setAttribute('data-test1-home-run', '1');
         canvas.setAttribute('data-test1-home-prep', '1');
+        canvas.setAttribute('data-test1-home-inner-rise', '1');
+        canvas.setAttribute('data-test1-home-bg-settled', '1');
         canvas.removeAttribute('data-test1-intro');
         canvas.removeAttribute('data-test1-intro-run');
         canvas.removeAttribute('data-test1-pill-prep');
@@ -11534,15 +12134,17 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
         canvas.removeAttribute('data-test1-shortcuts-animate');
         canvas.removeAttribute('data-test1-pill-out');
         canvas.removeAttribute('data-test1-pill-out-animate');
+        canvas.removeAttribute('data-test1-pill-out-done');
         canvas.removeAttribute('data-test1-gradient-run');
         canvas.removeAttribute('data-test1-gradient-animate');
         canvas.removeAttribute('data-test1-gradient-out');
+        canvas.removeAttribute('data-test1-home-widgets-ready');
         canvas.removeAttribute('data-test1-coda-run');
         canvas.removeAttribute('data-test1-coda-animate');
-        canvas.removeAttribute('data-test1-coda-inner-rise');
         canvas.removeAttribute('data-test1-coda-done');
         canvas.removeAttribute('data-test1-home-animate');
         canvas.removeAttribute('data-test1-home-inner-rise');
+        canvas.removeAttribute('data-test1-home-bg-settled');
         if (window.__mlpTestConfig) {
           window.__mlpTestConfig.test1GreenRun = false;
           window.__mlpTestConfig.test1StackRun = false;
@@ -11552,9 +12154,10 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
           window.__mlpTestConfig.test1GradientOut = false;
           window.__mlpTestConfig.test1GradientDone = false;
           window.__mlpTestConfig.test1CodaRun = false;
-          window.__mlpTestConfig.test1CodaDone = true;
+          window.__mlpTestConfig.test1CodaDone = false;
           window.__mlpTestConfig.test1HomePrep = true;
           window.__mlpTestConfig.test1HomeRun = true;
+          window.__mlpTestConfig.test1HomeBgSettled = true;
         }
       } else {
         canvas.removeAttribute('data-test1-reveal-all');
@@ -11563,10 +12166,17 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
         canvas.removeAttribute('data-test1-home-exit');
         canvas.removeAttribute('data-test1-home-animate');
         canvas.removeAttribute('data-test1-home-inner-rise');
+        canvas.removeAttribute('data-test1-home-bg-settled');
+        canvas.removeAttribute('data-test1-pill-swipe-armed');
+        canvas.removeAttribute('data-test1-pill-swipe-out');
         if (window.__mlpTestConfig && window.__mlpTestConfig.test1HomeRun) {
           canvas.setAttribute('data-test1-home-run', '1');
           if (window.__mlpTestConfig.test1HomePrep) {
             canvas.setAttribute('data-test1-home-prep', '1');
+          }
+          if (window.__mlpTestConfig.test1HomeBgSettled) {
+            canvas.setAttribute('data-test1-home-bg-settled', '1');
+            canvas.setAttribute('data-test1-home-inner-rise', '1');
           }
         }
         canvas.removeAttribute('data-test1-intro');
@@ -11592,9 +12202,11 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
         }
         if (window.__mlpTestConfig && window.__mlpTestConfig.test1PillOut) {
           canvas.setAttribute('data-test1-pill-out', '1');
+          canvas.setAttribute('data-test1-pill-out-done', '1');
         } else {
           canvas.removeAttribute('data-test1-pill-out');
           canvas.removeAttribute('data-test1-pill-out-animate');
+          canvas.removeAttribute('data-test1-pill-out-done');
         }
         if (window.__mlpTestConfig && window.__mlpTestConfig.test1GradientRun) {
           canvas.setAttribute('data-test1-gradient-run', '1');
@@ -11615,8 +12227,8 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
         } else {
           canvas.removeAttribute('data-test1-coda-run');
           canvas.removeAttribute('data-test1-coda-animate');
-          canvas.removeAttribute('data-test1-coda-inner-rise');
           canvas.removeAttribute('data-test1-coda-done');
+          canvas.removeAttribute('data-test1-pill-text-b');
         }
       }
     } else {
@@ -11756,35 +12368,51 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
     canvas.removeAttribute('data-test1-gradient-run');
     canvas.removeAttribute('data-test1-gradient-animate');
     canvas.removeAttribute('data-test1-gradient-out');
+    canvas.removeAttribute('data-test1-home-widgets-ready');
     canvas.removeAttribute('data-test1-coda-run');
     canvas.removeAttribute('data-test1-coda-animate');
     canvas.removeAttribute('data-test1-coda-inner-rise');
     canvas.removeAttribute('data-test1-coda-done');
+    canvas.removeAttribute('data-test1-home-run');
+    canvas.removeAttribute('data-test1-home-prep');
+    canvas.removeAttribute('data-test1-home-exit');
+    canvas.removeAttribute('data-test1-home-animate');
+    canvas.removeAttribute('data-test1-home-inner-rise');
+    canvas.removeAttribute('data-test1-home-bg-settled');
+    canvas.removeAttribute('data-test1-pill-swipe-armed');
+    canvas.removeAttribute('data-test1-pill-swipe-out');
   }
   window.renderSurfacePlan(canvas, plan, layout);
+  if (testScope === 'test1' || testScope === 'test2' || testScope === 'test3') {
+    try { _armTestScopeEntry(canvas); } catch (_) {}
+  }
   if (testScope === 'test1') {
     try {
-      var pillItem = canvas.querySelector('#test1-assist-pill');
-      if (pillItem && (!pillItem.querySelector('.test1-assist-pill-icon--1') || !pillItem.querySelector('.test1-assist-pill-shell'))) {
-        for (var pi = 0; pi < plan.components.length; pi++) {
-          if (plan.components[pi].id === 'test1-assist-pill') {
-            var pillRect = window.resolveComponentRect(plan.components[pi], layout, plan);
-            pillItem.innerHTML = window.renderAtomicForRole(plan.components[pi], pillRect);
-            break;
-          }
-        }
+      if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) {
+        _mountTest1BottomPillTextB(true);
+      } else if (canvas.getAttribute('data-test1-pill-text-b')) {
+        _mountTest1BottomPillTextB(canvas.getAttribute('data-test1-pill-text-b') === 'done');
+      } else if (window.__mlpTestConfig && window.__mlpTestConfig.test1CodaDone) {
+        _mountTest1BottomPillTextB(true);
       }
       if (window.__mlpTestConfig && !window.__mlpTestConfig.test1RevealAll && !window.__mlpTestConfig.test1HomeRun) {
         _armTest1IntroDelay(canvas);
-        if (canvas.getAttribute('data-test1-pill-run')) {
-          _armTest1GreenDelay(canvas);
+        if (canvas.getAttribute('data-test1-intro-run') && !canvas.getAttribute('data-test1-green-run')) {
+          _armTest1GreenAfterLotte(canvas);
         }
-        if (canvas.getAttribute('data-test1-green-run')) {
+        if (canvas.getAttribute('data-test1-green-run') && !canvas.getAttribute('data-test1-stack-run')) {
           _armTest1StackDelay(canvas);
         }
-        if (canvas.getAttribute('data-test1-stack-run')) {
-          _armTest1PillOutDelay(canvas);
+        if (canvas.getAttribute('data-test1-stack-run') && !canvas.getAttribute('data-test1-coda-run')) {
+          _armTest1CodaAfterStack(canvas);
         }
+      }
+      if (canvas.getAttribute('data-test1-coda-done') && !(window.__mlpTestConfig && window.__mlpTestConfig.test1HomeRun)) {
+        _ensureTest1BottomPillTextBDone(canvas);
+        _installTest1BottomPillSwipe(canvas);
+      }
+      if (canvas.getAttribute('data-test1-home-run')) {
+        _applyTest1HomeStatusBar();
       }
     } catch (_) {}
   }
