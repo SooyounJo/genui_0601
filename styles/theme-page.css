@@ -317,6 +317,17 @@
     z-index: 4;
     overflow: hidden;
   }
+  /* 로딩/음성 입력: 셸 하단 라운드(36px) + 캡슐이 canvas-item에 잘리지 않도록 */
+  #canvas[data-test-scope="test2"].p2-listening .canvas-item[data-role="persona2-widgets"],
+  #canvas[data-test-scope="test2"].p2-generating .canvas-item[data-role="persona2-widgets"],
+  #canvas[data-test-scope="test2"] .canvas-item[data-role="persona2-widgets"]:has(#p2-result.is-loading) {
+    overflow: visible;
+  }
+  #canvas[data-test-scope="test2"].p2-listening #p2-area.p2-agent-shell,
+  #canvas[data-test-scope="test2"].p2-generating #p2-area.p2-agent-shell,
+  #canvas[data-test-scope="test2"] #p2-area.p2-agent-shell:has(#p2-result.is-loading) {
+    overflow: visible !important;
+  }
 
   /* Persona2: loading crossfade overlay on the right card */
   #canvas[data-test-scope="test2"] #p2-result {
@@ -478,25 +489,22 @@
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    background: linear-gradient(
-      118deg,
-      #FF9DDA 0%,
-      #FFB8E4 34%,
-      #FFD4EE 68%,
-      #FFF0F8 100%
-    );
-    background-size: 160% 160%;
-    background-position: 0% 42%;
-    opacity: 0.92;
-    animation: p2LoadingColorFlow 3.6s ease-in-out infinite;
+    background: #5A71F5;
+    background-size: 100% 100%;
+    background-position: 50% 50%;
+    opacity: 1;
+    animation: none;
+  }
+  #canvas[data-test-scope="test2"] .p2-result-loading__border-sweep {
+    display: none !important;
   }
   #canvas[data-test-scope="test2"] .p2-agent-shell:has(#p2-result.is-loading).p2-agent-shell--gl-fill .p2-result-loading__bg {
-    opacity: 0;
+    opacity: 1;
     animation: none;
-    background: transparent;
+    background: #5A71F5;
   }
   #canvas[data-test-scope="test2"] #p2-result.is-loading .p2-result-loading__bg {
-    animation: p2LoadingColorFlow 3.6s ease-in-out infinite;
+    animation: none;
   }
   #canvas[data-test-scope="test2"] .p2-agent-shell.p2-loading-chrome-exiting #p2-result.is-loading .p2-result-loading__bg,
   #canvas[data-test-scope="test2"] #p2-result.p2-loading-ui-exiting.is-loading .p2-result-loading__bg {
@@ -527,14 +535,14 @@
   #canvas[data-test-scope="test2"] .p2-result-loading__content {
     position: relative;
     z-index: 2;
-    padding: 0;
+    padding: 0 0 6px;
     box-sizing: border-box;
     height: 100%;
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    justify-content: flex-start;
-    gap: 0;
+    justify-content: space-between;
+    gap: 11px;
     opacity: 1;
   }
   #canvas[data-test-scope="test2"] .p2-result-loading__head {
@@ -620,6 +628,7 @@
     align-items: center;
     gap: 8px;
     min-width: 0;
+    overflow: visible;
     opacity: 0;
     transform: translateY(8px);
     transition:
@@ -645,7 +654,7 @@
     font-weight: 500;
     font-size: 14px;
     line-height: 1.3;
-    overflow: hidden;
+    overflow: visible;
     background: none;
     color: #FF9DDA;
   }
@@ -664,11 +673,21 @@
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    background: rgba(255, 255, 255, 0.10);
-    -webkit-backdrop-filter: blur(12px);
-    backdrop-filter: blur(12px);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    background: linear-gradient(
+      132deg,
+      #FF9DDA 0%,
+      #FFB8E4 26%,
+      #FFC8EA 52%,
+      #FFD4EE 78%,
+      #FFE8F4 100%
+    );
+    background-size: 210% 210%;
+    background-position: 18% 44%;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
     z-index: -1;
+  }
+  #canvas[data-test-scope="test2"] #p2-result.is-loading .p2-result-loading__input::before {
+    animation: p2LoadingColorFlow 3.6s ease-in-out infinite;
   }
   /* ShinyText-style sweep: 150% → -50% */
   @keyframes p2Test2ShinyTextSweep {
@@ -2403,21 +2422,27 @@
   #canvas[data-test-scope="test2"] .p2-agent-shell:has(#p2-result.is-loading) {
     position: relative;
   }
-  #canvas[data-test-scope="test2"] .p2-agent-shell:has(#p2-result.is-loading) .p2-agent-main {
-    position: relative;
-    inset: auto;
-    flex: 1;
-    min-height: 0;
-    z-index: 1;
+  /* 로딩: main+result가 셸 전체를 덮고, 푸터는 로딩 오버레이 안 __footer만 사용 */
+  #canvas[data-test-scope="test2"] .p2-agent-shell:has(#p2-result.is-loading):not(.p2-loading-chrome-exiting):not(.p2-contact-shell-expanding):not(.p2-contact-layout-active) {
+    gap: 0;
+  }
+  #canvas[data-test-scope="test2"] .p2-agent-shell:has(#p2-result.is-loading):not(.p2-loading-chrome-exiting):not(.p2-contact-shell-expanding) .p2-agent-main {
+    position: absolute;
+    inset: 0;
+    flex: none;
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    z-index: 8;
   }
   #canvas[data-test-scope="test2"] #p2-result.is-loading {
-    position: relative;
-    inset: auto;
-    z-index: 1;
-    border-radius: 0;
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    border-radius: inherit;
     bottom: auto;
-    height: auto !important;
-    flex: 1;
+    height: 100% !important;
+    flex: none;
     min-height: 0;
   }
   #canvas[data-test-scope="test2"] #p2-result.is-loading .p2-result-loading {
@@ -2441,8 +2466,8 @@
     animation: none !important;
     transition: opacity 0.42s cubic-bezier(0.22, 0.82, 0.24, 1) !important;
   }
-  #canvas[data-test-scope="test2"] #p2-result.is-loading .p2-result-loading__footer {
-    display: none !important;
+  #canvas[data-test-scope="test2"] #p2-result.is-loading:not(.has-swap) .p2-result-loading__footer {
+    display: flex !important;
   }
   #canvas[data-test-scope="test2"] #p2-result.is-loading .p2-agent-card__body {
     opacity: 1;
@@ -2456,8 +2481,20 @@
       transform 0.52s cubic-bezier(0.16, 1, 0.3, 1);
     pointer-events: none;
   }
-  #canvas[data-test-scope="test2"] .p2-agent-shell:has(#p2-result.is-loading) .p2-agent-footer {
+  #canvas[data-test-scope="test2"] .p2-agent-shell:has(#p2-result.is-loading):not(.p2-loading-chrome-exiting):not(.p2-contact-shell-expanding):not(.p2-contact-layout-active) .p2-agent-footer {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+  }
+  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-loading-chrome-exiting:has(#p2-result.is-loading) .p2-agent-footer,
+  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-contact-shell-expanding:has(#p2-result.is-loading) .p2-agent-footer {
     opacity: 1 !important;
+    visibility: visible !important;
     pointer-events: none;
     height: 56px !important;
     padding: 0 8px 0 8px !important;
@@ -3063,9 +3100,20 @@
     width: 40px;
     height: 40px;
     border-radius: 16px;
-    background: rgba(255, 255, 255, 0.20);
-    border: 1px solid rgba(255, 255, 255, 0.10);
+    background: rgba(255, 255, 255, 0.12);
+    border: none;
     flex-shrink: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #canvas[data-test-scope="test2"] #p2-slot .p2-contact-list__icon-img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    border-radius: 16px;
   }
   #canvas[data-test-scope="test2"] #p2-slot .p2-contact-list__body {
     flex: 1;
@@ -3168,6 +3216,10 @@
     }
     #canvas[data-test-scope="test2"] .p2-result-loading__bg {
       animation: none !important;
+    }
+    #canvas[data-test-scope="test2"] #p2-result.is-loading .p2-result-loading__input::before {
+      animation: none !important;
+      background-position: 50% 50% !important;
     }
     #canvas[data-test-scope="test2"] .p2-agent-input.p2-agent-input--glow .p2-input-text,
     #canvas[data-test-scope="test2"] .p2-agent-shell:has(#p2-result.is-loading) .p2-agent-footer .p2-agent-input .p2-input-text,

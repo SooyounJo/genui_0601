@@ -72,6 +72,54 @@ var TEST3_MUSIC_SEARCH_LINE2_MS =
 var TEST3_MUSIC_DISC_STAR_ONLY_MS = 880;
 /** test2 agent orange orb — sparkle image ↔ dot grid. */
 var TEST2_ORB_SPARKLE_SRC = '/assets/test2-orange-orb-sparkle.png?v=1';
+/** test2 Needs list — Figma app icons (filename = app name + .png). */
+var TEST2_ICONS_DIR = '/assets/test2icons/';
+var TEST2_ICON_FILES = {
+  'Figma': 'Figma.png',
+  'Notion': 'Notion.png',
+  'Miro': 'Miro.png',
+  'Trello': 'Trello.png',
+  'Zoom': 'Zoom.png',
+  'Claude': 'Claude.png',
+  'Discord': 'Discord.png',
+  'Slack': 'Slack.png',
+  'Kakaotalk': 'Kakaotalk.png',
+  'Gmail': 'Gmail.png',
+  'Messages': 'Messages.png',
+  'Meet': 'Meet.png',
+  'Google Maps': 'Google Maps.png',
+  'Calendar': 'Calendar.png',
+  'Docs': 'Docs.png',
+  'Notes': 'Notes.png',
+  'Weather': 'Weather.png',
+  'Phone': 'Phone.png',
+  'Music': 'Music.png',
+  'Health': 'Health.png',
+  'Naver map': 'Naver map.png'
+};
+var TEST2_APP_TEXT_HINTS = [
+  { app: 'Slack', re: /slack|슬랙/i },
+  { app: 'Figma', re: /figma/i },
+  { app: 'Notion', re: /notion/i },
+  { app: 'Miro', re: /miro/i },
+  { app: 'Trello', re: /trello/i },
+  { app: 'Zoom', re: /zoom/i },
+  { app: 'Claude', re: /claude/i },
+  { app: 'Discord', re: /discord/i },
+  { app: 'Kakaotalk', re: /kakaotalk|카카오톡|카톡/i },
+  { app: 'Gmail', re: /gmail|지메일/i },
+  { app: 'Messages', re: /messages|메시지|메세지|문자/i },
+  { app: 'Meet', re: /google\s*meet|meet\b|미트/i },
+  { app: 'Google Maps', re: /google\s*maps|구글\s*지도|google\s*map/i },
+  { app: 'Calendar', re: /calendar|캘린더|일정/i },
+  { app: 'Docs', re: /google\s*docs|\bdocs\b|문서/i },
+  { app: 'Notes', re: /samsung\s*notes|\bnotes\b|노트/i },
+  { app: 'Weather', re: /weather|날씨/i },
+  { app: 'Phone', re: /phone|전화|통화/i },
+  { app: 'Music', re: /music|뮤직|음악/i },
+  { app: 'Health', re: /health|삼성\s*헬스|헬스/i },
+  { app: 'Naver map', re: /naver\s*map|네이버\s*지도|네이버맵/i }
+];
 /** test3 music capsule (right of mini orb) — Galaxy AI star → dot grid when fill starts. */
 var TEST3_CAPSULE_STAR_SVG_HTML =
   '<svg class="test3-music-capsule-chrome__starSvg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
@@ -2299,6 +2347,45 @@ function _escP2Html(str) {
     .replace(/"/g, '&quot;');
 }
 
+function _canonicalTest2AppName(name) {
+  var raw = String(name || '').trim();
+  if (!raw) return '';
+  if (TEST2_ICON_FILES[raw]) return raw;
+  var lower = raw.toLowerCase();
+  var keys = Object.keys(TEST2_ICON_FILES);
+  for (var i = 0; i < keys.length; i++) {
+    if (keys[i].toLowerCase() === lower) return keys[i];
+  }
+  return '';
+}
+
+function _resolveTest2ContactAppName(item) {
+  if (!item) return '';
+  var explicit = _canonicalTest2AppName(item.app || item.iconApp || item.sourceApp || item.icon);
+  if (explicit) return explicit;
+  var hay = [
+    item.text,
+    item.subtitle,
+    item.note,
+    item.meta,
+    item.title
+  ].filter(Boolean).join(' ');
+  if (!hay) return '';
+  for (var i = 0; i < TEST2_APP_TEXT_HINTS.length; i++) {
+    var hint = TEST2_APP_TEXT_HINTS[i];
+    if (hint.re.test(hay)) return hint.app;
+  }
+  return '';
+}
+
+function _renderTest2ContactIcon(appName) {
+  var canonical = _canonicalTest2AppName(appName);
+  if (!canonical) return '';
+  var file = TEST2_ICON_FILES[canonical];
+  if (!file) return '';
+  return '<img class="p2-contact-list__icon-img" src="' + TEST2_ICONS_DIR + encodeURI(file).replace(/#/g, '%23') + '" alt="" />';
+}
+
 function _computeP2ContactListHeight(itemCount) {
   var count = Math.max(1, Math.min(itemCount || 3, 3));
   var padTop = 20;
@@ -2314,29 +2401,46 @@ function _renderP2ContactList(variant, rect) {
   var v = variant || {};
   var w = (rect && rect.w) || 340;
   var rawItems = Array.isArray(v.items) ? v.items : [];
-  var defaultTimes = ['3일 전', '2일 전', '4일 전'];
-  var defaultTitles = [
-    '체크아웃 개선 리서치 공유',
-    '슬랙: 신규 알림 2건',
-    'Figma: 디자인 시스템 업데이트'
-  ];
-  var defaultSubs = [
-    '이민재 · 프로토타입 확인 후 피드백 요청',
-    '김지훈 · 쇼핑몰 개편 2차 시안 준비',
-    '김지훈 · Figma 완료, Notion 문서화만 남음'
-  ];
+  var isTest2 = _isTest2Scope();
+  var defaultTimes = isTest2
+    ? ['Now', 'Today', 'Check']
+    : ['3일 전', '2일 전', '4일 전'];
+  var defaultTitles = isTest2
+    ? [
+        '지금 가장 급한 일 한 가지',
+        '오늘 꼭 끝내고 싶은 일',
+        '밀린 확인만 빠르게 정리'
+      ]
+    : [
+        '체크아웃 개선 리서치 공유',
+        '슬랙: 신규 알림 2건',
+        'Figma: 디자인 시스템 업데이트'
+      ];
+  var defaultSubs = isTest2
+    ? [
+        '이인재 · 프로토타입 확인 후 피드백 요청',
+        '김지훈 · 쇼핑몰 개편 2차 시안 준비',
+        '김지훈 · Figma 완료, Notion 문서화만 남음'
+      ]
+    : [
+        '이민재 · 프로토타입 확인 후 피드백 요청',
+        '김지훈 · 쇼핑몰 개편 2차 시안 준비',
+        '김지훈 · Figma 완료, Notion 문서화만 남음'
+      ];
+  var defaultApps = ['Figma', 'Slack', 'Notion'];
   var items = rawItems.slice(0, 3);
   while (items.length < 3) {
     var fillIdx = items.length;
     items.push({
       text: defaultTitles[fillIdx] || ('항목 ' + (fillIdx + 1)),
       time: defaultTimes[fillIdx] || '',
-      subtitle: defaultSubs[fillIdx] || ''
+      subtitle: defaultSubs[fillIdx] || '',
+      app: isTest2 ? (defaultApps[fillIdx] || '') : ''
     });
   }
-  var header = v.title || v.section || v.date || '휴가 중 디자인 피드백';
+  var header = v.title || v.section || v.date || (isTest2 ? 'Needs' : '휴가 중 디자인 피드백');
   if (/^(summary|may\s+\d+|today|messages)$/i.test(String(header).trim())) {
-    header = '휴가 중 디자인 피드백';
+    header = isTest2 ? 'Needs' : '휴가 중 디자인 피드백';
   }
   var chevron = '<svg class="p2-contact-list__chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">' +
     '<path d="M6 4l4 4-4 4" stroke="rgba(255,255,255,0.5)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -2344,8 +2448,11 @@ function _renderP2ContactList(variant, rect) {
     var title = (it && it.text) || defaultTitles[idx] || ('항목 ' + (idx + 1));
     var time = (it && it.time) || defaultTimes[idx] || '';
     var sub = (it && (it.subtitle || it.note || it.meta)) || defaultSubs[idx] || '';
-    return '<div class="p2-contact-list__item dot-sch__row">' +
-      '<div class="p2-contact-list__icon" aria-hidden="true"></div>' +
+    var appName = isTest2 ? (_resolveTest2ContactAppName(it) || defaultApps[idx] || '') : '';
+    var iconHtml = isTest2 ? _renderTest2ContactIcon(appName) : '';
+    return '<div class="p2-contact-list__item dot-sch__row"' +
+      (appName ? ' data-app="' + _escP2Html(appName) + '"' : '') + '>' +
+      '<div class="p2-contact-list__icon" aria-hidden="true">' + iconHtml + '</div>' +
       '<div class="p2-contact-list__body">' +
         '<div class="p2-contact-list__title-row">' +
           '<span class="p2-contact-list__title">' + _escP2Html(title) + '</span>' +
