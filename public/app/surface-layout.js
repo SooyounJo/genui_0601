@@ -28,7 +28,7 @@ var TEST3_GOAL_H = 245;
 var TEST3_MUSIC_EXPAND_H = 218;
 var TEST3_MUSIC_LYRICS_H = TEST3_MUSIC_EXPAND_H + 112;
 /* Uniform vertical gap: goal↔music, music↔weather/steps, compact pill stack */
-var TEST3_CARD_GAP_V = 12;
+var TEST3_CARD_GAP_V = 8;
 var TEST3_CARD_GAP_H = 5;
 var TEST3_HALF_COL_W = (340 - TEST3_CARD_GAP_H) / 2;
 var TEST3_HALF_COL_X = 24 + TEST3_HALF_COL_W + TEST3_CARD_GAP_H;
@@ -7044,10 +7044,10 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
                       '<div class="p2-result-loading__sub" aria-hidden="true"></div>' +
                     '</div>' +
                     '<div class="p2-result-loading__footer">' +
+                      '<div class="p2-result-loading__input"><span class="p2-input-text">놓친 보고서 요약해줘</span></div>' +
                       '<div class="p2-result-loading__icon" aria-hidden="true">' +
                         '<canvas class="p2-galaxy-star__canvas p2-galaxy-star__canvas--loading" width="112" height="112" aria-hidden="true"></canvas>' +
                       '</div>' +
-                      '<div class="p2-result-loading__input"><span class="p2-input-text">놓친 보고서 요약해줘</span></div>' +
                     '</div>' +
                   '</div>' +
                 '</div>' +
@@ -7061,10 +7061,6 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
             '</div>' +
             '<div id="p2-slot" class="p2-agent-slot" style="opacity:0; pointer-events:none; overflow:hidden;"></div>' +
             '<div class="p2-agent-footer">' +
-              '<button id="p2-star" type="button" aria-label="AI Voice" class="p2-galaxy-star-btn">' +
-                '<span class="p2-galaxy-star__grad" aria-hidden="true"></span>' +
-                '<canvas class="p2-galaxy-star__canvas" width="112" height="112" aria-hidden="true"></canvas>' +
-              '</button>' +
               '<div class="p2-agent-input">' +
                 '<div class="p2-agent-fill" aria-hidden="true">' +
                   '<canvas class="p2-agent-fill__gl"></canvas>' +
@@ -7076,6 +7072,10 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
                 '</div>' +
                 '<span class="p2-input-text">놓친 보고서 요약해줘</span>' +
               '</div>' +
+              '<button id="p2-star" type="button" aria-label="AI Voice" class="p2-galaxy-star-btn">' +
+                '<span class="p2-galaxy-star__grad" aria-hidden="true"></span>' +
+                '<canvas class="p2-galaxy-star__canvas" width="112" height="112" aria-hidden="true"></canvas>' +
+              '</button>' +
             '</div>' +
           '</div>' +
         '</div>';

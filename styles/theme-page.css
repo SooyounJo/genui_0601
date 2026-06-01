@@ -2175,6 +2175,20 @@
       height calc(var(--p2-test2-morph-dur) - 0.18s) var(--p2-test2-morph-ease),
       transform var(--p2-test2-morph-dur) var(--p2-test2-morph-ease);
   }
+  #canvas[data-test-scope="test2"] .p2-agent-footer .p2-agent-input {
+    order: 1;
+    flex: 1;
+    min-width: 0;
+  }
+  #canvas[data-test-scope="test2"] .p2-agent-footer #p2-star {
+    order: 2;
+  }
+  #canvas[data-test-scope="test2"] .p2-result-loading__footer .p2-result-loading__input {
+    order: 1;
+  }
+  #canvas[data-test-scope="test2"] .p2-result-loading__footer .p2-result-loading__icon {
+    order: 2;
+  }
   #canvas[data-test-scope="test2"] .p2-agent-input {
     flex: 1;
     min-width: 0;
@@ -3680,11 +3694,11 @@
     --test3-music-cyan-out-ms: 1100ms;
     --test3-music-chrome-fade-ms: 520ms;
     --test3-music-settle-text-ms: 560ms;
-    --test3-card-gap-v: 12px;
-    /* Capsule-phase orb (82px-tall pill) — smaller than settled player disc. */
-    --test3-orb-capsule-size: 46px;
+    --test3-card-gap-v: 8px;
+    /* Capsule-phase orb (82px pill) — settled player disc stays 64px. */
+    --test3-orb-capsule-size: 56px;
     --test3-orb-capsule-x: 13px;
-    --test3-orb-capsule-y: 18px;
+    --test3-orb-capsule-y: 13px;
     --test3-music-progress-dur: 245s;
     --test3-music-bar-h: 10px;
     --test3-music-bar-thumb: 15px;
@@ -5064,34 +5078,34 @@
     }
     100% {
       opacity: 1;
-      transform: translateY(var(--test3-weather-drop, 94px));
+      transform: translateY(var(--test3-weather-drop, 90px));
     }
   }
   /* 57%→68% — glide down in lockstep with test3MusicWrapperHeight (same 14s timeline). */
   @keyframes test3WeatherShift {
     0%, 56% {
       opacity: 1;
-      transform: translateY(var(--test3-weather-drop, 94px));
+      transform: translateY(var(--test3-weather-drop, 90px));
     }
     57% {
       animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     }
     68%, 100% {
       opacity: 1;
-      transform: translateY(var(--test3-weather-drop-expanded, 230px));
+      transform: translateY(var(--test3-weather-drop-expanded, 226px));
     }
   }
   @keyframes test3StepsShift {
     0%, 56% {
       opacity: 1;
-      transform: translateY(var(--test3-weather-drop, 94px));
+      transform: translateY(var(--test3-weather-drop, 90px));
     }
     57% {
       animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     }
     68%, 100% {
       opacity: 1;
-      transform: translateY(var(--test3-weather-drop-expanded, 230px));
+      transform: translateY(var(--test3-weather-drop-expanded, 226px));
     }
   }
   /* === test3 music card — v2 motion (14 s master timeline) =================
@@ -5243,10 +5257,10 @@
   }
   @keyframes test3MusicOrbMotion {
     0%, 14% {
-      width: var(--test3-orb-capsule-size, 46px);
-      height: var(--test3-orb-capsule-size, 46px);
+      width: var(--test3-orb-capsule-size, 56px);
+      height: var(--test3-orb-capsule-size, 56px);
       left: var(--test3-orb-capsule-x, 13px);
-      top: var(--test3-orb-capsule-y, 18px);
+      top: var(--test3-orb-capsule-y, 13px);
       margin: 0;
       border-radius: 50%;
       opacity: 1;
@@ -5255,10 +5269,10 @@
       animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     }
     24%, 56% {
-      width: var(--test3-orb-capsule-size, 46px);
-      height: var(--test3-orb-capsule-size, 46px);
+      width: var(--test3-orb-capsule-size, 56px);
+      height: var(--test3-orb-capsule-size, 56px);
       left: var(--test3-orb-capsule-x, 13px);
-      top: var(--test3-orb-capsule-y, 18px);
+      top: var(--test3-orb-capsule-y, 13px);
       margin: 0;
       border-radius: 50%;
       opacity: 1;
@@ -5267,28 +5281,28 @@
       animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     }
     57% {
-      width: var(--test3-orb-capsule-size, 46px);
-      height: var(--test3-orb-capsule-size, 46px);
+      width: var(--test3-orb-capsule-size, 56px);
+      height: var(--test3-orb-capsule-size, 56px);
       left: var(--test3-orb-capsule-x, 13px);
-      top: var(--test3-orb-capsule-y, 18px);
+      top: var(--test3-orb-capsule-y, 13px);
       margin: 0;
       border-radius: 50%;
       opacity: 1;
     }
     62% {
-      width: calc(var(--test3-orb-capsule-size, 46px) + 2px);
-      height: calc(var(--test3-orb-capsule-size, 46px) + 2px);
+      width: calc(var(--test3-orb-capsule-size, 56px) + 2px);
+      height: calc(var(--test3-orb-capsule-size, 56px) + 2px);
       left: calc(var(--test3-orb-capsule-x, 13px) + 1px);
-      top: calc(var(--test3-orb-capsule-y, 18px) + 1px);
+      top: calc(var(--test3-orb-capsule-y, 13px) + 1px);
       margin: 0;
       border-radius: 50%;
       opacity: 1;
     }
     68%, 100% {
-      width: var(--test3-orb-capsule-size, 46px);
-      height: var(--test3-orb-capsule-size, 46px);
+      width: var(--test3-orb-capsule-size, 56px);
+      height: var(--test3-orb-capsule-size, 56px);
       left: var(--test3-orb-capsule-x, 13px);
-      top: var(--test3-orb-capsule-y, 18px);
+      top: var(--test3-orb-capsule-y, 13px);
       margin: 0;
       border-radius: 50%;
       opacity: 1;
@@ -5731,11 +5745,11 @@
     animation: none !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music {
-    /* Capsule loader orb (46px in 82px pill); player disc stays 64px after settle. */
-    --test3-orb-size: var(--test3-orb-capsule-size, 46px);
+    /* Capsule loader orb (56px in 82px pill); player disc stays 64px after settle. */
+    --test3-orb-size: var(--test3-orb-capsule-size, 56px);
     --test3-disc-size: 64px;
     --test3-orb-x: var(--test3-orb-capsule-x, 13px);
-    --test3-orb-y: var(--test3-orb-capsule-y, 18px);
+    --test3-orb-y: var(--test3-orb-capsule-y, 13px);
     --test3-orb-mask-x: calc(var(--test3-orb-x) + var(--test3-orb-size) * 0.5);
     --test3-orb-mask-y: calc(var(--test3-orb-y) + var(--test3-orb-size) * 0.5);
     --test3-orb-mask-r: calc(var(--test3-orb-size) * 0.5 + 8px);
@@ -6106,9 +6120,9 @@
     position: absolute;
     left: calc(var(--test3-orb-capsule-x, 13px) - 10px);
     top: 50%;
-    width: calc(var(--test3-orb-capsule-size, 46px) * 1.22);
+    width: calc(var(--test3-orb-capsule-size, 56px) * 1.22);
     max-width: 62px;
-    height: calc(var(--test3-orb-capsule-size, 46px) * 1.12);
+    height: calc(var(--test3-orb-capsule-size, 56px) * 1.12);
     max-height: 56px;
     transform: translateY(-50%);
     transform-origin: 78% 50%;
@@ -6878,10 +6892,10 @@
     box-shadow: none;
     left: var(--test3-orb-capsule-x, 13px);
     right: auto;
-    top: var(--test3-orb-capsule-y, 18px);
+    top: var(--test3-orb-capsule-y, 13px);
     margin: 0;
-    width: var(--test3-orb-capsule-size, 46px);
-    height: var(--test3-orb-capsule-size, 46px);
+    width: var(--test3-orb-capsule-size, 56px);
+    height: var(--test3-orb-capsule-size, 56px);
     transform-origin: center center;
     animation:
       test3MusicOrbBodyFill 14s cubic-bezier(0.16, 1, 0.3, 1) forwards,
@@ -11490,9 +11504,9 @@
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-settling="1"] .dot-music1__compact--layout .dot-music1__iconBg {
     position: absolute !important;
     left: var(--test3-orb-capsule-x, 13px) !important;
-    top: var(--test3-orb-capsule-y, 18px) !important;
-    width: var(--test3-orb-capsule-size, 46px) !important;
-    height: var(--test3-orb-capsule-size, 46px) !important;
+    top: var(--test3-orb-capsule-y, 13px) !important;
+    width: var(--test3-orb-capsule-size, 56px) !important;
+    height: var(--test3-orb-capsule-size, 56px) !important;
     margin: 0 !important;
     transform-origin: center center;
     overflow: visible !important;
