@@ -18147,6 +18147,15 @@
 
   /* test1-assist-pill-motion-ver1:lifecycle-start */
   /* test1 intro — stack 1.5s 후 bottom pillar coda (surface-layout.js) */
+  #canvas[data-test-scope="test1"][data-test1-lock-stack-out]:not([data-test1-reveal-all]) .canvas-item[data-role="test1-now-bar-b"],
+  #canvas[data-test-scope="test1"][data-test1-lock-stack-out]:not([data-test1-reveal-all]) #test1-now-bar-b,
+  #canvas[data-test-scope="test1"][data-test1-lock-stack-out]:not([data-test1-reveal-all]) .canvas-item[data-role="test1-now-bar"],
+  #canvas[data-test-scope="test1"][data-test1-lock-stack-out]:not([data-test1-reveal-all]) #test1-now-bar,
+  #canvas[data-test-scope="test1"][data-test1-lock-stack-out]:not([data-test1-reveal-all]) .canvas-item[data-role="test1-transit-card"],
+  #canvas[data-test-scope="test1"][data-test1-lock-stack-out]:not([data-test1-reveal-all]) #test1-transit-card {
+    animation: none !important;
+  }
+
   #canvas[data-test-scope="test1"] {
     --test1-pill-out-dur: 1.25s;
   }
@@ -18807,8 +18816,7 @@
 
   #canvas[data-test-scope="test1"] .test1-bottom-pill__icon {
     fill: #155E75;
-    stroke: #FFFFFF;
-    stroke-width: 0.93px;
+    stroke: none;
   }
 
   #canvas[data-test-scope="test1"] .test1-bottom-pill__text-a-fo {
@@ -18841,7 +18849,7 @@
     line-height: 16px;
     color: #155E75;
     white-space: nowrap;
-    background-image: linear-gradient(120deg, #155E75 0%, #155E75 35%, #ffffff 50%, #155E75 65%, #155E75 100%);
+    background-image: linear-gradient(120deg, #155E75 0%, #155E75 35%, #EEF0DF 50%, #155E75 65%, #155E75 100%);
     background-size: 200% auto;
     background-position: 150% center;
     -webkit-background-clip: text;
