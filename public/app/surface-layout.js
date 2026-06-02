@@ -12001,7 +12001,9 @@ function _clearTest1PillPostRiseTimers() {
 function _scheduleTest1PillPostRise(canvas) {
   if (!canvas || canvas.getAttribute('data-test-scope') !== 'test1') return;
   _clearTest1PillPostRiseTimers();
-  canvas.setAttribute('data-test1-coda-animate', '1');
+  if (!canvas.getAttribute('data-test1-coda-animate')) {
+    canvas.setAttribute('data-test1-coda-animate', '1');
+  }
   window.__mlpTest1TextARevealTimer = setTimeout(function () {
     window.__mlpTest1TextARevealTimer = null;
     try {
@@ -12043,7 +12045,6 @@ function _runTest1BottomPillShellRise(canvas, done) {
       if (done) done();
       return;
     }
-    wrap.style.visibility = 'hidden';
     var pill = wrap.querySelector('.test1-bottom-pill');
     if (!pill || typeof pill.animate !== 'function') {
       wrap.style.visibility = 'visible';
@@ -12058,33 +12059,38 @@ function _runTest1BottomPillShellRise(canvas, done) {
     pill.style.opacity = '0';
     pill.style.transform = 'translate3d(0, 14px, 0)';
     pill.style.willChange = 'transform, opacity';
+    wrap.style.visibility = 'hidden';
     void pill.offsetWidth;
     requestAnimationFrame(function () {
-      requestAnimationFrame(function () {
-        wrap.style.visibility = 'visible';
-        _mountTest1BottomPillAiLogo();
-        var riseAnim = pill.animate(
-          [
-            { opacity: 0, transform: 'translate3d(0, 14px, 0)' },
-            { opacity: 1, transform: 'translate3d(0, 0, 0)' }
-          ],
-          {
-            duration: TEST1_PILL_SHELL_RISE_MS,
-            easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-            fill: 'forwards'
-          }
-        );
-        riseAnim.onfinish = function () {
-          try { riseAnim.commitStyles(); } catch (_) {}
-          pill.style.opacity = '1';
-          pill.style.transform = 'translate3d(0, 0, 0)';
-          pill.style.willChange = '';
-          requestAnimationFrame(function () {
-            if (canvas) _scheduleTest1PillPostRise(canvas);
-            if (done) done();
-          });
-        };
-      });
+      if (canvas) canvas.setAttribute('data-test1-pill-rise-run', '1');
+      wrap.style.visibility = 'visible';
+      void pill.offsetWidth;
+      var riseAnim = pill.animate(
+        [
+          { opacity: 0, transform: 'translate3d(0, 14px, 0)', offset: 0 },
+          { opacity: 0.94, transform: 'translate3d(0, 4px, 0)', offset: 0.68 },
+          { opacity: 1, transform: 'translate3d(0, 0, 0)', offset: 1 }
+        ],
+        {
+          duration: TEST1_PILL_SHELL_RISE_MS,
+          easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+          fill: 'forwards'
+        }
+      );
+      riseAnim.onfinish = function () {
+        try { riseAnim.commitStyles(); } catch (_) {}
+        pill.style.opacity = '1';
+        pill.style.transform = 'translate3d(0, 0, 0)';
+        pill.style.willChange = '';
+        if (canvas) {
+          canvas.setAttribute('data-test1-coda-animate', '1');
+          _scheduleTest1PillPostRise(canvas);
+        }
+        requestAnimationFrame(function () {
+          _mountTest1BottomPillAiLogo();
+          if (done) done();
+        });
+      };
     });
   } catch (_) {
     if (canvas) _scheduleTest1PillPostRise(canvas);
@@ -12094,21 +12100,22 @@ function _runTest1BottomPillShellRise(canvas, done) {
 
 function _beginTest1CodaChromeRise() {
   requestAnimationFrame(function () {
-    requestAnimationFrame(function () {
-      try {
-        var cRise = document.getElementById('canvas');
-        if (!cRise || cRise.getAttribute('data-test-scope') !== 'test1') return;
-        if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
-        if (!cRise.getAttribute('data-test1-coda-run')) return;
-        _clearTest1PillPostRiseTimers();
-        cRise.removeAttribute('data-test1-pill-content-ready');
-        cRise.removeAttribute('data-test1-pill-text-a-run');
-        cRise.removeAttribute('data-test1-pill-grad-run');
-        cRise.removeAttribute('data-test1-coda-animate');
+    try {
+      var cRise = document.getElementById('canvas');
+      if (!cRise || cRise.getAttribute('data-test-scope') !== 'test1') return;
+      if (window.__mlpTestConfig && window.__mlpTestConfig.test1RevealAll) return;
+      if (!cRise.getAttribute('data-test1-coda-run')) return;
+      _clearTest1PillPostRiseTimers();
+      cRise.removeAttribute('data-test1-pill-content-ready');
+      cRise.removeAttribute('data-test1-pill-text-a-run');
+      cRise.removeAttribute('data-test1-pill-grad-run');
+      cRise.removeAttribute('data-test1-coda-animate');
+      cRise.removeAttribute('data-test1-pill-rise-run');
+      if (!cRise.getAttribute('data-test1-coda-inner-rise')) {
         cRise.setAttribute('data-test1-coda-inner-rise', '1');
-        _runTest1BottomPillShellRise(cRise, null);
-      } catch (_) {}
-    });
+      }
+      _runTest1BottomPillShellRise(cRise, null);
+    } catch (_) {}
   });
 }
 
@@ -12126,7 +12133,11 @@ function _runTest1CodaIntro() {
     c.removeAttribute('data-test1-pill-text-a-run');
     c.removeAttribute('data-test1-pill-grad-run');
     c.removeAttribute('data-test1-lock-stack-out');
+    c.removeAttribute('data-test1-pill-rise-run');
+    var pillWrap = document.getElementById('test1-bottom-pill');
+    if (pillWrap) pillWrap.style.visibility = 'hidden';
     c.setAttribute('data-test1-coda-run', '1');
+    c.setAttribute('data-test1-coda-inner-rise', '1');
     void c.offsetWidth;
     _ensureTest1GalaxyAiLogoScript(function () {});
     if (window.__mlpTestConfig) {
@@ -12510,6 +12521,7 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
         canvas.removeAttribute('data-test1-pill-text-a-run');
         canvas.removeAttribute('data-test1-pill-grad-run');
         canvas.removeAttribute('data-test1-lock-stack-out');
+        canvas.removeAttribute('data-test1-pill-rise-run');
         canvas.removeAttribute('data-test1-home-animate');
         canvas.removeAttribute('data-test1-home-inner-rise');
         canvas.removeAttribute('data-test1-home-food-rise');
@@ -12602,6 +12614,7 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
           canvas.removeAttribute('data-test1-pill-text-a-run');
           canvas.removeAttribute('data-test1-pill-grad-run');
           canvas.removeAttribute('data-test1-lock-stack-out');
+          canvas.removeAttribute('data-test1-pill-rise-run');
           canvas.removeAttribute('data-test1-pill-text-b');
         }
       }
@@ -12751,6 +12764,7 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
     canvas.removeAttribute('data-test1-pill-text-a-run');
     canvas.removeAttribute('data-test1-pill-grad-run');
     canvas.removeAttribute('data-test1-lock-stack-out');
+    canvas.removeAttribute('data-test1-pill-rise-run');
     canvas.removeAttribute('data-test1-home-run');
     canvas.removeAttribute('data-test1-home-prep');
     canvas.removeAttribute('data-test1-home-exit');

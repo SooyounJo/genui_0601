@@ -19320,6 +19320,12 @@
     overflow: hidden;
   }
 
+  /* coda rise — hide pillar slot until WAAPI starts (prevents pre-rise flash) */
+  #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-inner-rise]:not([data-test1-coda-animate]):not([data-test1-pill-rise-run]):not([data-test1-reveal-all]) #test1-bottom-pill,
+  #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-inner-rise]:not([data-test1-coda-animate]):not([data-test1-pill-rise-run]):not([data-test1-reveal-all]) .canvas-item[data-role="test1-bottom-pill"] {
+    visibility: hidden !important;
+  }
+
   #canvas[data-test-scope="test1"][data-test1-coda-run]:not([data-test1-pill-text-a-run]):not([data-test1-reveal-all]) .test1-bottom-pill__text-stage,
   #canvas[data-test-scope="test1"][data-test1-coda-run]:not([data-test1-reveal-all]) .test1-bottom-pill__text-sweep,
   #canvas[data-test-scope="test1"][data-test1-coda-run]:not([data-test1-pill-grad-run]):not([data-test1-reveal-all]) .test1-bottom-pill__grad-sweep {
@@ -19768,9 +19774,10 @@
 
   /* pillar — WAAPI owns shell rise; hold settled state once coda-animate starts */
   #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run]:not([data-test1-reveal-all]) .test1-bottom-pill {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-    animation: none;
+    opacity: 1 !important;
+    transform: translate3d(0, 0, 0) !important;
+    animation: none !important;
+    transition: none !important;
     will-change: auto;
   }
 
