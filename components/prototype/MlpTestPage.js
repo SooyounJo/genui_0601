@@ -301,6 +301,18 @@ export default function MlpTestPage({
   // calling setCardRowId inside the effect would re-fire it and the
   // cleanup would cancel our queued rAFs before they fire.
   const cardRowIdRef = useRef(null);
+
+  // ─── Entry Sequence ───
+  // When switching tests, the mobile frame slides up from below with opacity.
+  // Delay entry by 2 seconds per user request.
+  const [isEntering, setIsEntering] = useState(false);
+
+  useEffect(() => {
+    setIsEntering(false);
+    const timer = setTimeout(() => setIsEntering(true), 1000);
+    return () => clearTimeout(timer);
+  }, [testId]);
+
   useEffect(() => { cardRowIdRef.current = cardRowId; }, [cardRowId]);
   // Ref to the card DOM node — we toggle .is-snapping imperatively to
   // avoid React batching it with the state-driven .is-visible flip.
@@ -667,6 +679,7 @@ export default function MlpTestPage({
             background-size: cover !important;
             background-position: center center !important;
             background-repeat: no-repeat !important;
+            transition: background-image 0.8s ease-in-out !important;
           }
           .page-nav {
             position: absolute !important;
@@ -732,6 +745,7 @@ export default function MlpTestPage({
             background-position: center center !important;
             background-repeat: no-repeat !important;
             position: relative !important;
+            transition: background-image 0.8s ease-in-out !important;
           }
           .mlp-left {
             width: 120px !important;
@@ -745,7 +759,7 @@ export default function MlpTestPage({
             left: 80px !important;
             top: 0 !important;
             bottom: 0 !important;
-            z-index: 10 !important;
+            z-index: 6000 !important;
           }
           /* Flex slot grows with the 1.8× badge so gap: 24px is kept
              between slots and neighbours never overlap. */
@@ -1545,7 +1559,24 @@ export default function MlpTestPage({
             padding: 0 !important;
             transition: width 0.2s ease-out, height 0.2s ease-out !important;
             margin: 0 auto !important;
-            transform: translateY(var(--offsetY, 0px)) !important;
+            transform: translateY(var(--offsetY, 0px));
+            opacity: 0;
+            pointer-events: none;
+          }
+          .mlp-test-page .canvas-wrap.is-entering {
+            opacity: 1;
+            pointer-events: auto;
+            animation: mobileEntryUp 0.8s cubic-bezier(0.2, 0, 0, 1) forwards;
+          }
+          @keyframes mobileEntryUp {
+            from {
+              opacity: 0;
+              transform: translateY(calc(var(--offsetY, 0px) + 80px));
+            }
+            to {
+              opacity: 1;
+              transform: translateY(var(--offsetY, 0px));
+            }
           }
           .mlp-test-page .canvas-frame.mlp-phone {
             width: ${PHONE_W}px !important;
@@ -1694,7 +1725,11 @@ export default function MlpTestPage({
 
           <section className="mlp-right" ref={rightRef}>
             {mounted && (
-              <div className="canvas-wrap" id="canvasWrap" style={{ "--scale": scale, "--offsetY": `${PHONE_OFFSET_Y}px` }}>
+              <div
+                className={`canvas-wrap${isEntering ? " is-entering" : ""}`}
+                id="canvasWrap"
+                style={{ "--scale": scale, "--offsetY": `${PHONE_OFFSET_Y}px` }}
+              >
                 <div className="canvas-frame mlp-phone" id="canvasFrame">
                   <div
                     className="canvas-inner"
