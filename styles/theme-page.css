@@ -2824,6 +2824,14 @@
     opacity: 1 !important;
     transform: none !important;
     pointer-events: none !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 0 8px 0 10px !important;
+    overflow: visible !important;
   }
   #canvas[data-test-scope="test2"] .p2-agent-shell.p2-final-loading-compact:has(#p2-result.is-loading) .p2-agent-card__body,
   #canvas[data-test-scope="test2"] .p2-agent-shell.p2-contact-voice-exit:has(#p2-result.is-loading) .p2-agent-card__body {
@@ -2834,9 +2842,26 @@
   #canvas[data-test-scope="test2"] .p2-agent-shell.p2-final-loading-compact:has(#p2-result.is-loading) .p2-result-loading__content,
   #canvas[data-test-scope="test2"] .p2-agent-shell.p2-contact-voice-exit:has(#p2-result.is-loading) .p2-result-loading__content {
     height: 100% !important;
-    padding: 0 8px 0 10px !important;
+    padding: 0 !important;
+    min-width: 0 !important;
     box-sizing: border-box !important;
     justify-content: space-between !important;
+  }
+  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-final-loading-compact:has(#p2-result.is-loading) .p2-result-loading__input,
+  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-contact-voice-exit:has(#p2-result.is-loading):not(.p2-loading-footer-handoff) .p2-result-loading__input {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: auto !important;
+    max-width: calc(100% - 64px) !important;
+    height: 44px !important;
+    overflow: hidden !important;
+  }
+  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-final-loading-compact:has(#p2-result.is-loading) .p2-result-loading__icon,
+  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-contact-voice-exit:has(#p2-result.is-loading):not(.p2-loading-footer-handoff) .p2-result-loading__icon {
+    flex: 0 0 56px !important;
+    width: 56px !important;
+    height: 56px !important;
+    align-self: center !important;
   }
   #canvas[data-test-scope="test2"] .p2-agent-shell.p2-final-loading-compact:has(#p2-result.is-loading) #p2-result.p2-loading-text-reveal .p2-result-loading__head,
   #canvas[data-test-scope="test2"] .p2-agent-shell.p2-contact-voice-exit:has(#p2-result.is-loading) #p2-result.p2-loading-text-reveal .p2-result-loading__head {
@@ -2859,6 +2884,13 @@
   }
   #canvas[data-test-scope="test2"] #p2-result.is-loading:not(.has-swap) .p2-result-loading__footer {
     display: flex !important;
+  }
+  /* Avoid footer-only flash when loading title is hidden before crossfade/mount */
+  #canvas[data-test-scope="test2"] #p2-result.is-loading:not(.p2-loading-text-reveal):not(.p2-crossfade-out):not(.p2-loading-ui-exiting):not(.has-swap) .p2-result-loading__footer {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
   }
   #canvas[data-test-scope="test2"] .p2-agent-shell.p2-loading-chrome-exiting:has(#p2-result.is-loading) #p2-result:not(.has-swap) .p2-result-loading__footer,
   #canvas[data-test-scope="test2"] .p2-agent-shell.p2-loading-footer-handoff:has(#p2-result.is-loading) #p2-result:not(.has-swap) .p2-result-loading__footer,

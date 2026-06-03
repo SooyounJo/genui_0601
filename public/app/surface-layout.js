@@ -2483,14 +2483,20 @@ function resetTest2P2LayoutForNewUtterance(canvas) {
   }
 
   if (result) {
+    var stillLoading = result.classList.contains('is-loading');
+    if (stillLoading) {
+      result.classList.add('p2-crossfade-out');
+    }
     result.classList.remove(
       'has-swap',
       'p2-result-expanded',
-      'p2-crossfade-out',
       'p2-default-hiding',
       'p2-loading-ui-exiting',
       'p2-loading-text-reveal'
     );
+    if (!stillLoading) {
+      result.classList.remove('p2-crossfade-out');
+    }
     result.style.removeProperty('--p2-reveal-h');
     resetTest2LoadingChromeState(result);
   }
@@ -2771,8 +2777,7 @@ function beginTest2LoadingHandoffFromFinal(userText, opts) {
     if (sub && raw) sub.textContent = raw;
     if (loadingInput && raw) {
       setTest2InputDisplayText(loadingInput, raw);
-      loadingInput.classList.remove('p2-agent-input--settled');
-      loadingInput.classList.add('p2-agent-input--glow');
+      loadingInput.classList.remove('p2-agent-input--settled', 'p2-agent-input--glow');
     }
   }
 
@@ -11850,7 +11855,10 @@ function resetTest2LoadingChromeState(result) {
   if (!result) return;
   delete result.dataset.test2LoadingUiScheduled;
   delete result.dataset.test2LoadingUiRevealed;
-  result.classList.remove('p2-loading-ui-exiting', 'p2-loading-text-reveal');
+  result.classList.remove('p2-loading-ui-exiting');
+  if (!result.classList.contains('is-loading')) {
+    result.classList.remove('p2-loading-text-reveal');
+  }
   var shell = document.getElementById('p2-area');
   if (shell) {
     shell.classList.remove('p2-loading-chrome-exiting', 'p2-loading-footer-handoff');
