@@ -18684,12 +18684,49 @@
     background: #000;
   }
 
-  /* Figma pill grad — full pillar, icon sits above on svg layer */
+  /* Figma Rectangle 240657056 — mint→#EECBFF pillar grad (persists after sweep) */
   #canvas[data-test-scope="test1"] .test1-bottom-pill__bg-blue {
     position: absolute;
     inset: 0;
     border-radius: inherit;
+    --test1-pill-grad-angle: 81.78deg;
+    --test1-pill-bg-reveal: -4%;
     background: linear-gradient(81.78deg, #9DC5B7 1.03%, #EECBFF 165.82%);
+    z-index: 1;
+  }
+
+  /* Sweep — reveal Figma grad under GL (unrevealed = mint cover below) */
+  #canvas[data-test-scope="test1"][data-test1-pill-grad-run]:not([data-test1-reveal-all]) .test1-bottom-pill__bg-blue {
+    -webkit-mask-image: linear-gradient(
+      var(--test1-pill-grad-angle),
+      #000 0%,
+      #000 calc(var(--test1-pill-bg-reveal) - 38%),
+      rgba(0, 0, 0, 0.94) calc(var(--test1-pill-bg-reveal) - 30%),
+      rgba(0, 0, 0, 0.82) calc(var(--test1-pill-bg-reveal) - 22%),
+      rgba(0, 0, 0, 0.66) calc(var(--test1-pill-bg-reveal) - 15%),
+      rgba(0, 0, 0, 0.48) calc(var(--test1-pill-bg-reveal) - 9%),
+      rgba(0, 0, 0, 0.3) calc(var(--test1-pill-bg-reveal) - 4%),
+      rgba(0, 0, 0, 0.16) calc(var(--test1-pill-bg-reveal) + 2%),
+      rgba(0, 0, 0, 0.08) calc(var(--test1-pill-bg-reveal) + 8%),
+      rgba(0, 0, 0, 0.035) calc(var(--test1-pill-bg-reveal) + 16%),
+      rgba(0, 0, 0, 0.012) calc(var(--test1-pill-bg-reveal) + 24%),
+      transparent calc(var(--test1-pill-bg-reveal) + 36%)
+    );
+    mask-image: linear-gradient(
+      var(--test1-pill-grad-angle),
+      #000 0%,
+      #000 calc(var(--test1-pill-bg-reveal) - 38%),
+      rgba(0, 0, 0, 0.94) calc(var(--test1-pill-bg-reveal) - 30%),
+      rgba(0, 0, 0, 0.82) calc(var(--test1-pill-bg-reveal) - 22%),
+      rgba(0, 0, 0, 0.66) calc(var(--test1-pill-bg-reveal) - 15%),
+      rgba(0, 0, 0, 0.48) calc(var(--test1-pill-bg-reveal) - 9%),
+      rgba(0, 0, 0, 0.3) calc(var(--test1-pill-bg-reveal) - 4%),
+      rgba(0, 0, 0, 0.16) calc(var(--test1-pill-bg-reveal) + 2%),
+      rgba(0, 0, 0, 0.08) calc(var(--test1-pill-bg-reveal) + 8%),
+      rgba(0, 0, 0, 0.035) calc(var(--test1-pill-bg-reveal) + 16%),
+      rgba(0, 0, 0, 0.012) calc(var(--test1-pill-bg-reveal) + 24%),
+      transparent calc(var(--test1-pill-bg-reveal) + 36%)
+    );
   }
 
   #canvas[data-test-scope="test1"] .test1-bottom-pill__bg-blue-cover {
@@ -18698,7 +18735,7 @@
     border-radius: inherit;
     background: #9DC5B7;
     pointer-events: none;
-    z-index: 1;
+    z-index: 0;
   }
 
   #canvas[data-test-scope="test1"] .test1-bottom-pill__grad-sweep {
@@ -18710,6 +18747,126 @@
     opacity: 0;
     z-index: 2;
     isolation: isolate;
+  }
+
+  /* test1 pillar — test2-style organic GL reveal (colors/timing unchanged; CSS sweep fallback) */
+  #canvas[data-test-scope="test1"] .test1-bottom-pill__fill-gl {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    overflow: hidden;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 2;
+    isolation: isolate;
+    transition: none;
+    --test1-pill-grad-angle: 81.78deg;
+  }
+
+  #canvas[data-test-scope="test1"] .test1-bottom-pill__fill-gl .p2-agent-fill__gl,
+  #canvas[data-test-scope="test1"] .test1-bottom-pill__fill-gl-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  #canvas[data-test-scope="test1"] .test1-bottom-pill--gl-fill .test1-bottom-pill__fill-gl {
+    opacity: 1;
+  }
+
+  #canvas[data-test-scope="test1"][data-test1-pill-grad-run] .test1-bottom-pill__fill-gl.p2-agent-fill--gl-ready.p2-agent-fill--gl-active {
+    animation: test1PillGradSweepShow var(--test1-pill-pink-fade-dur) var(--test1-pill-pink-fade-ease) 0s forwards;
+    opacity: 1;
+  }
+
+  /* pillGlFade: soft-edge retreat (same mask language as bg reveal) + JS opacity */
+  #canvas[data-test-scope="test1"][data-test1-pill-grad-run] .test1-bottom-pill__fill-gl.p2-agent-fill--gl-ready.p2-agent-fill--gl-fading {
+    --test1-pill-gl-dissolve: 128%;
+    animation: none;
+    -webkit-mask-image: linear-gradient(
+      var(--test1-pill-grad-angle),
+      #000 0%,
+      #000 calc(var(--test1-pill-gl-dissolve) - 44%),
+      rgba(0, 0, 0, 0.96) calc(var(--test1-pill-gl-dissolve) - 34%),
+      rgba(0, 0, 0, 0.88) calc(var(--test1-pill-gl-dissolve) - 26%),
+      rgba(0, 0, 0, 0.76) calc(var(--test1-pill-gl-dissolve) - 19%),
+      rgba(0, 0, 0, 0.6) calc(var(--test1-pill-gl-dissolve) - 13%),
+      rgba(0,  0, 0, 0.44) calc(var(--test1-pill-gl-dissolve) - 8%),
+      rgba(0, 0, 0, 0.28) calc(var(--test1-pill-gl-dissolve) - 3%),
+      rgba(0, 0, 0, 0.14) calc(var(--test1-pill-gl-dissolve) + 4%),
+      rgba(0, 0, 0, 0.07) calc(var(--test1-pill-gl-dissolve) + 12%),
+      rgba(0, 0, 0, 0.03) calc(var(--test1-pill-gl-dissolve) + 22%),
+      rgba(0, 0, 0, 0.01) calc(var(--test1-pill-gl-dissolve) + 34%),
+      transparent calc(var(--test1-pill-gl-dissolve) + 48%)
+    );
+    mask-image: linear-gradient(
+      var(--test1-pill-grad-angle),
+      #000 0%,
+      #000 calc(var(--test1-pill-gl-dissolve) - 44%),
+      rgba(0, 0, 0, 0.96) calc(var(--test1-pill-gl-dissolve) - 34%),
+      rgba(0, 0, 0, 0.88) calc(var(--test1-pill-gl-dissolve) - 26%),
+      rgba(0, 0, 0, 0.76) calc(var(--test1-pill-gl-dissolve) - 19%),
+      rgba(0, 0, 0, 0.6) calc(var(--test1-pill-gl-dissolve) - 13%),
+      rgba(0, 0, 0, 0.44) calc(var(--test1-pill-gl-dissolve) - 8%),
+      rgba(0, 0, 0, 0.28) calc(var(--test1-pill-gl-dissolve) - 3%),
+      rgba(0, 0, 0, 0.14) calc(var(--test1-pill-gl-dissolve) + 4%),
+      rgba(0, 0, 0, 0.07) calc(var(--test1-pill-gl-dissolve) + 12%),
+      rgba(0, 0, 0, 0.03) calc(var(--test1-pill-gl-dissolve) + 22%),
+      rgba(0, 0, 0, 0.01) calc(var(--test1-pill-gl-dissolve) + 34%),
+      transparent calc(var(--test1-pill-gl-dissolve) + 48%)
+    );
+  }
+
+  #canvas[data-test-scope="test1"][data-test1-pill-grad-run]:not([data-test1-reveal-all]) .test1-bottom-pill__fill-gl.p2-agent-fill--gl-ready:not(.p2-agent-fill--gl-active):not(.p2-agent-fill--gl-fading) {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    animation: none !important;
+  }
+
+  #canvas[data-test-scope="test1"] .test1-bottom-pill__fill-gl.p2-agent-fill--gl-fading {
+    transition: none;
+  }
+
+  #canvas[data-test-scope="test1"] .test1-bottom-pill--gl-fill .test1-bottom-pill__grad-sweep,
+  #canvas[data-test-scope="test1"] .test1-bottom-pill--gl-fill .test1-bottom-pill__grad-sweep--pre {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  #canvas[data-test-scope="test1"] .test1-bottom-pill--gl-fill .test1-bottom-pill__grad-sweep-track,
+  #canvas[data-test-scope="test1"] .test1-bottom-pill--gl-fill .test1-bottom-pill__grad-sweep--pre .test1-bottom-pill__grad-sweep-track {
+    opacity: 0 !important;
+    animation: none !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run][data-test1-pill-grad-run]:not([data-test1-reveal-all]) .test1-bottom-pill__grad-sweep {
+      opacity: 0;
+      pointer-events: none;
+      animation: test1PillGradSweepShow var(--test1-pill-pink-fade-dur) var(--test1-pill-pink-fade-ease) 0s forwards,
+        test1PillGradSweepHide 0.5s ease var(--test1-pill-pink-flow-dur) forwards;
+    }
+
+    #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run][data-test1-pill-grad-run]:not([data-test1-reveal-all]) .test1-bottom-pill__grad-sweep-track--1 {
+      opacity: 1;
+      animation: test1PillGradFillPass var(--test1-pass-dur) linear 0s forwards;
+    }
+
+    #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run][data-test1-pill-grad-run]:not([data-test1-reveal-all]) .test1-bottom-pill__grad-sweep-track--2 {
+      opacity: 1;
+      animation: test1PillGradFillPass var(--test1-pass-dur) linear var(--test1-pill-grad-pass-step) forwards;
+    }
+
+    #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run][data-test1-pill-grad-run]:not([data-test1-reveal-all]) .test1-bottom-pill__grad-sweep-track--3 {
+      opacity: 1;
+      animation: test1PillGradFillPass var(--test1-pass-dur) linear calc(var(--test1-pill-grad-pass-step) * 2) forwards;
+    }
   }
 
   #canvas[data-test-scope="test1"] .test1-bottom-pill__svg {
@@ -18950,6 +19107,12 @@
     initial-value: -4%;
   }
 
+  @property --test1-pill-bg-reveal {
+    syntax: '<percentage>';
+    inherits: true;
+    initial-value: -4%;
+  }
+
   #canvas[data-test-scope="test1"] .test1-bottom-pill__text-sweep-track--reveal {
     display: none;
   }
@@ -19069,6 +19232,7 @@
 
   /* test1 coda — shortcuts first, then staged pillar intro */
   #canvas[data-test-scope="test1"] {
+    --test1-pill-pink: #EECBFF;
     --test1-coda-ease: cubic-bezier(0.16, 1, 0.3, 1);
     --test1-coda-in-dur: 0.82s;
     --test1-coda-pill-w: 215px;
@@ -19124,11 +19288,15 @@
     --test1-pill-pre-pink-cycle-dur: calc(var(--test1-pill-grad-pass-step) + var(--test1-pass-dur));
     --test1-pill-pre-pink-flow-dur: var(--test1-top-gradient-total);
     --test1-pill-pre-pink-sweep-end: calc(var(--test1-pill-pre-pink-start) + var(--test1-pill-pre-pink-flow-dur));
-    --test1-pill-pink-sweep-end: calc(var(--test1-pill-pink-sweep-start) + var(--test1-pill-pink-flow-dur));
-    --test1-pill-text-b-gap-after-pink: 0s;
+    --test1-pill-fill-hold: 0.35s;
+    --test1-pill-gl-fade-dur: 1.32s;
+    --test1-pill-pink-settle-dur: calc(var(--test1-pill-fill-hold) + var(--test1-pill-gl-fade-dur));
+    --test1-pill-pink-sweep-end: calc(var(--test1-pill-pink-sweep-start) + var(--test1-pill-pink-flow-dur) + var(--test1-pill-pink-settle-dur));
+    --test1-pill-text-b-after-gl: 0.52s;
+    --test1-pill-text-b-gap-after-pink: calc(var(--test1-pill-pink-settle-dur) + var(--test1-pill-text-b-after-gl));
     --test1-pill-cover-hold-dur: calc(var(--test1-pill-pink-flow-delay) - var(--test1-pill-bg-delay));
     --test1-pill-text-b-dur: 0.88s;
-    --test1-pill-text-b-delay: calc(var(--test1-pill-pink-sweep-end) + var(--test1-pill-text-b-gap-after-pink));
+    --test1-pill-text-b-delay: calc(var(--test1-pill-pink-sweep-end) + var(--test1-pill-text-b-after-gl));
   }
 
   /* coda — shortcut inner shell matches pillar height (57px) */
@@ -19394,8 +19562,35 @@
     opacity: 1;
   }
 
-  #canvas[data-test-scope="test1"][data-test1-coda-run] .test1-bottom-pill__bg-blue-cover {
+  /* mint only until pink grad sweep — no pink behind 귀가 후 text */
+  #canvas[data-test-scope="test1"][data-test1-coda-run]:not([data-test1-pill-grad-run]):not([data-test1-reveal-all]) .test1-bottom-pill__bg-blue {
     opacity: 0;
+  }
+
+  #canvas[data-test-scope="test1"][data-test1-coda-run]:not([data-test1-pill-grad-run]):not([data-test1-reveal-all]) .test1-bottom-pill__bg-blue-cover {
+    opacity: 1;
+  }
+
+  /*
+   * pill-grad-run: Figma grad on bg-blue reveals with sweep; mint cover under unrevealed; GL on top.
+   */
+  #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-pill-grad-run]:not([data-test1-reveal-all]) .test1-bottom-pill__bg-blue {
+    opacity: 1;
+  }
+
+  #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-pill-grad-run]:not([data-test1-reveal-all]) .test1-bottom-pill__bg-blue-cover {
+    opacity: 1;
+  }
+
+  /* Figma grad fully revealed — no mask/cover flash before coda-done */
+  #canvas[data-test-scope="test1"][data-test1-pill-grad-run]:not([data-test1-reveal-all]) .test1-bottom-pill--grad-settled .test1-bottom-pill__bg-blue {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  #canvas[data-test-scope="test1"][data-test1-pill-grad-run]:not([data-test1-reveal-all]) .test1-bottom-pill--grad-settled .test1-bottom-pill__bg-blue-cover {
+    opacity: 0;
+    transition: opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   #canvas[data-test-scope="test1"][data-test1-coda-run] .test1-bottom-pill__text-a-stage {
@@ -19408,11 +19603,6 @@
   #canvas[data-test-scope="test1"][data-test1-coda-run] .test1-bottom-pill__text--b {
     opacity: 0;
     visibility: hidden;
-  }
-
-  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run]:not([data-test1-reveal-all]) .test1-bottom-pill__bg-blue-cover {
-    opacity: 0 !important;
-    animation: none !important;
   }
 
   #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run][data-test1-pill-text-a-run]:not([data-test1-reveal-all]) .test1-bottom-pill__text--a {
@@ -19450,27 +19640,7 @@
     display: none;
   }
 
-  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run][data-test1-pill-grad-run]:not([data-test1-reveal-all]) .test1-bottom-pill__grad-sweep {
-    opacity: 0;
-    pointer-events: none;
-    animation: test1PillGradSweepShow var(--test1-pill-pink-fade-dur) var(--test1-pill-pink-fade-ease) 0s forwards,
-      test1PillGradSweepHide 0.5s ease var(--test1-pill-pink-flow-dur) forwards;
-  }
-
-  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run][data-test1-pill-grad-run]:not([data-test1-reveal-all]) .test1-bottom-pill__grad-sweep-track--1 {
-    opacity: 1;
-    animation: test1PillGradFillPass var(--test1-pass-dur) linear 0s forwards;
-  }
-
-  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run][data-test1-pill-grad-run]:not([data-test1-reveal-all]) .test1-bottom-pill__grad-sweep-track--2 {
-    opacity: 1;
-    animation: test1PillGradFillPass var(--test1-pass-dur) linear var(--test1-pill-grad-pass-step) forwards;
-  }
-
-  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run][data-test1-pill-grad-run]:not([data-test1-reveal-all]) .test1-bottom-pill__grad-sweep-track--3 {
-    opacity: 1;
-    animation: test1PillGradFillPass var(--test1-pass-dur) linear calc(var(--test1-pill-grad-pass-step) * 2) forwards;
-  }
+  /* pill-grad-run: GL layer uses test1PillGradSweep* timing on .test1-bottom-pill__fill-gl (see above) */
 
   #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-done]:not([data-test1-reveal-all]) .test1-bottom-pill__bg-base,
   #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-done]:not([data-test1-reveal-all]) .test1-bottom-pill__icon {
@@ -19484,12 +19654,13 @@
 
   #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-done]:not([data-test1-reveal-all]) .test1-bottom-pill__bg-blue {
     opacity: 1;
+    --test1-pill-bg-reveal: 128%;
+    -webkit-mask-image: none;
+    mask-image: none;
   }
 
   #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-done]:not([data-test1-reveal-all]) .test1-bottom-pill__bg-blue-cover {
     opacity: 0;
-    -webkit-mask-image: none;
-    mask-image: none;
   }
 
   #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-done]:not([data-test1-reveal-all]) .test1-bottom-pill__grad-sweep {
@@ -19641,6 +19812,11 @@
     100% { --test1-pill-grad-fill: 128%; opacity: 1; }
   }
 
+  @keyframes test1PillBgRevealPass {
+    0% { --test1-pill-bg-reveal: -4%; }
+    100% { --test1-pill-bg-reveal: 128%; }
+  }
+
   @keyframes test1PillGradSweepShow {
     0% { opacity: 0; }
     100% { opacity: 1; }
@@ -19711,12 +19887,13 @@
 
   #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-done]:not([data-test1-reveal-all]) .test1-bottom-pill__bg-blue {
     opacity: 1;
+    --test1-pill-bg-reveal: 128%;
+    -webkit-mask-image: none;
+    mask-image: none;
   }
 
   #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-done]:not([data-test1-reveal-all]) .test1-bottom-pill__bg-blue-cover {
     opacity: 0;
-    -webkit-mask-image: none;
-    mask-image: none;
   }
 
   #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-done]:not([data-test1-reveal-all]) .test1-bottom-pill__grad-sweep {
@@ -20838,8 +21015,16 @@
       opacity: 0;
     }
 
-    #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run]:not([data-test1-reveal-all]) .test1-bottom-pill__bg-blue-cover {
-      opacity: 0;
+    #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run]:not([data-test1-pill-grad-run]):not([data-test1-reveal-all]) .test1-bottom-pill__bg-blue-cover {
+      opacity: 1;
+    }
+
+    #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run][data-test1-pill-grad-run]:not([data-test1-reveal-all]) .test1-bottom-pill__bg-blue-cover {
+      opacity: 1;
+    }
+
+    #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run][data-test1-pill-grad-run]:not([data-test1-reveal-all]) .test1-bottom-pill__bg-blue {
+      animation: test1PillBgRevealPass var(--test1-pill-pink-flow-dur) linear var(--test1-pill-pink-flow-delay) forwards;
     }
 
     #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run]:not([data-test1-reveal-all]) .test1-bottom-pill__grad-sweep,

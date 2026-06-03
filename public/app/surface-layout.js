@@ -6666,6 +6666,9 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
           '<div class="test1-bottom-pill__bg-base"></div>' +
           '<div class="test1-bottom-pill__bg-blue"></div>' +
           '<div class="test1-bottom-pill__bg-blue-cover"></div>' +
+          '<div class="test1-bottom-pill__fill-gl p2-agent-fill">' +
+            '<canvas class="test1-bottom-pill__fill-gl-canvas p2-agent-fill__gl"></canvas>' +
+          '</div>' +
           '<div class="test1-bottom-pill__grad-sweep test1-bottom-pill__grad-sweep--pre">' +
             '<div class="test1-bottom-pill__grad-sweep-track test1-bottom-pill__grad-sweep-track--1"></div>' +
             '<div class="test1-bottom-pill__grad-sweep-track test1-bottom-pill__grad-sweep-track--2"></div>' +
@@ -11257,8 +11260,12 @@ var TEST1_PILL_GRAD_PASS_STEP_MS = TEST1_PASS_DUR_MS - TEST1_PILL_GRAD_PASS_OVER
 var TEST1_PILL_TEXT_SWEEP_MS = TEST1_PASS_DUR_MS + TEST1_PASS_STEP_MS * 2;
 var TEST1_PILL_TEXT_A_OUT_MS = 1150;
 var TEST1_PILL_PINK_FLOW_MS = TEST1_PASS_DUR_MS + TEST1_PILL_GRAD_PASS_STEP_MS * 2;
+/* Keep in sync with p2-agent-fill-gl.js Test1BottomPillFillGL hold/fade */
+var TEST1_PILL_FILL_HOLD_MS = 350;
+var TEST1_PILL_GL_FADE_MS = 1320;
+var TEST1_PILL_TEXT_B_AFTER_GL_MS = 520;
 var TEST1_PILL_TEXT_B_DUR_MS = 880;
-var TEST1_PILL_TEXT_B_GAP_AFTER_PINK_MS = 0;
+var TEST1_PILL_TEXT_B_GAP_AFTER_PINK_MS = TEST1_PILL_FILL_HOLD_MS + TEST1_PILL_GL_FADE_MS + TEST1_PILL_TEXT_B_AFTER_GL_MS;
 var TEST1_LOCK_STACK_OUT_DUR_MS = 420;
 var TEST1_LOCK_STACK_OUT_STAGGER_MS = 200;
 var TEST1_LOCK_STACK_OUT_LIFT_B_PX = 28;
@@ -11497,7 +11504,19 @@ function _clearTest1IntroTimer() {
   if (window.Test1HomeWidgetFillGL) {
     try { window.Test1HomeWidgetFillGL.destroyAll(); } catch (_) {}
   }
+  if (window.Test1BottomPillFillGL) {
+    try { window.Test1BottomPillFillGL.stop(); } catch (_) {}
+  }
   window.__mlpTest1Transitioning = false;
+}
+
+function _syncTest1BottomPillFillGL(run) {
+  if (!window.Test1BottomPillFillGL) return;
+  if (run) {
+    try { window.Test1BottomPillFillGL.start(); } catch (_) {}
+  } else {
+    try { window.Test1BottomPillFillGL.stop(); } catch (_) {}
+  }
 }
 
 function _unmountTest1BottomPillAiLogo() {
@@ -12010,6 +12029,7 @@ function _scheduleTest1PillPostRise(canvas) {
       if (!c2 || c2.getAttribute('data-test-scope') !== 'test1') return;
       c2.setAttribute('data-test1-pill-grad-run', '1');
       c2.setAttribute('data-test1-pill-content-ready', '1');
+      _syncTest1BottomPillFillGL(true);
     } catch (_) {}
   }, TEST1_PILL_PINK_SWEEP_START_MS);
   window.__mlpTest1TextBMountTimer = setTimeout(function () {
@@ -12100,6 +12120,7 @@ function _beginTest1CodaChromeRise() {
       cRise.removeAttribute('data-test1-pill-content-ready');
       cRise.removeAttribute('data-test1-pill-text-a-run');
       cRise.removeAttribute('data-test1-pill-grad-run');
+      _syncTest1BottomPillFillGL(false);
       cRise.removeAttribute('data-test1-coda-animate');
       cRise.removeAttribute('data-test1-pill-rise-run');
       if (!cRise.getAttribute('data-test1-coda-inner-rise')) {
@@ -12123,6 +12144,7 @@ function _runTest1CodaIntro() {
     c.removeAttribute('data-test1-pill-content-ready');
     c.removeAttribute('data-test1-pill-text-a-run');
     c.removeAttribute('data-test1-pill-grad-run');
+    _syncTest1BottomPillFillGL(false);
     c.removeAttribute('data-test1-lock-stack-out');
     c.removeAttribute('data-test1-pill-rise-run');
     var pillWrap = document.getElementById('test1-bottom-pill');
@@ -12151,6 +12173,7 @@ function _runTest1CodaIntro() {
           }
           if (!c2.getAttribute('data-test1-pill-grad-run')) {
             c2.setAttribute('data-test1-pill-grad-run', '1');
+            _syncTest1BottomPillFillGL(true);
           }
           if (!c2.getAttribute('data-test1-pill-content-ready')) {
             c2.setAttribute('data-test1-pill-content-ready', '1');
@@ -12511,6 +12534,7 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
         canvas.removeAttribute('data-test1-pill-content-ready');
         canvas.removeAttribute('data-test1-pill-text-a-run');
         canvas.removeAttribute('data-test1-pill-grad-run');
+        _syncTest1BottomPillFillGL(false);
         canvas.removeAttribute('data-test1-lock-stack-out');
         canvas.removeAttribute('data-test1-pill-rise-run');
         canvas.removeAttribute('data-test1-home-animate');
@@ -12604,6 +12628,7 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
           canvas.removeAttribute('data-test1-pill-content-ready');
           canvas.removeAttribute('data-test1-pill-text-a-run');
           canvas.removeAttribute('data-test1-pill-grad-run');
+          _syncTest1BottomPillFillGL(false);
           canvas.removeAttribute('data-test1-lock-stack-out');
           canvas.removeAttribute('data-test1-pill-rise-run');
           canvas.removeAttribute('data-test1-pill-text-b');
@@ -12754,6 +12779,7 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
     canvas.removeAttribute('data-test1-pill-content-ready');
     canvas.removeAttribute('data-test1-pill-text-a-run');
     canvas.removeAttribute('data-test1-pill-grad-run');
+    _syncTest1BottomPillFillGL(false);
     canvas.removeAttribute('data-test1-lock-stack-out');
     canvas.removeAttribute('data-test1-pill-rise-run');
     canvas.removeAttribute('data-test1-home-run');
