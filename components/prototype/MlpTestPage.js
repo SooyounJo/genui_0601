@@ -143,6 +143,7 @@ function TestScripts({ testId }) {
       <Script src="/app/design-doc.js?v=2" strategy="beforeInteractive" />
       <Script src="/app/interaction-state.js?v=2" strategy="beforeInteractive" />
       <Script src="/app/dot-pair-rain.js?v=1" strategy="beforeInteractive" />
+      <Script src="/app/surface-layout.js?v=mlp-test1-lock-shortcut-57-1" strategy="beforeInteractive" />
       <Script src="/app/surface-layout.js?v=mlp-test2-shrink-flow-1" strategy="beforeInteractive" />
       <Script src="/app/settings.js?v=2" strategy="beforeInteractive" />
       <Script src="/app/canvas.js?v=2" strategy="beforeInteractive" />
