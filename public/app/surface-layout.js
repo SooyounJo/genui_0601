@@ -2416,6 +2416,7 @@ function resetTest2P2LayoutForNewUtterance(canvas) {
   var footer = shell && shell.querySelector('.p2-agent-footer');
   var agentInput = footer && footer.querySelector('.p2-agent-input');
   var star = document.getElementById('p2-star');
+  var stillLoading = !!(result && result.classList.contains('is-loading'));
 
   clearTest2ContactExitFade();
 
@@ -2456,10 +2457,11 @@ function resetTest2P2LayoutForNewUtterance(canvas) {
       'p2-contact-unified-reveal-active',
       'p2-contact-footer-settling',
       'p2-shell-js-height',
-      'p2-agent-shell--flow-handoff',
-      'p2-loading-chrome-exiting',
-      'p2-loading-footer-handoff'
+      'p2-agent-shell--flow-handoff'
     );
+    if (!stillLoading) {
+      shell.classList.remove('p2-loading-chrome-exiting', 'p2-loading-footer-handoff');
+    }
     TEST2_SLOT_PHASE_MIRROR.forEach(function (cls) {
       shell.classList.remove(cls);
     });
@@ -2483,22 +2485,21 @@ function resetTest2P2LayoutForNewUtterance(canvas) {
   }
 
   if (result) {
-    var stillLoading = result.classList.contains('is-loading');
-    if (stillLoading) {
-      result.classList.add('p2-crossfade-out');
-    }
     result.classList.remove(
       'has-swap',
       'p2-result-expanded',
       'p2-default-hiding',
-      'p2-loading-ui-exiting',
-      'p2-loading-text-reveal'
+      'p2-loading-ui-exiting'
     );
     if (!stillLoading) {
-      result.classList.remove('p2-crossfade-out');
+      result.classList.remove(
+        'p2-crossfade-out',
+        'p2-crossfade-out--mount',
+        'p2-loading-text-reveal'
+      );
+      resetTest2LoadingChromeState(result);
     }
     result.style.removeProperty('--p2-reveal-h');
-    resetTest2LoadingChromeState(result);
   }
 
   if (footer) {
@@ -11857,7 +11858,11 @@ function resetTest2LoadingChromeState(result) {
   delete result.dataset.test2LoadingUiRevealed;
   result.classList.remove('p2-loading-ui-exiting');
   if (!result.classList.contains('is-loading')) {
-    result.classList.remove('p2-loading-text-reveal');
+    result.classList.remove(
+      'p2-loading-text-reveal',
+      'p2-crossfade-out',
+      'p2-crossfade-out--mount'
+    );
   }
   var shell = document.getElementById('p2-area');
   if (shell) {

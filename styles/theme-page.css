@@ -436,6 +436,10 @@
   #canvas[data-test-scope="test2"].p2-generating #p2-area.p2-agent-shell {
     overflow: visible !important;
   }
+  #canvas[data-test-scope="test2"].p2-generating #p2-area.p2-agent-shell:is(.p2-loading-chrome-exiting, .p2-loading-footer-handoff):has(#p2-result.is-loading):not(.p2-contact-layout-active),
+  #canvas[data-test-scope="test2"].p2-listening #p2-area.p2-agent-shell:is(.p2-loading-chrome-exiting, .p2-loading-footer-handoff):has(#p2-result.is-loading):not(.p2-contact-layout-active) {
+    overflow: hidden !important;
+  }
 
   /* Persona2: loading crossfade overlay on the right card */
   #canvas[data-test-scope="test2"] #p2-result {
@@ -472,11 +476,15 @@
   #canvas[data-test-scope="test2"] #p2-result.p2-crossfade-out .p2-result-loading {
     opacity: 0 !important;
     pointer-events: none !important;
-    transition: opacity 0.42s cubic-bezier(0.22, 0.82, 0.24, 1) !important;
+    transition: opacity var(--p2-test2-loading-crossfade-dur, 820ms) var(--p2-test2-flow-ease, cubic-bezier(0.22, 0.82, 0.24, 1)) !important;
   }
   #canvas[data-test-scope="test2"] #p2-result.p2-crossfade-out .p2-result-loading__content {
     opacity: 0 !important;
-    transition: opacity 0.42s cubic-bezier(0.22, 0.82, 0.24, 1) !important;
+    transition: opacity var(--p2-test2-loading-crossfade-dur, 820ms) var(--p2-test2-flow-ease, cubic-bezier(0.22, 0.82, 0.24, 1)) !important;
+  }
+  #canvas[data-test-scope="test2"] #p2-result.p2-crossfade-out--mount.p2-crossfade-out .p2-result-loading,
+  #canvas[data-test-scope="test2"] #p2-result.p2-crossfade-out--mount.p2-crossfade-out .p2-result-loading__content {
+    transition-delay: var(--p2-test2-loading-crossfade-mount-hold, 360ms) !important;
   }
   #canvas[data-test-scope="test2"] .p2-agent-shell.p2-contact-shell-expanding:not(.p2-contact-reveal-active):not(:has(#p2-slot.p2-contact-reveal-active)) .p2-agent-footer {
     opacity: 1 !important;
@@ -562,6 +570,8 @@
     --p2-test2-contact-chrome-ease: cubic-bezier(0.22, 0.82, 0.24, 1);
     --p2-test2-footer-settle-dur: 0.58s;
     --p2-test2-flow-ease: cubic-bezier(0.22, 0.82, 0.24, 1);
+    --p2-test2-loading-crossfade-dur: 820ms;
+    --p2-test2-loading-crossfade-mount-hold: 360ms;
     --p2-test2-content-dur: 1.32s;
     --p2-test2-edge-dur: 4.6s;
     --p2-test2-reveal-dur: 0.92s;
@@ -848,6 +858,8 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    min-height: 56px;
+    flex-shrink: 0;
     min-width: 0;
     overflow: visible;
     opacity: 0;
@@ -2713,11 +2725,11 @@
     position: relative;
   }
   /* 로딩: main+result가 셸 전체를 덮고, 푸터는 로딩 오버레이 안 __footer만 사용 */
-  #canvas[data-test-scope="test2"] .p2-agent-shell:has(#p2-result.is-loading):not(.p2-loading-chrome-exiting):not(.p2-contact-shell-expanding):not(.p2-contact-layout-active) {
+  #canvas[data-test-scope="test2"] .p2-agent-shell:has(#p2-result.is-loading):not(.p2-loading-chrome-exiting):not(.p2-loading-footer-handoff):not(.p2-contact-shell-expanding):not(.p2-contact-layout-active) {
     gap: 0;
     overflow: hidden;
   }
-  #canvas[data-test-scope="test2"] .p2-agent-shell:has(#p2-result.is-loading):not(.p2-loading-chrome-exiting):not(.p2-contact-shell-expanding) .p2-agent-main {
+  #canvas[data-test-scope="test2"] .p2-agent-shell:has(#p2-result.is-loading):not(.p2-loading-chrome-exiting):not(.p2-loading-footer-handoff):not(.p2-contact-shell-expanding) .p2-agent-main {
     position: absolute;
     inset: 0;
     flex: none;
@@ -2725,6 +2737,31 @@
     height: 100%;
     min-height: 100%;
     z-index: 8;
+  }
+  /* 로딩→최종 직전: shell footer handoff — main은 flex 영역만, 푸터 56px 고정 (absolute inset 금지) */
+  #canvas[data-test-scope="test2"] .p2-agent-shell:is(.p2-loading-chrome-exiting, .p2-loading-footer-handoff):has(#p2-result.is-loading):not(.p2-contact-layout-active):not(.p2-contact-shell-expanding) {
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+  #canvas[data-test-scope="test2"] .p2-agent-shell:is(.p2-loading-chrome-exiting, .p2-loading-footer-handoff):has(#p2-result.is-loading):not(.p2-contact-layout-active):not(.p2-contact-shell-expanding) .p2-agent-main {
+    position: relative !important;
+    inset: auto !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    z-index: 1 !important;
+  }
+  #canvas[data-test-scope="test2"] .p2-agent-shell:is(.p2-loading-chrome-exiting, .p2-loading-footer-handoff):has(#p2-result.is-loading):not(.p2-contact-layout-active):not(.p2-contact-shell-expanding) #p2-result.is-loading {
+    position: absolute !important;
+    inset: 0 !important;
+    height: 100% !important;
+    z-index: 2 !important;
   }
   #canvas[data-test-scope="test2"] #p2-result.is-loading {
     position: absolute;
@@ -2861,6 +2898,33 @@
     flex: 0 0 56px !important;
     width: 56px !important;
     height: 56px !important;
+    min-width: 56px !important;
+    min-height: 56px !important;
+    max-width: 56px !important;
+    max-height: 56px !important;
+    align-self: center !important;
+    margin: 0 !important;
+  }
+  #canvas[data-test-scope="test2"] #p2-result.is-loading.p2-loading-text-reveal:not(.has-swap) .p2-result-loading__footer {
+    min-height: 56px !important;
+    align-items: center !important;
+    flex-shrink: 0 !important;
+    overflow: hidden !important;
+  }
+  #canvas[data-test-scope="test2"] #p2-result.is-loading.p2-loading-text-reveal:not(.has-swap) .p2-result-loading__input {
+    height: 44px !important;
+    min-height: 44px !important;
+    max-height: 44px !important;
+    align-self: center !important;
+  }
+  #canvas[data-test-scope="test2"] #p2-result.is-loading.p2-loading-text-reveal:not(.has-swap) .p2-result-loading__icon {
+    flex: 0 0 56px !important;
+    width: 56px !important;
+    height: 56px !important;
+    min-width: 56px !important;
+    min-height: 56px !important;
+    max-width: 56px !important;
+    max-height: 56px !important;
     align-self: center !important;
   }
   #canvas[data-test-scope="test2"] .p2-agent-shell.p2-final-loading-compact:has(#p2-result.is-loading) #p2-result.p2-loading-text-reveal .p2-result-loading__head,
@@ -2936,9 +3000,38 @@
     opacity: 1 !important;
     visibility: visible !important;
     pointer-events: none;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
     height: 56px !important;
+    min-height: 56px !important;
+    max-height: 56px !important;
     padding: 0 8px 0 8px !important;
-    overflow: visible;
+    overflow: hidden !important;
+    z-index: 3 !important;
+  }
+  #canvas[data-test-scope="test2"] .p2-agent-shell:is(.p2-loading-chrome-exiting, .p2-loading-footer-handoff):has(#p2-result.is-loading):not(.p2-contact-layout-active) .p2-agent-footer .p2-agent-input {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    max-height: 44px !important;
+    align-self: center !important;
+  }
+  #canvas[data-test-scope="test2"] .p2-agent-shell:is(.p2-loading-chrome-exiting, .p2-loading-footer-handoff):has(#p2-result.is-loading):not(.p2-contact-layout-active) .p2-agent-footer #p2-star {
+    flex: 0 0 56px !important;
+    width: 56px !important;
+    height: 56px !important;
+    min-width: 56px !important;
+    min-height: 56px !important;
+    max-width: 56px !important;
+    max-height: 56px !important;
+    align-self: center !important;
+    margin: 0 !important;
   }
   #canvas[data-test-scope="test2"] .p2-agent-shell:has(#p2-result.is-loading):not(.p2-contact-layout-active) .p2-agent-footer .p2-agent-input,
   #canvas[data-test-scope="test2"].p2-generating:not(:has(.p2-contact-layout-active)) .p2-agent-footer .p2-agent-input,
