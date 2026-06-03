@@ -2338,6 +2338,118 @@ function _isTest2Scope() {
   return !!(window.__mlpTestConfig && window.__mlpTestConfig.id === 'test2');
 }
 
+var _test2RunId = 0;
+var _p2LayoutPatchToken = 0;
+var _p2LayoutPatchScheduled = false;
+
+function _bumpTest2RunId() {
+  _test2RunId += 1;
+  window.__test2RunId = _test2RunId;
+  return _test2RunId;
+}
+
+function _isTest2RunCurrent(runId) {
+  return runId === _test2RunId;
+}
+
+/** Stop observers/RAF/WebGL before canvas rebuild or bfcache restore (prevents refresh hang). */
+function resetTest2P2Runtime(canvas) {
+  canvas = canvas || document.getElementById('canvas');
+  _bumpTest2RunId();
+  if (_test2ContactSyncRaf) {
+    cancelAnimationFrame(_test2ContactSyncRaf);
+    _test2ContactSyncRaf = 0;
+  }
+  _test2ContactSyncRunning = false;
+  _p2LayoutPatchScheduled = false;
+  _test2LoadingSyncLock = false;
+  if (typeof window._teardownTest2P2TransitionBridge === 'function') {
+    window._teardownTest2P2TransitionBridge(canvas);
+  }
+  if (typeof window.__teardownP2FillGlObserver === 'function') {
+    window.__teardownP2FillGlObserver();
+  }
+  if (window.P2AgentFillGL && typeof window.P2AgentFillGL.destroy === 'function') {
+    window.P2AgentFillGL.destroy();
+  }
+  if (window.P2GalaxyStar && typeof window.P2GalaxyStar.unmount === 'function') {
+    window.P2GalaxyStar.unmount();
+  }
+  if (typeof window.__stopP2ChordAnimation === 'function') {
+    window.__stopP2ChordAnimation();
+  }
+  if (canvas) {
+    canvas.classList.remove('p2-listening', 'p2-generating');
+  }
+  var shell = document.getElementById('p2-area');
+  if (shell) {
+    shell.classList.remove(
+      'p2-contact-shell-expanding',
+      'p2-contact-layout-active',
+      'p2-contact-expand-settled',
+      'p2-contact-reveal-flow',
+      'p2-contact-unified-reveal',
+      'p2-contact-unified-reveal-active',
+      'p2-shell-js-height',
+      'p2-agent-shell--flow-handoff',
+      'p2-loading-chrome-exiting',
+      'p2-loading-footer-handoff'
+    );
+    TEST2_SLOT_PHASE_MIRROR.forEach(function (cls) {
+      shell.classList.remove(cls);
+    });
+  }
+}
+window.resetTest2P2Runtime = resetTest2P2Runtime;
+
+var TEST2_SLOT_PHASE_MIRROR = [
+  'p2-reveal-waiting',
+  'p2-reveal-swap',
+  'p2-seq-color',
+  'p2-seq-color-active',
+  'p2-seq-title',
+  'p2-seq-done',
+  'p2-contact-reveal-active'
+];
+
+function mirrorTest2SlotPhaseToShell(slot) {
+  var shell = document.getElementById('p2-area');
+  if (!shell || !slot) return;
+  TEST2_SLOT_PHASE_MIRROR.forEach(function (cls) {
+    shell.classList.toggle(cls, slot.classList.contains(cls));
+  });
+}
+
+function prepareTest2ContactListShellExpand(slot) {
+  if (!_isTest2Scope() || !slot) return;
+  var shell = document.getElementById('p2-area');
+  if (!shell) return;
+  shell.classList.add('p2-contact-shell-expanding', 'p2-shell-js-height');
+  applyTest2ContactListShellHeight(slot);
+  mirrorTest2SlotPhaseToShell(slot);
+}
+
+function beginTest2ContactListReveal(slot) {
+  if (!_isTest2Scope() || !slot) return;
+  if (!slot.querySelector('.p2-contact-list')) return;
+  window.__test2FillGlBindSuspended = true;
+  if (window.P2AgentFillGL && typeof window.P2AgentFillGL.setPhase === 'function') {
+    window.P2AgentFillGL.setPhase('idle');
+  }
+  prepareTest2ContactListShellExpand(slot);
+  staggerTest2ContactListRows(slot);
+  var runId = _test2RunId;
+  window.setTimeout(function () {
+    if (!_isTest2RunCurrent(runId)) return;
+    try {
+      document.dispatchEvent(new CustomEvent('p2-test2-fill-fadeout'));
+    } catch (_) { /* noop */ }
+  }, TEST2_CONTACT_FILL_FADEOUT_MS);
+}
+window.prepareTest2ContactListShellExpand = prepareTest2ContactListShellExpand;
+window.beginTest2ContactListReveal = beginTest2ContactListReveal;
+window.mirrorTest2SlotPhaseToShell = mirrorTest2SlotPhaseToShell;
+
 var TEST2_AGENT_INPUT_FILL_HTML =
   '<div class="p2-agent-fill" aria-hidden="true">' +
     '<canvas class="p2-agent-fill__gl"></canvas>' +
@@ -2397,6 +2509,11 @@ function _renderTest2ContactIcon(appName) {
 
 var TEST2_CONTACT_FOOTER_H = 56;
 var TEST2_CONTACT_CHROME_PAD_BOTTOM = 10;
+var TEST2_CONTACT_FOOTER_SETTLE_MS = 580;
+var TEST2_CONTACT_REVEAL_BASE_MS = 360;
+var TEST2_CONTACT_REVEAL_STEP_MS = 230;
+var TEST2_CONTACT_REVEAL_TAIL_MS = 1020;
+var TEST2_CONTACT_FILL_FADEOUT_MS = 960;
 
 function _computeP2ContactListHeight(itemCount) {
   var count = Math.max(1, Math.min(itemCount || 3, 3));
@@ -10650,6 +10767,9 @@ window.renderSurfacePlan = function renderSurfacePlan(canvas, plan, layout) {
   }
 
   // FULL render — wipe + rebuild.
+  if (testScope === 'test2' && typeof window._teardownTest2P2TransitionBridge === 'function') {
+    window._teardownTest2P2TransitionBridge(canvas);
+  }
   canvas.innerHTML = '';
   canvas.dataset.rulesMode = '1';
   canvas.style.position = 'relative';
@@ -10771,6 +10891,7 @@ function applyTest2ContactListShellHeight(slot) {
   var stage = slot.querySelector('.p2-reveal-stage');
 
   if (area) {
+    area.classList.add('p2-shell-js-height');
     area.style.height = shellHpx;
     area.style.minHeight = shellHpx;
     area.style.setProperty('--p2-shell-h', shellHpx);
@@ -10793,22 +10914,66 @@ function applyTest2ContactListShellHeight(slot) {
   slot.dataset.p2LayoutReady = count + ':' + contentH;
 }
 
+function _shouldAnimateTest2ContactFooterSettle() {
+  return false;
+}
+
+function _runTest2ContactFooterSettle(shell, footer, beforeTop) {
+  if (!shell || !footer) return;
+  shell.classList.remove('p2-contact-footer-settling');
+  footer.style.removeProperty('transform');
+  var afterTop = footer.getBoundingClientRect().top;
+  var offsetY = Math.round(beforeTop - afterTop);
+  if (Math.abs(offsetY) < 3) return;
+  shell.classList.add('p2-contact-footer-settling');
+  footer.style.transform = 'translate3d(0,' + offsetY + 'px,0)';
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      footer.style.transform = 'translate3d(0,0,0)';
+      window.setTimeout(function () {
+        shell.classList.remove('p2-contact-footer-settling');
+        footer.style.removeProperty('transform');
+      }, TEST2_CONTACT_FOOTER_SETTLE_MS);
+    });
+  });
+}
+
 function activateTest2ContactListLayout(slot) {
   if (!_isTest2Scope() || !slot) return false;
   var list = slot.querySelector('.p2-contact-list');
   if (!list) return false;
 
   var shell = document.getElementById('p2-area');
+  if (shell && shell.classList.contains('p2-contact-layout-active')) {
+    applyTest2ContactListShellHeight(slot);
+    mirrorTest2SlotPhaseToShell(slot);
+    return true;
+  }
+
   var main = document.getElementById('p2-default-widgets');
   var footer = shell && shell.querySelector('.p2-agent-footer');
   var count = parseInt(list.getAttribute('data-item-count') || '3', 10) || 3;
   var shellHpx = _test2ContactShellHeight(_computeP2ContactListHeight(count)) + 'px';
   var widgets = document.querySelector('.p2-widgets--compact');
   var widgetsWrap = document.querySelector('[data-role="persona2-widgets"]');
+  var animateFooter = _shouldAnimateTest2ContactFooterSettle(slot, shell);
+  var footerTopBefore = animateFooter && footer ? footer.getBoundingClientRect().top : 0;
 
   if (shell) {
     shell.classList.remove('p2-loading-chrome-exiting', 'p2-loading-footer-handoff');
-    shell.classList.add('p2-contact-layout-active');
+    if (
+      !slot.classList.contains('p2-contact-reveal-active') &&
+      !shell.classList.contains('p2-contact-unified-reveal')
+    ) {
+      shell.classList.remove(
+        'p2-contact-shell-expanding',
+        'p2-contact-reveal-flow',
+        'p2-contact-unified-reveal',
+        'p2-contact-unified-reveal-active'
+      );
+      shell.classList.add('p2-contact-expand-settled');
+    }
+    shell.classList.add('p2-contact-layout-active', 'p2-shell-js-height');
     shell.style.height = shellHpx;
     shell.style.minHeight = shellHpx;
     shell.style.setProperty('--p2-shell-h', shellHpx);
@@ -10821,8 +10986,9 @@ function activateTest2ContactListLayout(slot) {
     main.style.pointerEvents = 'none';
   }
   if (footer) {
-    footer.style.position = 'relative';
-    footer.style.opacity = '1';
+    footer.style.removeProperty('position');
+    footer.style.removeProperty('opacity');
+    footer.style.removeProperty('transform');
     footer.style.height = '56px';
     footer.style.pointerEvents = 'auto';
     footer.classList.add('p2-agent-footer--settled');
@@ -10842,7 +11008,12 @@ function activateTest2ContactListLayout(slot) {
   });
 
   _unlockTest2ContactListNodes(slot);
+  mirrorTest2SlotPhaseToShell(slot);
   syncTest2VoiceStarState(document.getElementById('canvas'));
+
+  if (animateFooter && footer && shell) {
+    _runTest2ContactFooterSettle(shell, footer, footerTopBefore);
+  }
   return true;
 }
 
@@ -10859,6 +11030,10 @@ function patchTest2ContactListLayout(slot, opts) {
   opts = opts || {};
   if (!slot) return;
   if (slot.dataset.test2ContactRevealLock === '1' && !opts.force) return;
+  if (!opts.force && slot.classList.contains('p2-contact-reveal-active') &&
+      !slot.classList.contains('p2-seq-done')) {
+    return;
+  }
   var list = slot.querySelector('.p2-contact-list');
   if (!list) {
     slot.dataset.p2LayoutReady = '';
@@ -10867,7 +11042,12 @@ function patchTest2ContactListLayout(slot, opts) {
     return;
   }
 
-  if (_isTest2ContactLayoutReady(slot)) {
+  var shell = document.getElementById('p2-area');
+  if (
+    _isTest2ContactLayoutReady(slot) &&
+    slot.dataset.test2ContactRevealLock !== '1' &&
+    !(shell && shell.classList.contains('p2-contact-layout-active'))
+  ) {
     activateTest2ContactListLayout(slot);
   }
 
@@ -10922,14 +11102,6 @@ function patchTest2ContactListLayout(slot, opts) {
   }
 
   applyLayout(estimate);
-  requestAnimationFrame(function () {
-    if (patchToken !== _p2LayoutPatchToken) return;
-    requestAnimationFrame(function () {
-      if (patchToken !== _p2LayoutPatchToken) return;
-      var measured = Math.ceil(list.scrollHeight || list.offsetHeight || 0);
-      applyLayout(Math.max(measured, estimate));
-    });
-  });
 }
 
 function schedulePatchTest2ContactListLayout(slot) {
@@ -10995,6 +11167,8 @@ function _syncTest2LoadingFillGl() {
 
 var TEST2_LOADING_UI_REVEAL_MS = 480;
 var _test2LoadingSyncLock = false;
+var _test2ContactSyncRaf = 0;
+var _test2ContactSyncRunning = false;
 
 function revealTest2LoadingText(result) {
   if (!result || !_isTest2Scope()) return;
@@ -11019,7 +11193,12 @@ function scheduleTest2LoadingUiReveal(result) {
   if (result.dataset.test2LoadingUiRevealed === '1') return;
   if (result.dataset.test2LoadingUiScheduled === '1') return;
   result.dataset.test2LoadingUiScheduled = '1';
+  var runId = _test2RunId;
   window.setTimeout(function () {
+    if (!_isTest2RunCurrent(runId)) {
+      delete result.dataset.test2LoadingUiScheduled;
+      return;
+    }
     delete result.dataset.test2LoadingUiScheduled;
     revealTest2LoadingText(result);
   }, TEST2_LOADING_UI_REVEAL_MS);
@@ -11117,31 +11296,40 @@ function beginTest2LoadingChromeExit(result) {
 
 function prepareTest2ContactListSequence(slot) {
   if (!_isTest2Scope() || !slot) return false;
-  var list = slot.querySelector('.p2-contact-list');
-  if (!list) return false;
-
-  var header = list.querySelector('.p2-contact-list__header');
-  var rows = list.querySelectorAll('.p2-contact-list__item');
-
-  if (header) {
-    header.classList.add('p2-seq-text-hidden');
-    header.classList.remove('p2-seq-text-visible');
-  }
-  rows.forEach(function (row) {
-    row.classList.add('p2-seq-text-hidden');
-    row.classList.remove('p2-seq-text-visible');
-  });
-  return true;
+  return !!slot.querySelector('.p2-contact-list');
 }
 
-function revealTest2ContactSequenceItem(el, delayMs) {
-  if (!el) return;
-  setTimeout(function () {
-    requestAnimationFrame(function () {
-      el.classList.remove('p2-seq-text-hidden');
-      el.classList.add('p2-seq-text-visible');
-    });
-  }, delayMs);
+function _clearTest2ContactRevealSeqClasses(slot) {
+  if (!slot) return;
+  slot.querySelectorAll('.p2-seq-text-hidden, .p2-seq-text-visible').forEach(function (el) {
+    el.classList.remove('p2-seq-text-hidden', 'p2-seq-text-visible');
+    el.style.removeProperty('opacity');
+    el.style.removeProperty('transform');
+    el.style.removeProperty('filter');
+  });
+}
+
+function finishTest2ContactRevealFlow(slot) {
+  if (!_isTest2Scope()) return;
+  var shell = document.getElementById('p2-area');
+  if (shell) {
+    shell.classList.remove(
+      'p2-contact-shell-expanding',
+      'p2-contact-reveal-flow',
+      'p2-contact-unified-reveal',
+      'p2-contact-unified-reveal-active'
+    );
+    shell.classList.add('p2-contact-expand-settled');
+    var footer = shell.querySelector('.p2-agent-footer');
+    if (footer) {
+      footer.style.removeProperty('opacity');
+      footer.style.removeProperty('transform');
+      footer.style.removeProperty('filter');
+      footer.style.removeProperty('pointer-events');
+    }
+  }
+  _clearTest2ContactRevealSeqClasses(slot);
+  if (slot) patchTest2ContactListLayout(slot, { force: true });
 }
 
 function staggerTest2ContactListRows(slot) {
@@ -11153,34 +11341,54 @@ function staggerTest2ContactListRows(slot) {
 
   slot.dataset.test2ContactStagger = '1';
   slot.dataset.test2ContactRevealLock = '1';
-  slot.classList.add('p2-contact-reveal-active');
   installTest2FillFadeOutBridge(slot);
+  _clearTest2ContactRevealSeqClasses(slot);
+
+  var shell = document.getElementById('p2-area');
+  var runId = _test2RunId;
+  var finishMs =
+    TEST2_CONTACT_REVEAL_BASE_MS +
+    TEST2_CONTACT_REVEAL_STEP_MS * 4 +
+    TEST2_CONTACT_REVEAL_TAIL_MS;
+
+  if (shell) {
+    shell.classList.add(
+      'p2-contact-reveal-flow',
+      'p2-contact-unified-reveal',
+      'p2-contact-shell-expanding'
+    );
+    shell.classList.remove('p2-contact-unified-reveal-active');
+  }
+
   applyTest2ContactListShellHeight(slot);
   activateTest2ContactListLayout(slot);
+  slot.classList.add('p2-contact-reveal-active');
+  mirrorTest2SlotPhaseToShell(slot);
 
-  var header = list.querySelector('.p2-contact-list__header');
-  var rows = list.querySelectorAll('.p2-contact-list__item');
-  var baseDelay = 100;
-  var stepDelay = 155;
-  var seqIndex = 0;
-
-  revealTest2ContactSequenceItem(header, baseDelay + seqIndex++ * stepDelay);
-  rows.forEach(function (row) {
-    revealTest2ContactSequenceItem(row, baseDelay + seqIndex++ * stepDelay);
+  if (shell) void shell.offsetHeight;
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      if (!_isTest2RunCurrent(runId)) return;
+      if (shell) shell.classList.add('p2-contact-unified-reveal-active');
+    });
   });
 
   setTimeout(function () {
+    if (!_isTest2RunCurrent(runId)) return;
     slot.dataset.test2ContactRevealLock = '';
-    patchTest2ContactListLayout(slot, { force: true });
-  }, baseDelay + seqIndex * stepDelay + 560);
+    finishTest2ContactRevealFlow(slot);
+  }, finishMs);
 }
 
 function installTest2FillFadeOutBridge(slot) {
   if (!slot || slot.dataset.test2FillFadeBound === '1') return;
   slot.dataset.test2FillFadeBound = '1';
+  var runId = _test2RunId;
   document.addEventListener('p2-test2-fill-fadeout', function onFadeOut() {
     document.removeEventListener('p2-test2-fill-fadeout', onFadeOut);
+    if (!_isTest2RunCurrent(runId)) return;
     slot.classList.add('p2-seq-done');
+    mirrorTest2SlotPhaseToShell(slot);
     slot.style.pointerEvents = 'auto';
     var result = document.getElementById('p2-result');
     var defaults = document.getElementById('p2-default-widgets');
@@ -11303,70 +11511,29 @@ function installTest2GalaxyStar(canvas) {
   document.head.appendChild(script);
 }
 
+function _teardownTest2P2TransitionBridge(canvas) {
+  if (!canvas || typeof canvas.__test2P2BridgeTeardown !== 'function') return;
+  try {
+    canvas.__test2P2BridgeTeardown();
+  } catch (_) {}
+  canvas.__test2P2BridgeTeardown = null;
+  delete canvas.dataset.test2P2Bridge;
+}
+
 function installTest2P2TransitionBridge(canvas) {
-  if (!canvas || canvas.dataset.test2P2Bridge === '1') return;
+  if (!canvas) return;
   if (!(window.__mlpTestConfig && window.__mlpTestConfig.id === 'test2')) return;
+  _teardownTest2P2TransitionBridge(canvas);
   canvas.dataset.test2P2Bridge = '1';
-
-  function softenSlotInlineStyles(slot) {
-    if (!slot) return;
-    var inReveal =
-      slot.classList.contains('p2-reveal-waiting') ||
-      slot.classList.contains('p2-reveal-swap') ||
-      slot.classList.contains('p2-seq-done');
-    if (!inReveal) return;
-    slot.style.removeProperty('opacity');
-    slot.style.removeProperty('transition');
-  }
-
-  function syncContactListLayout(slot, opts) {
-    opts = opts || {};
-    if (!slot || !slot.querySelector('.p2-contact-list')) return;
-    softenSlotInlineStyles(slot);
-
-    if (opts.mount) {
-      slot.dataset.p2LayoutReady = '';
-      delete slot.dataset.test2ContactStagger;
-      delete slot.dataset.test2ContactRevealLock;
-      prepareTest2ContactListSequence(slot);
-    }
-
-    if (slot.classList.contains('p2-seq-color-active')) {
-      staggerTest2ContactListRows(slot);
-    } else if (slot.classList.contains('p2-seq-done')) {
-      activateTest2ContactListLayout(slot);
-      if (!slot.dataset.p2LayoutReady) {
-        schedulePatchTest2ContactListLayout(slot);
-      }
-    }
-  }
-
-  function bindSlot(slot) {
-    if (!slot || slot.dataset.test2P2Bound === '1') return;
-    slot.dataset.test2P2Bound = '1';
-    new MutationObserver(function (mutations) {
-      var shouldSync = false;
-      var isMount = false;
-      for (var i = 0; i < mutations.length; i++) {
-        var m = mutations[i];
-        if (m.type === 'childList') {
-          shouldSync = true;
-          isMount = true;
-          break;
-        }
-        if (m.type === 'attributes' && m.attributeName === 'class' && m.target === slot) {
-          shouldSync = true;
-          syncTest2VoiceStarState(document.getElementById('canvas'));
-        }
-      }
-      if (shouldSync) syncContactListLayout(slot, { mount: isMount });
-    }).observe(slot, { attributes: true, attributeFilter: ['class'], childList: true, subtree: true });
-  }
+  var bridgeObservers = [];
 
   function bindResult(result) {
     if (!result || result.dataset.test2P2ResultBound === '1') return;
     result.dataset.test2P2ResultBound = '1';
-    new MutationObserver(function (mutations) {
+    try {
+      canvasBindObserver.disconnect();
+    } catch (_) {}
+    var resultObserver = new MutationObserver(function (mutations) {
       var loadingToggled = false;
       for (var i = 0; i < mutations.length; i++) {
         var m = mutations[i];
@@ -11376,13 +11543,16 @@ function installTest2P2TransitionBridge(canvas) {
         var hasLoading = result.classList.contains('is-loading');
         if (hadLoading !== hasLoading) loadingToggled = true;
       }
-      syncTest2VoiceStarState(document.getElementById('canvas'));
-      if (!result.classList.contains('is-loading')) {
-        resetTest2LoadingChromeState(result);
-        return;
+      if (loadingToggled) {
+        syncTest2VoiceStarState(canvas);
+        if (!result.classList.contains('is-loading')) {
+          resetTest2LoadingChromeState(result);
+          return;
+        }
+        syncTest2LoadingPresentation(result);
       }
-      if (loadingToggled) syncTest2LoadingPresentation(result);
-    }).observe(result, {
+    });
+    resultObserver.observe(result, {
       attributes: true,
       attributeFilter: ['class'],
       attributeOldValue: true
@@ -11390,19 +11560,57 @@ function installTest2P2TransitionBridge(canvas) {
     if (result.classList.contains('is-loading')) {
       syncTest2LoadingPresentation(result);
     }
+    bridgeObservers.push(resultObserver);
   }
 
-  bindSlot(document.getElementById('p2-slot'));
+  var canvasBindRaf = 0;
+  var canvasVoiceRaf = 0;
+
   bindResult(document.getElementById('p2-result'));
   syncTest2VoiceStarState(canvas);
-  new MutationObserver(function () {
-    bindSlot(document.getElementById('p2-slot'));
-    bindResult(document.getElementById('p2-result'));
-  }).observe(canvas, { childList: true, subtree: true });
-  new MutationObserver(function () {
-    syncTest2VoiceStarState(canvas);
-  }).observe(canvas, { attributes: true, attributeFilter: ['class'] });
+  var canvasBindObserver = new MutationObserver(function () {
+    if (canvasBindRaf) return;
+    canvasBindRaf = requestAnimationFrame(function () {
+      canvasBindRaf = 0;
+      bindResult(document.getElementById('p2-result'));
+    });
+  });
+  canvasBindObserver.observe(canvas, { childList: true, subtree: true });
+  bridgeObservers.push(canvasBindObserver);
+
+  var canvasVoiceObserver = new MutationObserver(function () {
+    if (canvasVoiceRaf) return;
+    canvasVoiceRaf = requestAnimationFrame(function () {
+      canvasVoiceRaf = 0;
+      syncTest2VoiceStarState(canvas);
+    });
+  });
+  canvasVoiceObserver.observe(canvas, { attributes: true, attributeFilter: ['class'] });
+  bridgeObservers.push(canvasVoiceObserver);
+
+  canvas.__test2P2BridgeTeardown = function () {
+    if (canvasBindRaf) {
+      cancelAnimationFrame(canvasBindRaf);
+      canvasBindRaf = 0;
+    }
+    if (canvasVoiceRaf) {
+      cancelAnimationFrame(canvasVoiceRaf);
+      canvasVoiceRaf = 0;
+    }
+    bridgeObservers.forEach(function (obs) {
+      try {
+        obs.disconnect();
+      } catch (_) {}
+    });
+    bridgeObservers.length = 0;
+    var liveSlot = document.getElementById('p2-slot');
+    var liveResult = document.getElementById('p2-result');
+    if (liveSlot) delete liveSlot.dataset.test2P2Bound;
+    if (liveResult) delete liveResult.dataset.test2P2ResultBound;
+  };
 }
+
+window._teardownTest2P2TransitionBridge = _teardownTest2P2TransitionBridge;
 
 var TEST1_INTRO_DELAY_MS = 3000;
 var TEST1_LOTTE_INTRO_MS = 720;
@@ -12639,6 +12847,10 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
   if (!canvas) return;
 
   const testScope = window.__mlpTestConfig && window.__mlpTestConfig.id;
+  if (testScope === 'test2') {
+    window.__test2FillGlBindSuspended = true;
+    try { resetTest2P2Runtime(canvas); } catch (_) {}
+  }
   window.currentSurfaceType = surfaceType;
 
   // Add support for lockscreen-dot
@@ -12984,6 +13196,13 @@ window.generateSurfaceScenario = function generateSurfaceScenario(surfaceType) {
       installTest2P2TransitionBridge(canvas);
       installTest2GalaxyStar(canvas);
     } catch (_) {}
+    window.__test2FillGlBindSuspended = false;
+    requestAnimationFrame(function () {
+      if (!(window.__mlpTestConfig && window.__mlpTestConfig.id === 'test2')) return;
+      if (window.P2AgentFillGL && typeof window.P2AgentFillGL.ensureBound === 'function') {
+        window.P2AgentFillGL.ensureBound();
+      }
+    });
   }
 
 

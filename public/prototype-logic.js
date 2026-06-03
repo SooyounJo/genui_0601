@@ -560,23 +560,27 @@
 
       slot.classList.remove('p2-reveal-waiting');
       slot.classList.add('p2-reveal-swap', 'p2-seq-color', 'p2-seq-color-active');
+      if (typeof window.mirrorTest2SlotPhaseToShell === 'function') {
+        window.mirrorTest2SlotPhaseToShell(slot);
+      }
       if (result) result.classList.add('p2-crossfade-out');
+      if (isTest2 && hasContactList) {
+        var flowShellContact = document.getElementById('p2-area');
+        if (flowShellContact) flowShellContact.classList.add('p2-agent-shell--flow-handoff');
+        if (window.P2AgentFillGL) window.P2AgentFillGL.setPhase('idle');
+        void slot.offsetWidth;
+        slot.classList.add('p2-seq-title');
+        if (typeof window.beginTest2ContactListReveal === 'function') {
+          window.beginTest2ContactListReveal(slot);
+        }
+        return;
+      }
       if (isTest2 && window.P2AgentFillGL) {
         var flowShell = document.getElementById('p2-area');
         if (flowShell) flowShell.classList.add('p2-agent-shell--flow-handoff');
         window.P2AgentFillGL.setPhase('hollowReveal');
       }
       void slot.offsetWidth;
-
-      if (isTest2 && hasContactList) {
-        if (typeof window.prepareTest2ContactListShellExpand === 'function') {
-          window.prepareTest2ContactListShellExpand(slot);
-        } else if (typeof window.applyTest2ContactListShellHeight === 'function') {
-          window.applyTest2ContactListShellHeight(slot);
-        }
-        slot.classList.add('p2-seq-title');
-        return;
-      }
 
       setTimeout(function () {
         slot.classList.add('p2-seq-title');
@@ -882,15 +886,57 @@
       if (!canvas) return;
 
       function bindP2FillGl() {
-        if (window.P2AgentFillGL) window.P2AgentFillGL.ensureBound();
+        if (window.__test2FillGlBindSuspended) return;
+        if (!(window.__mlpTestConfig && window.__mlpTestConfig.id === 'test2')) return;
+        var contactSlot = document.getElementById('p2-slot');
+        if (
+          contactSlot &&
+          (contactSlot.classList.contains('p2-contact-reveal-active') ||
+            contactSlot.classList.contains('p2-seq-done'))
+        ) {
+          return;
+        }
+        if (window.P2AgentFillGL && window.P2AgentFillGL.ensureBound()) {
+          if (fillGlMo) {
+            try { fillGlMo.disconnect(); } catch (_) {}
+            fillGlMo = null;
+          }
+        }
       }
+
+      window.__stopP2ChordAnimation = function () {
+        generating = false;
+        listening = false;
+        if (chordRaf) cancelAnimationFrame(chordRaf);
+        chordRaf = null;
+        try { canvas.classList.remove('p2-listening', 'p2-generating'); } catch (_) {}
+        if (window.P2AgentFillGL && typeof window.P2AgentFillGL.setPhase === 'function') {
+          window.P2AgentFillGL.setPhase('idle');
+        }
+      };
 
       bindP2FillGl();
       if (typeof MutationObserver !== 'undefined') {
-        var mo = new MutationObserver(function () {
-          bindP2FillGl();
+        var fillGlBindRaf = 0;
+        var fillGlMo = null;
+        fillGlMo = new MutationObserver(function () {
+          if (fillGlBindRaf) return;
+          fillGlBindRaf = requestAnimationFrame(function () {
+            fillGlBindRaf = 0;
+            bindP2FillGl();
+          });
         });
-        mo.observe(canvas, { childList: true, subtree: true });
+        fillGlMo.observe(canvas, { childList: true, subtree: true });
+        window.__teardownP2FillGlObserver = function () {
+          if (fillGlMo) {
+            try { fillGlMo.disconnect(); } catch (_) {}
+            fillGlMo = null;
+          }
+          if (fillGlBindRaf) {
+            cancelAnimationFrame(fillGlBindRaf);
+            fillGlBindRaf = 0;
+          }
+        };
       } else {
         var bindAttempts = 0;
         var bindTimer = setInterval(function () {
