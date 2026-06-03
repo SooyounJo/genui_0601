@@ -9351,7 +9351,7 @@ image.png  :root {
     background: #C6C3A7 !important;
   }
   #canvas[data-test-scope="test3"] #test3-music[data-music-state="lyrics"] .dot-music3__bar .dot-music__barTrack {
-    background: #5BB8F0 !important;
+    background: #77DCF1 !important;
   }
   #canvas[data-test-scope="test3"] #test3-music[data-music-state="lyrics"] .dot-music3__bar .dot-music__barTrack::after {
     background: #4C5B17 !important;
@@ -9499,10 +9499,10 @@ image.png  :root {
   #canvas[data-test-scope="test3"] #test3-music[data-music-state="compact"] .dot-music3__bar .dot-music__barTrack,
   #canvas[data-test-scope="test3"] #test3-music[data-test3-music-settled="1"]:not([data-music-state="lyrics"]) .dot-music3__bar .dot-music__barTrack,
   #canvas[data-test-scope="test3"] #test3-music[data-test3-music-phase="playing"]:not([data-music-state="lyrics"]):not([data-test3-music-loading="1"]) .dot-music3__bar .dot-music__barTrack {
-    background: #5BB8F0 !important;
+    background: #77DCF1 !important;
   }
   #canvas[data-test-scope="test3"] #test3-music[data-music-state="lyrics"] .dot-music3__bar .dot-music__barTrack {
-    background: #5BB8F0 !important;
+    background: #77DCF1 !important;
   }
   #canvas[data-test-scope="test3"] #test3-music[data-music-state="normal"] .dot-music3__bar .dot-music__barTrack::after,
   #canvas[data-test-scope="test3"] #test3-music[data-music-state="compact"] .dot-music3__bar .dot-music__barTrack::after,
@@ -9771,7 +9771,7 @@ image.png  :root {
   #canvas[data-test-scope="test3"] #test3-music[data-music-state="compact"] .dot-music3__bar .dot-music__barTrack,
   #canvas[data-test-scope="test3"] #test3-music[data-test3-music-settled="1"]:not([data-music-state="lyrics"]) .dot-music3__bar .dot-music__barTrack,
   #canvas[data-test-scope="test3"] #test3-music[data-test3-music-phase="playing"]:not([data-music-state="lyrics"]):not([data-test3-music-loading="1"]) .dot-music3__bar .dot-music__barTrack {
-    background: #5BB8F0 !important;
+    background: #77DCF1 !important;
   }
   #canvas[data-test-scope="test3"] #test3-music[data-music-state="normal"] .dot-music3__bar .dot-music__barTrack::after,
   #canvas[data-test-scope="test3"] #test3-music[data-music-state="compact"] .dot-music3__bar .dot-music__barTrack::after,
@@ -10140,7 +10140,7 @@ image.png  :root {
     background: #C6C3A7 !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-settling="1"]:not([data-music-state="lyrics"]) .dot-music3__bar .dot-music__barTrack {
-    background: #5BB8F0 !important;
+    background: #77DCF1 !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-settling="1"]:not([data-music-state="lyrics"]) .dot-music3__bar .dot-music__barTrack::after {
     background: #4C5B17 !important;
@@ -10167,7 +10167,7 @@ image.png  :root {
     background: #C6C3A7 !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-settling="1"][data-music-state="lyrics"] .dot-music3__bar .dot-music__barTrack {
-    background: #5BB8F0 !important;
+    background: #77DCF1 !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-settling="1"][data-music-state="lyrics"] .dot-music3__bar .dot-music__barTrack::after {
     background: #4C5B17 !important;

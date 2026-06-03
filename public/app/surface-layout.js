@@ -541,9 +541,9 @@ function _toggleTest3PlaylistOpen(music) {
   }
   if (typeof _layoutTest3Cards === 'function') _layoutTest3Cards();
 }
-var TEST3_GOAL_SHELL_MS = 520;
+var TEST3_GOAL_SHELL_MS = 800;
 /* Expanded chrome (map + copy) appears once after shell height finishes — not during rise. */
-var TEST3_GOAL_CONTENT_REVEAL_MS = TEST3_GOAL_SHELL_MS;
+var TEST3_GOAL_CONTENT_REVEAL_MS = 3000;
 var TEST3_GOAL_INNER_RISE_MS = 560;
 var TEST3_GOAL_INNER_LAST_DELAY_MS = 180;
 var TEST3_GOAL_UNIFIED_RISE_MS = TEST3_GOAL_SHELL_MS + TEST3_GOAL_INNER_LAST_DELAY_MS + TEST3_GOAL_INNER_RISE_MS;
@@ -552,7 +552,7 @@ var TEST3_GOAL_EXPAND_START_MS = 120;
 var TEST3_PILL_REVEAL_LOAD_MS = 0;
 var TEST3_PILL_REVEAL_ICON_MS = 480;
 /* Circle hold before horizontal widen — icon pop (480ms) + hold = 1.2s total. */
-var TEST3_PILL_PRE_EXPAND_WAIT_MS = 1200;
+var TEST3_PILL_PRE_EXPAND_WAIT_MS = 2000;
 var TEST3_PILL_REVEAL_ICON_HOLD_MS = TEST3_PILL_PRE_EXPAND_WAIT_MS - TEST3_PILL_REVEAL_ICON_MS;
 /* Pill copy: widen → text emerge → hold → drop (shine runs in parallel, snaps on drop). */
 var TEST3_PILL_TEXT_EMERGE_MS = 720;
@@ -7821,11 +7821,11 @@ function _showTest3GoalExpandedContent(goalEl) {
     '.dot-goal__map-photo, .dot-goal__map-pin, .dot-goal__main--light .dot-goal__title, .dot-goal__main--light .dot-goal__status, .dot-goal__main--light .dot-goal__location, .dot-goal__main--light .dot-goal__location-icon, .dot-goal__main--light .dot-goal__location span'
   );
   revealEls.forEach(function (el) {
-    el.style.opacity = '1';
-    el.style.visibility = 'visible';
-    el.style.transform = 'none';
-    el.style.animation = 'none';
-    el.style.transition = 'none';
+    el.style.removeProperty('opacity');
+    el.style.removeProperty('visibility');
+    el.style.removeProperty('transform');
+    el.style.removeProperty('animation');
+    el.style.removeProperty('transition');
   });
 }
 function _bindTest3GoalExpandClick() {
@@ -7893,7 +7893,6 @@ function _lockTest3GoalExpandedState(goalEl) {
   if (darkMain) {
     darkMain.style.opacity = '0';
     darkMain.style.visibility = 'hidden';
-    darkMain.style.display = 'none';
   }
   var mapElLock = goalEl.querySelector('.dot-goal__map');
   if (mapElLock) {
