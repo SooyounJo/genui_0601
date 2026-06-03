@@ -863,9 +863,15 @@
       } catch (e) {
         console.error('setResultFromUtterance failed:', e);
         el.classList.remove('is-loading');
+        if (typeof window.resetTest2LoadingChromeState === 'function') {
+          window.resetTest2LoadingChromeState(el);
+        }
         if (canvas) canvas.classList.remove('p2-generating');
         generating = false;
         if (window.P2AgentFillGL) window.P2AgentFillGL.setPhase('idle');
+        if (isTest2 && typeof window.setTest2AgentInputGlow === 'function') {
+          window.setTest2AgentInputGlow(false);
+        }
       } finally {
         // No-op, handled above
       }

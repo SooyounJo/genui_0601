@@ -527,13 +527,14 @@
   #canvas[data-test-scope="test2"] .p2-agent-shell.p2-loading-chrome-exiting #p2-result.is-loading .p2-result-loading__head,
   #canvas[data-test-scope="test2"] .p2-agent-shell.p2-loading-chrome-exiting #p2-result.is-loading .p2-result-loading__content,
   #canvas[data-test-scope="test2"] #p2-result.p2-loading-ui-exiting.is-loading .p2-result-loading__head,
-  #canvas[data-test-scope="test2"] #p2-result.p2-loading-ui-exiting.is-loading .p2-result-loading__content {
+  #canvas[data-test-scope="test2"] #p2-result.p2-loading-ui-exiting.is-loading .p2-result-loading__content,
+  #canvas[data-test-scope="test2"] #p2-result.is-loading:not(.p2-loading-text-reveal) .p2-result-loading__head {
     opacity: 0 !important;
     transform: translateY(-6px);
     pointer-events: none !important;
     transition:
-      opacity 0.62s cubic-bezier(0.22, 0.82, 0.24, 1),
-      transform 0.62s cubic-bezier(0.22, 0.82, 0.24, 1) !important;
+      opacity 0.42s cubic-bezier(0.22, 0.82, 0.24, 1),
+      transform 0.42s cubic-bezier(0.22, 0.82, 0.24, 1) !important;
   }
   /* test2: shared motion tokens — expand + content flow */
   @property --p2-shell-h {
@@ -678,16 +679,16 @@
       color 0.58s cubic-bezier(0.16, 1, 0.3, 1) 0.1s,
       -webkit-text-fill-color 0.58s cubic-bezier(0.16, 1, 0.3, 1) 0.1s;
   }
-  #canvas[data-test-scope="test2"] #p2-result.is-loading .p2-result-loading__title {
+  #canvas[data-test-scope="test2"] #p2-result.is-loading.p2-loading-text-reveal .p2-result-loading__title {
     opacity: 1;
     transform: translateY(0);
     color: #FFFFFF;
     -webkit-text-fill-color: #FFFFFF;
     transition:
-      opacity 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.24s,
-      transform 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0.24s,
-      color 0.62s cubic-bezier(0.16, 1, 0.3, 1) 0.34s,
-      -webkit-text-fill-color 0.62s cubic-bezier(0.16, 1, 0.3, 1) 0.34s;
+      opacity 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.06s,
+      transform 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0.06s,
+      color 0.48s cubic-bezier(0.16, 1, 0.3, 1) 0.12s,
+      -webkit-text-fill-color 0.48s cubic-bezier(0.16, 1, 0.3, 1) 0.12s;
   }
   #canvas[data-test-scope="test2"] .p2-result-loading__title br {
     display: none;
@@ -710,16 +711,16 @@
       color 0.58s cubic-bezier(0.16, 1, 0.3, 1) 0.14s,
       -webkit-text-fill-color 0.58s cubic-bezier(0.16, 1, 0.3, 1) 0.14s;
   }
-  #canvas[data-test-scope="test2"] #p2-result.is-loading .p2-result-loading__status {
+  #canvas[data-test-scope="test2"] #p2-result.is-loading.p2-loading-text-reveal .p2-result-loading__status {
     opacity: 1;
     transform: translateY(0);
     color: rgba(255, 255, 255, 0.92);
     -webkit-text-fill-color: rgba(255, 255, 255, 0.92);
     transition:
-      opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.34s,
-      transform 0.44s cubic-bezier(0.16, 1, 0.3, 1) 0.34s,
-      color 0.62s cubic-bezier(0.16, 1, 0.3, 1) 0.44s,
-      -webkit-text-fill-color 0.62s cubic-bezier(0.16, 1, 0.3, 1) 0.44s;
+      opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.18s,
+      transform 0.44s cubic-bezier(0.16, 1, 0.3, 1) 0.18s,
+      color 0.48s cubic-bezier(0.16, 1, 0.3, 1) 0.26s,
+      -webkit-text-fill-color 0.48s cubic-bezier(0.16, 1, 0.3, 1) 0.26s;
   }
   #canvas[data-test-scope="test2"] .p2-result-loading__sub {
     position: absolute;
@@ -2389,6 +2390,11 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  #canvas[data-test-scope="test2"]:is(.p2-listening, .p2-generating) .p2-agent-footer .p2-agent-input,
+  #canvas[data-test-scope="test2"]:is(.p2-listening, .p2-generating) .p2-agent-footer .p2-agent-input:has(.p2-agent-fill--gl-active) {
+    background: none !important;
+    background-color: transparent !important;
+  }
   #canvas[data-test-scope="test2"]:is(.p2-listening, .p2-generating) .p2-agent-input .p2-agent-fill,
   #canvas[data-test-scope="test2"] .p2-agent-shell:has(#p2-result.is-loading):not(:has(#p2-slot.p2-contact-reveal-active)) .p2-agent-input .p2-agent-fill,
   #canvas[data-test-scope="test2"] .p2-agent-input .p2-agent-fill--gl-ready.p2-agent-fill--gl-active:not(.p2-agent-fill--gl-fading) {
@@ -2614,19 +2620,35 @@
   #canvas[data-test-scope="test2"] #p2-result.is-loading:not(.has-swap) .p2-result-loading__footer {
     display: flex !important;
   }
+  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-loading-chrome-exiting:has(#p2-result.is-loading) #p2-result:not(.has-swap) .p2-result-loading__footer,
+  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-loading-footer-handoff:has(#p2-result.is-loading) #p2-result:not(.has-swap) .p2-result-loading__footer,
+  #canvas[data-test-scope="test2"] #p2-result.p2-loading-ui-exiting.is-loading:not(.has-swap) .p2-result-loading__footer {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
   #canvas[data-test-scope="test2"] #p2-result.is-loading .p2-agent-card__body {
     opacity: 1;
     pointer-events: none;
   }
-  #canvas[data-test-scope="test2"] #p2-result.is-loading .p2-agent-greeting {
+  #canvas[data-test-scope="test2"] #p2-result.is-loading.p2-loading-ui-exiting .p2-agent-greeting {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    transition:
+      opacity 0.42s cubic-bezier(0.22, 0.82, 0.24, 1),
+      transform 0.42s cubic-bezier(0.22, 0.82, 0.24, 1) !important;
+    pointer-events: none;
+  }
+  #canvas[data-test-scope="test2"] #p2-result.is-loading:not(.p2-loading-ui-exiting) .p2-agent-greeting {
     opacity: 0;
     transform: translateY(-6px);
     transition:
-      opacity 0.52s cubic-bezier(0.16, 1, 0.3, 1),
-      transform 0.52s cubic-bezier(0.16, 1, 0.3, 1);
+      opacity 0.42s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
     pointer-events: none;
   }
-  #canvas[data-test-scope="test2"] .p2-agent-shell:has(#p2-result.is-loading):not(.p2-loading-chrome-exiting):not(.p2-contact-shell-expanding):not(.p2-contact-layout-active) .p2-agent-footer {
+  #canvas[data-test-scope="test2"] .p2-agent-shell:has(#p2-result.is-loading):not(.p2-loading-chrome-exiting):not(.p2-loading-footer-handoff):not(.p2-contact-shell-expanding):not(.p2-contact-layout-active) .p2-agent-footer {
     opacity: 0 !important;
     visibility: hidden !important;
     height: 0 !important;
@@ -2637,6 +2659,7 @@
     pointer-events: none !important;
   }
   #canvas[data-test-scope="test2"] .p2-agent-shell.p2-loading-chrome-exiting:has(#p2-result.is-loading) .p2-agent-footer,
+  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-loading-footer-handoff:has(#p2-result.is-loading) .p2-agent-footer,
   #canvas[data-test-scope="test2"] .p2-agent-shell.p2-contact-shell-expanding:has(#p2-result.is-loading) .p2-agent-footer {
     opacity: 1 !important;
     visibility: visible !important;

@@ -408,7 +408,18 @@
 
   function pickTest2FillCanvas() {
     var result = document.getElementById('p2-result');
+    var shell = document.getElementById('p2-area');
     if (result && result.classList.contains('is-loading') && !result.classList.contains('has-swap')) {
+      var chromeHandoff =
+        (shell && shell.classList.contains('p2-loading-chrome-exiting')) ||
+        (shell && shell.classList.contains('p2-loading-footer-handoff')) ||
+        result.classList.contains('p2-loading-ui-exiting');
+      if (chromeHandoff) {
+        var footerCanvas = document.querySelector(
+          '.p2-agent-footer .p2-agent-input .p2-agent-fill__gl'
+        );
+        if (footerCanvas) return footerCanvas;
+      }
       var loadingCanvas = document.querySelector('.p2-result-loading__input .p2-agent-fill__gl');
       if (loadingCanvas) return loadingCanvas;
     }
@@ -480,6 +491,7 @@
     this.startTime = 0;
     this.layout = { aspect: 1, radius: 0.24, compact: 0, virtAspect: INPUT_VIRT_ASPECT };
     this._layoutCache = { w: 0, h: 0, aspect: 0 };
+    this._resizeLock = false;
     this.resizeObserver = null;
     this.uniforms = {};
     this._onFrame = this._tick.bind(this);
@@ -514,12 +526,6 @@
     var btnX = (btn.left + btn.width * 0.5 - fill.left) / fill.width;
     var btnY = 1 - (btn.top + btn.height * 0.5 - fill.top) / fill.height;
     if (isInput) {
-      if (isTest2Scope()) {
-        return [
-          clamp(btnX * 0.35 + 0.06 * 0.65, 0.02, 0.22),
-          clamp(btnY * 0.22 + 0.5 * 0.78, 0.38, 0.62)
-        ];
-      }
       return [
         clamp(btnX * 0.52 + 0.98 * 0.48, 0.88, 1.06),
         clamp(btnY * 0.62 + 0.5 * 0.38, 0.40, 0.60)
@@ -534,7 +540,7 @@
   };
 
   AgentFillGL.prototype._resize = function (force) {
-    if (!this.canvas || !this.gl || !this.fillEl) return;
+    if (!this.canvas || !this.gl || !this.fillEl || this._resizeLock) return;
     var rect = this._fillRect();
     if (!rect) return;
     var dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -544,13 +550,20 @@
     var cache = this._layoutCache;
     var sizeChanged = force || cache.w !== w || cache.h !== h;
     if (sizeChanged) {
-      this.canvas.width = w;
-      this.canvas.height = h;
-      this.canvas.style.width = rect.width + 'px';
-      this.canvas.style.height = rect.height + 'px';
-      this.gl.viewport(0, 0, w, h);
-      cache.w = w;
-      cache.h = h;
+      this._resizeLock = true;
+      try {
+        var cssW = Math.round(rect.width) + 'px';
+        var cssH = Math.round(rect.height) + 'px';
+        this.canvas.width = w;
+        this.canvas.height = h;
+        if (this.canvas.style.width !== cssW) this.canvas.style.width = cssW;
+        if (this.canvas.style.height !== cssH) this.canvas.style.height = cssH;
+        this.gl.viewport(0, 0, w, h);
+        cache.w = w;
+        cache.h = h;
+      } finally {
+        this._resizeLock = false;
+      }
     }
     if (sizeChanged || Math.abs(cache.aspect - aspect) > 0.002) {
       this.layout.aspect = aspect;
@@ -598,7 +611,8 @@
         shell.classList.remove(
           'p2-agent-shell--glow-retire',
           'p2-agent-shell--flow-handoff',
-          'p2-loading-chrome-exiting'
+          'p2-loading-chrome-exiting',
+          'p2-loading-footer-handoff'
         );
       }, 560);
     }, 420);
@@ -725,14 +739,15 @@
       : 1;
     var eased;
     if (this.phase === 'listening') {
-      if (t < LISTEN_SWEEP_PORTION) {
-        var sweepT = t / LISTEN_SWEEP_PORTION;
+      var sweepPortion = isTest2Scope() ? 0.14 : LISTEN_SWEEP_PORTION;
+      if (t < sweepPortion) {
+        var sweepT = t / sweepPortion;
         this.values.sweep = easeOutCubic(sweepT);
         this.values.spread = 0;
         this.values.intensity = easeListenIntensity(sweepT * 0.78);
         this.values.fill = 0;
       } else {
-        var fillT = (t - LISTEN_SWEEP_PORTION) / (1 - LISTEN_SWEEP_PORTION);
+        var fillT = (t - sweepPortion) / (1 - sweepPortion);
         this.values.sweep = 1;
         this.values.spread = lerp(
           this.phaseFrom.spread,
@@ -972,12 +987,10 @@
     var self = this;
     if (typeof ResizeObserver !== 'undefined') {
       this.resizeObserver = new ResizeObserver(function () {
+        if (self._resizeLock) return;
         self._resize(true);
       });
       this.resizeObserver.observe(this.fillEl);
-      if (this.shellEl && this.shellEl !== this.fillEl) {
-        this.resizeObserver.observe(this.shellEl);
-      }
     }
 
     canvas.addEventListener('webglcontextlost', function (e) {

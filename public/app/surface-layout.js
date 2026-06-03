@@ -10973,9 +10973,6 @@ function _restoreTest2InputFill(inputEl) {
   if (!fill) return false;
   if (span) inputEl.insertBefore(fill, span);
   else inputEl.insertBefore(fill, inputEl.firstChild);
-  if (window.P2AgentFillGL && typeof window.P2AgentFillGL.ensureBound === 'function') {
-    window.P2AgentFillGL.ensureBound();
-  }
   return true;
 }
 
@@ -10985,6 +10982,49 @@ function _syncTest2LoadingFillGl() {
   if (!result || !result.classList.contains('is-loading') || result.classList.contains('has-swap')) return;
   if (typeof window.P2AgentFillGL.ensureBound === 'function') {
     window.P2AgentFillGL.ensureBound();
+  }
+}
+
+var TEST2_LOADING_UI_REVEAL_MS = 480;
+var _test2LoadingSyncLock = false;
+
+function revealTest2LoadingText(result) {
+  if (!result || !_isTest2Scope()) return;
+  if (result.dataset.test2LoadingUiRevealed === '1') return;
+  if (!result.classList.contains('is-loading') || result.classList.contains('has-swap')) return;
+
+  result.classList.remove('p2-loading-ui-exiting');
+  result.dataset.test2LoadingUiRevealed = '1';
+
+  var shell = document.getElementById('p2-area');
+  if (shell) {
+    shell.classList.remove('p2-loading-chrome-exiting');
+    shell.classList.add('p2-loading-footer-handoff');
+  }
+
+  void result.offsetWidth;
+  result.classList.add('p2-loading-text-reveal');
+}
+
+function scheduleTest2LoadingUiReveal(result) {
+  if (!result || !_isTest2Scope()) return;
+  if (result.dataset.test2LoadingUiRevealed === '1') return;
+  if (result.dataset.test2LoadingUiScheduled === '1') return;
+  result.dataset.test2LoadingUiScheduled = '1';
+  window.setTimeout(function () {
+    delete result.dataset.test2LoadingUiScheduled;
+    revealTest2LoadingText(result);
+  }, TEST2_LOADING_UI_REVEAL_MS);
+}
+
+function resetTest2LoadingChromeState(result) {
+  if (!result) return;
+  delete result.dataset.test2LoadingUiScheduled;
+  delete result.dataset.test2LoadingUiRevealed;
+  result.classList.remove('p2-loading-ui-exiting', 'p2-loading-text-reveal');
+  var shell = document.getElementById('p2-area');
+  if (shell) {
+    shell.classList.remove('p2-loading-chrome-exiting', 'p2-loading-footer-handoff');
   }
 }
 
@@ -11003,47 +11043,68 @@ function setTest2InputDisplayText(container, text) {
 
 function setTest2AgentInputGlow(active) {
   if (!_isTest2Scope()) return;
-  var agentInput = document.querySelector('.p2-agent-input');
+  var agentInput = document.querySelector('.p2-agent-footer .p2-agent-input');
   if (!agentInput) return;
   if (active) agentInput.classList.add('p2-agent-input--glow');
   else agentInput.classList.remove('p2-agent-input--glow');
 }
 
 function syncTest2LoadingPresentation(result) {
-  if (!_isTest2Scope() || !result) return;
+  if (!_isTest2Scope() || !result || !result.classList.contains('is-loading')) return;
+  if (_test2LoadingSyncLock) return;
   var loading = result.querySelector('.p2-result-loading');
   if (!loading) return;
 
-  var sub = loading.querySelector('.p2-result-loading__sub');
-  var status = loading.querySelector('.p2-result-loading__status');
-  var loadingInput = loading.querySelector('.p2-result-loading__input');
-  var agentInput = document.querySelector('.p2-agent-input');
-  var raw = '';
+  _test2LoadingSyncLock = true;
+  try {
+    var sub = loading.querySelector('.p2-result-loading__sub');
+    var status = loading.querySelector('.p2-result-loading__status');
+    var loadingInput = loading.querySelector('.p2-result-loading__input');
+    var agentInput = document.querySelector('.p2-agent-footer .p2-agent-input');
+    var raw = '';
 
-  if (sub && sub.textContent) {
-    raw = sub.textContent.replace(/^[\s"“]+|[\s"”]+$/g, '');
-  }
-  if (!raw && agentInput) raw = _getTest2InputDisplayText(agentInput);
-  if (!raw && loadingInput) raw = _getTest2InputDisplayText(loadingInput);
-  if (!raw) return;
+    if (sub && sub.textContent) {
+      raw = sub.textContent.replace(/^[\s"“]+|[\s"”]+$/g, '');
+    }
+    if (!raw && agentInput) raw = _getTest2InputDisplayText(agentInput);
+    if (!raw && loadingInput) raw = _getTest2InputDisplayText(loadingInput);
 
-  if (loadingInput) setTest2InputDisplayText(loadingInput, raw);
-  if (agentInput) setTest2InputDisplayText(agentInput, raw);
-  if (status) {
-    var nextStatus = deriveTest2LoadingStatus(raw);
-    if (status.textContent !== nextStatus) status.textContent = nextStatus;
+    beginTest2LoadingChromeExit(result);
+
+    if (!raw) {
+      scheduleTest2LoadingUiReveal(result);
+      return;
+    }
+
+    if (agentInput) setTest2InputDisplayText(agentInput, raw);
+    if (loadingInput) setTest2InputDisplayText(loadingInput, raw);
+    if (status) {
+      var nextStatus = deriveTest2LoadingStatus(raw);
+      if (status.textContent !== nextStatus) status.textContent = nextStatus;
+    }
+    setTest2AgentInputGlow(true);
+    scheduleTest2LoadingUiReveal(result);
+    _syncTest2LoadingFillGl();
+  } finally {
+    _test2LoadingSyncLock = false;
   }
-  setTest2AgentInputGlow(true);
-  _syncTest2LoadingFillGl();
 }
 
-function beginTest2LoadingChromeExit(slot) {
+function beginTest2LoadingChromeExit(result) {
   if (!_isTest2Scope()) return;
   var shell = document.getElementById('p2-area');
-  var result = document.getElementById('p2-result');
+  result = result || document.getElementById('p2-result');
 
-  if (shell) shell.classList.add('p2-loading-chrome-exiting');
-  if (result) result.classList.add('p2-loading-ui-exiting');
+  if (shell && !shell.classList.contains('p2-loading-chrome-exiting')) {
+    shell.classList.add('p2-loading-chrome-exiting');
+  }
+  if (
+    result &&
+    result.dataset.test2LoadingUiRevealed !== '1' &&
+    !result.classList.contains('p2-loading-ui-exiting')
+  ) {
+    result.classList.add('p2-loading-ui-exiting');
+  }
 }
 
 function prepareTest2ContactListSequence(slot) {
@@ -11116,7 +11177,8 @@ function installTest2FillFadeOutBridge(slot) {
     var result = document.getElementById('p2-result');
     var defaults = document.getElementById('p2-default-widgets');
         if (result) {
-          result.classList.remove('is-loading', 'p2-crossfade-out', 'p2-loading-ui-exiting');
+          result.classList.remove('is-loading', 'p2-crossfade-out');
+          resetTest2LoadingChromeState(result);
           result.classList.add('has-swap', 'p2-default-hiding');
         }
     if (defaults) {
@@ -11126,7 +11188,11 @@ function installTest2FillFadeOutBridge(slot) {
     var flowShell = document.getElementById('p2-area');
     if (flowShell) {
           setTimeout(function () {
-            flowShell.classList.remove('p2-agent-shell--flow-handoff', 'p2-loading-chrome-exiting');
+            flowShell.classList.remove(
+              'p2-agent-shell--flow-handoff',
+              'p2-loading-chrome-exiting',
+              'p2-loading-footer-handoff'
+            );
           }, 900);
     }
   });
@@ -11137,6 +11203,7 @@ window.applyTest2ContactListShellHeight = applyTest2ContactListShellHeight;
 window.beginTest2LoadingChromeExit = beginTest2LoadingChromeExit;
 window.activateTest2ContactListLayout = activateTest2ContactListLayout;
 window.syncTest2LoadingPresentation = syncTest2LoadingPresentation;
+window.resetTest2LoadingChromeState = resetTest2LoadingChromeState;
 window.setTest2InputDisplayText = setTest2InputDisplayText;
 window.setTest2AgentInputGlow = setTest2AgentInputGlow;
 
@@ -11149,7 +11216,14 @@ function isTest2P2RevealStarted() {
   if (result) {
     if (result.classList.contains('p2-result-expanded')) return true;
     if (result.classList.contains('p2-crossfade-out')) return true;
-    if (result.classList.contains('p2-loading-ui-exiting')) return true;
+    if (
+      result.classList.contains('p2-loading-ui-exiting') &&
+      result.dataset.test2LoadingUiRevealed !== '1'
+    ) return true;
+    if (
+      result.classList.contains('p2-loading-text-reveal') &&
+      !result.classList.contains('has-swap')
+    ) return true;
     if (result.classList.contains('has-swap')) return true;
   }
   if (slot) {
@@ -11284,11 +11358,27 @@ function installTest2P2TransitionBridge(canvas) {
   function bindResult(result) {
     if (!result || result.dataset.test2P2ResultBound === '1') return;
     result.dataset.test2P2ResultBound = '1';
-    new MutationObserver(function () {
+    new MutationObserver(function (mutations) {
+      var loadingToggled = false;
+      for (var i = 0; i < mutations.length; i++) {
+        var m = mutations[i];
+        if (m.type !== 'attributes' || m.attributeName !== 'class') continue;
+        var prev = m.oldValue || '';
+        var hadLoading = /\bis-loading\b/.test(prev);
+        var hasLoading = result.classList.contains('is-loading');
+        if (hadLoading !== hasLoading) loadingToggled = true;
+      }
       syncTest2VoiceStarState(document.getElementById('canvas'));
-      if (!result.classList.contains('is-loading')) return;
-      syncTest2LoadingPresentation(result);
-    }).observe(result, { attributes: true, attributeFilter: ['class'] });
+      if (!result.classList.contains('is-loading')) {
+        resetTest2LoadingChromeState(result);
+        return;
+      }
+      if (loadingToggled) syncTest2LoadingPresentation(result);
+    }).observe(result, {
+      attributes: true,
+      attributeFilter: ['class'],
+      attributeOldValue: true
+    });
     if (result.classList.contains('is-loading')) {
       syncTest2LoadingPresentation(result);
     }
@@ -11300,7 +11390,6 @@ function installTest2P2TransitionBridge(canvas) {
   new MutationObserver(function () {
     bindSlot(document.getElementById('p2-slot'));
     bindResult(document.getElementById('p2-result'));
-    syncTest2VoiceStarState(canvas);
   }).observe(canvas, { childList: true, subtree: true });
   new MutationObserver(function () {
     syncTest2VoiceStarState(canvas);
