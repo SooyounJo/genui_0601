@@ -435,6 +435,32 @@
     return !!(window.__mlpTestConfig && window.__mlpTestConfig.id === 'test2');
   }
 
+  function pickTest2FillCanvas() {
+    var result = document.getElementById('p2-result');
+    var shell = document.getElementById('p2-area');
+    if (shell && shell.classList.contains('p2-contact-voice-renew')) {
+      var renewFooter = document.querySelector(
+        '.p2-agent-footer .p2-agent-input .p2-agent-fill__gl'
+      );
+      if (renewFooter) return renewFooter;
+    }
+    if (result && result.classList.contains('is-loading') && !result.classList.contains('has-swap')) {
+      var chromeHandoff =
+        (shell && shell.classList.contains('p2-loading-chrome-exiting')) ||
+        (shell && shell.classList.contains('p2-loading-footer-handoff')) ||
+        result.classList.contains('p2-loading-ui-exiting');
+      if (chromeHandoff) {
+        var footerCanvas = document.querySelector(
+          '.p2-agent-footer .p2-agent-input .p2-agent-fill__gl'
+        );
+        if (footerCanvas) return footerCanvas;
+      }
+      var loadingCanvas = document.querySelector('.p2-result-loading__input .p2-agent-fill__gl');
+      if (loadingCanvas) return loadingCanvas;
+    }
+    return document.querySelector('.p2-agent-input .p2-agent-fill__gl');
+  }
+
   function isTest3Scope() {
     var canvas = document.getElementById('canvas');
     if (canvas && canvas.getAttribute('data-test-scope') === 'test3') return true;
@@ -500,6 +526,7 @@
     this.startTime = 0;
     this.layout = { aspect: 1, radius: 0.24, compact: 0, virtAspect: INPUT_VIRT_ASPECT };
     this._layoutCache = { w: 0, h: 0, aspect: 0 };
+    this._resizeLock = false;
     this.resizeObserver = null;
     this.uniforms = {};
     this._onFrame = this._tick.bind(this);
@@ -522,19 +549,18 @@
   AgentFillGL.prototype._getOrigin = function () {
     var fill = this._fillRect();
     if (!fill) return [0.92, 0.10];
-    var isInput = this.fillEl && this.fillEl.closest('.p2-agent-input');
+    var isLoadingInput = this.fillEl && this.fillEl.closest('.p2-result-loading__input');
+    var isInput = isLoadingInput || (this.fillEl && this.fillEl.closest('.p2-agent-input'));
     var star = document.getElementById('p2-star');
-    if (!star) return isInput ? [0.06, 0.50] : [0.92, 0.10];
-    var btn = star.getBoundingClientRect();
+    var loadIcon = isLoadingInput
+      ? (this.fillEl.closest('.p2-result-loading') || document).querySelector('.p2-result-loading__icon')
+      : null;
+    var anchor = loadIcon || star;
+    if (!anchor) return isInput ? [0.06, 0.50] : [0.92, 0.10];
+    var btn = anchor.getBoundingClientRect();
     var btnX = (btn.left + btn.width * 0.5 - fill.left) / fill.width;
     var btnY = 1 - (btn.top + btn.height * 0.5 - fill.top) / fill.height;
     if (isInput) {
-      if (isTest2Scope()) {
-        return [
-          clamp(btnX * 0.35 + 0.06 * 0.65, 0.02, 0.22),
-          clamp(btnY * 0.22 + 0.5 * 0.78, 0.38, 0.62)
-        ];
-      }
       return [
         clamp(btnX * 0.52 + 0.98 * 0.48, 0.88, 1.06),
         clamp(btnY * 0.62 + 0.5 * 0.38, 0.40, 0.60)
@@ -549,7 +575,7 @@
   };
 
   AgentFillGL.prototype._resize = function (force) {
-    if (!this.canvas || !this.gl || !this.fillEl) return;
+    if (!this.canvas || !this.gl || !this.fillEl || this._resizeLock) return;
     var rect = this._fillRect();
     if (!rect) return;
     var dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -559,27 +585,35 @@
     var cache = this._layoutCache;
     var sizeChanged = force || cache.w !== w || cache.h !== h;
     if (sizeChanged) {
-      this.canvas.width = w;
-      this.canvas.height = h;
-      this.canvas.style.width = rect.width + 'px';
-      this.canvas.style.height = rect.height + 'px';
-      this.gl.viewport(0, 0, w, h);
-      cache.w = w;
-      cache.h = h;
+      this._resizeLock = true;
+      try {
+        var cssW = Math.round(rect.width) + 'px';
+        var cssH = Math.round(rect.height) + 'px';
+        this.canvas.width = w;
+        this.canvas.height = h;
+        if (this.canvas.style.width !== cssW) this.canvas.style.width = cssW;
+        if (this.canvas.style.height !== cssH) this.canvas.style.height = cssH;
+        this.gl.viewport(0, 0, w, h);
+        cache.w = w;
+        cache.h = h;
+      } finally {
+        this._resizeLock = false;
+      }
     }
     if (sizeChanged || Math.abs(cache.aspect - aspect) > 0.002) {
       this.layout.aspect = aspect;
       this.layout.radius = Math.min(22, rect.height * 0.5) / rect.height;
       cache.aspect = aspect;
     }
-    this.layout.compact = this.fillEl.closest('.p2-agent-input') ? 1 : 0;
+    this.layout.compact = (this.fillEl.closest('.p2-agent-input') ||
+      this.fillEl.closest('.p2-result-loading__input')) ? 1 : 0;
   };
 
   function getPhaseConfig(phaseName) {
     var next = PHASES[phaseName] || PHASES.idle;
     if (!isTest2Scope()) return next;
     if (phaseName === 'generating') {
-      return { spread: 1.42, intensity: 1.0, fill: 0.0, duration: 1780 };
+      return { spread: 1.42, intensity: 1.0, fill: 0.0, duration: 3200 };
     }
     if (phaseName === 'hollowReveal') {
       return { spread: 1.42, intensity: 0.86, fill: 0.74, duration: 780 };
@@ -612,7 +646,8 @@
         shell.classList.remove(
           'p2-agent-shell--glow-retire',
           'p2-agent-shell--flow-handoff',
-          'p2-loading-chrome-exiting'
+          'p2-loading-chrome-exiting',
+          'p2-loading-footer-handoff'
         );
       }, 560);
     }, 420);
@@ -634,6 +669,13 @@
       fill: next.fill
     };
     this.phaseDuration = next.duration;
+    if (
+      phaseName === 'generating' &&
+      isTest2Scope() &&
+      this.phaseFrom.spread < 0.12
+    ) {
+      this.phaseDuration = 5200;
+    }
     if (this.fillEl) {
       if (phaseName !== 'idle') {
         this.fillEl.classList.add('p2-agent-fill--gl-active');
@@ -647,6 +689,7 @@
       }
     }
     if (this.shellEl) {
+      var voiceRenew = this.shellEl.classList.contains('p2-contact-voice-renew');
       if (isTest2Scope() && (phaseName === 'fadeOut' || phaseName === 'settling')) {
         this.shellEl.classList.add('p2-agent-shell--glow-retire');
       } else if (
@@ -656,12 +699,13 @@
         this.shellEl.classList.remove('p2-agent-shell--glow-retire');
       }
       if (
-        phaseName === 'listening' || phaseName === 'generating' ||
+        !voiceRenew &&
+        (phaseName === 'listening' || phaseName === 'generating' ||
         phaseName === 'hollowReveal' || phaseName === 'handoff' ||
-        phaseName === 'settling' || phaseName === 'fadeOut'
+        phaseName === 'settling' || phaseName === 'fadeOut')
       ) {
         this.shellEl.classList.add('p2-agent-shell--gl-fill');
-      } else if (phaseName === 'idle') {
+      } else if (phaseName === 'idle' || voiceRenew) {
         this.shellEl.classList.remove('p2-agent-shell--gl-fill');
       }
     }
@@ -732,14 +776,15 @@
       : 1;
     var eased;
     if (this.phase === 'listening') {
-      if (t < LISTEN_SWEEP_PORTION) {
-        var sweepT = t / LISTEN_SWEEP_PORTION;
+      var sweepPortion = isTest2Scope() ? 0.14 : LISTEN_SWEEP_PORTION;
+      if (t < sweepPortion) {
+        var sweepT = t / sweepPortion;
         this.values.sweep = easeOutCubic(sweepT);
         this.values.spread = 0;
         this.values.intensity = easeListenIntensity(sweepT * 0.78);
         this.values.fill = 0;
       } else {
-        var fillT = (t - LISTEN_SWEEP_PORTION) / (1 - LISTEN_SWEEP_PORTION);
+        var fillT = (t - sweepPortion) / (1 - sweepPortion);
         this.values.sweep = 1;
         this.values.spread = lerp(
           this.phaseFrom.spread,
@@ -757,7 +802,9 @@
       return;
     }
     if (this.phase === 'generating') {
-      eased = easeContinueSpread(t, this.phaseFrom.spread);
+      eased = isTest2Scope()
+        ? easeListeningSpread(t)
+        : easeContinueSpread(t, this.phaseFrom.spread);
     } else if (this.phase === 'hollowReveal') {
       eased = isTest2Scope() ? easeOutCubic(t) : easeOutQuint(t);
     } else if (this.phase === 'handoff') {
@@ -891,6 +938,20 @@
   };
 
   AgentFillGL.prototype.bind = function (canvas) {
+    var preserved = null;
+    if (this.ready && isTest2Scope() && this.canvas && canvas && this.canvas !== canvas) {
+      preserved = {
+        phase: this.phase,
+        values: {
+          spread: this.values.spread,
+          intensity: this.values.intensity,
+          fill: this.values.fill,
+          sweep: this.values.sweep
+        },
+        smoothAudio: this.smoothAudio,
+        startTime: this.startTime
+      };
+    }
     this.destroy();
     if (!canvas || prefersReducedMotion() || !isTest2Scope()) return false;
 
@@ -944,20 +1005,29 @@
     };
 
     this.ready = true;
-    this.startTime = performance.now();
-    this._setPhaseTargets('idle');
+    if (preserved && preserved.phase && preserved.phase !== 'idle') {
+      this.values.spread = preserved.values.spread;
+      this.values.intensity = preserved.values.intensity;
+      this.values.fill = preserved.values.fill;
+      this.values.sweep = preserved.values.sweep;
+      this.smoothAudio = preserved.smoothAudio;
+      this.startTime = preserved.startTime;
+      this._setPhaseTargets(preserved.phase);
+      this._startLoop();
+    } else {
+      this.startTime = performance.now();
+      this._setPhaseTargets('idle');
+    }
     this.fillEl.classList.add('p2-agent-fill--gl-ready');
     this._resize(true);
 
     var self = this;
     if (typeof ResizeObserver !== 'undefined') {
       this.resizeObserver = new ResizeObserver(function () {
+        if (self._resizeLock) return;
         self._resize(true);
       });
       this.resizeObserver.observe(this.fillEl);
-      if (this.shellEl && this.shellEl !== this.fillEl) {
-        this.resizeObserver.observe(this.shellEl);
-      }
     }
 
     canvas.addEventListener('webglcontextlost', function (e) {
@@ -972,7 +1042,7 @@
 
   function ensureBound() {
     if (!isTest2Scope() || prefersReducedMotion()) return false;
-    var canvas = document.querySelector('.p2-agent-input .p2-agent-fill__gl');
+    var canvas = pickTest2FillCanvas();
     if (!canvas) return false;
     if (instance.canvas === canvas && instance.ready) return true;
     return instance.bind(canvas);
