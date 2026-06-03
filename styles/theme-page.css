@@ -287,6 +287,9 @@
     background-color: transparent !important;
     background-image: none !important;
     isolation: isolate;
+    /* voice-input ShinyText — darker pink (readable on pink fill) */
+    --p2-test2-input-text-grad: #C93D92;
+    --p2-test2-input-text-grad-sweep: #8B1F62;
   }
   #canvas[data-test-scope="test2"]::before {
     content: "";
@@ -416,6 +419,61 @@
     width: 7px;
     height: 13px;
   }
+  /* test2 — lock screen shortcuts (Figma lock screen shortcut) */
+  #canvas[data-test-scope="test2"] .canvas-item[data-role="shortcutLeft"] .test2-lock-shortcut--phone,
+  #canvas[data-test-scope="test2"] .test2-lock-shortcut--phone,
+  #canvas[data-test-scope="test2"] .canvas-item[data-role="shortcutRight"] .test2-lock-shortcut--camera,
+  #canvas[data-test-scope="test2"] .test2-lock-shortcut--camera {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    pointer-events: none;
+  }
+  #canvas[data-test-scope="test2"] .test2-lock-shortcut__disc {
+    width: 54.99px;
+    height: 54.99px;
+    min-width: 54.99px;
+    min-height: 54.99px;
+    max-width: 54.99px;
+    max-height: 54.99px;
+    aspect-ratio: 1 / 1;
+    border-radius: 55.9063px;
+    background: rgba(55, 55, 55, 0.3);
+    border: 0.229px solid rgba(55, 55, 55, 0.3);
+    backdrop-filter: blur(5.499px);
+    -webkit-backdrop-filter: blur(5.499px);
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  #canvas[data-test-scope="test2"] .test2-lock-shortcut__glyph {
+    display: block;
+    flex-shrink: 0;
+    pointer-events: none;
+  }
+  /* Figma phone — tall aspect */
+  #canvas[data-test-scope="test2"] .test2-lock-shortcut--phone .test2-lock-shortcut__glyph {
+    width: auto;
+    height: 26px;
+    max-width: 11px;
+    max-height: 28px;
+  }
+  /* Figma camera — wide aspect */
+  #canvas[data-test-scope="test2"] .test2-lock-shortcut--camera .test2-lock-shortcut__glyph {
+    width: 22px;
+    height: auto;
+    max-width: 24px;
+    max-height: 19px;
+  }
+
   #canvas[data-test-scope="test2"] .canvas-item[data-role="lockIndicator"],
   #canvas[data-test-scope="test2"] .canvas-item[data-role="weatherDate"],
   #canvas[data-test-scope="test2"] .canvas-item[data-role="clock"] {
@@ -3049,11 +3107,11 @@
     font-weight: 600;
     background-image: linear-gradient(
       120deg,
-      #FF9DDA 0%,
-      #FF9DDA 35%,
-      #E055AD 50%,
-      #FF9DDA 65%,
-      #FF9DDA 100%
+      var(--p2-test2-input-text-grad) 0%,
+      var(--p2-test2-input-text-grad) 35%,
+      var(--p2-test2-input-text-grad-sweep) 50%,
+      var(--p2-test2-input-text-grad) 65%,
+      var(--p2-test2-input-text-grad) 100%
     );
     background-size: 200% auto;
     background-position: 150% center;
@@ -3101,11 +3159,11 @@
     font-weight: 600;
     background-image: linear-gradient(
       120deg,
-      #FF9DDA 0%,
-      #FF9DDA 35%,
-      #E055AD 50%,
-      #FF9DDA 65%,
-      #FF9DDA 100%
+      var(--p2-test2-input-text-grad) 0%,
+      var(--p2-test2-input-text-grad) 35%,
+      var(--p2-test2-input-text-grad-sweep) 50%,
+      var(--p2-test2-input-text-grad) 65%,
+      var(--p2-test2-input-text-grad) 100%
     );
     background-size: 200% auto;
     background-position: 150% center;
@@ -3384,7 +3442,7 @@
   #canvas[data-test-scope="test2"] .p2-agent-shell:has(#p2-slot.p2-seq-done) {
     --p2-chrome-pad-top: 0px;
     --p2-chrome-pad-right: 0px;
-    --p2-chrome-pad-bottom: 10px;
+    --p2-chrome-pad-bottom: 0px;
     --p2-chrome-pad-left: 0px;
     --p2-footer-pad-left: 20px;
     --p2-footer-pad-right: 16px;
@@ -3673,11 +3731,11 @@
     font-weight: 600 !important;
     background-image: linear-gradient(
       120deg,
-      #FF9DDA 0%,
-      #FF9DDA 35%,
-      #E055AD 50%,
-      #FF9DDA 65%,
-      #FF9DDA 100%
+      var(--p2-test2-input-text-grad) 0%,
+      var(--p2-test2-input-text-grad) 35%,
+      var(--p2-test2-input-text-grad-sweep) 50%,
+      var(--p2-test2-input-text-grad) 65%,
+      var(--p2-test2-input-text-grad) 100%
     ) !important;
     background-size: 200% auto !important;
     background-position: 150% center !important;
@@ -4010,8 +4068,8 @@
       background-position: 50% center !important;
       -webkit-background-clip: border-box !important;
       background-clip: border-box !important;
-      -webkit-text-fill-color: #FF9DDA !important;
-      color: #FF9DDA !important;
+      -webkit-text-fill-color: var(--p2-test2-input-text-grad) !important;
+      color: var(--p2-test2-input-text-grad) !important;
       filter: none !important;
     }
     #canvas[data-test-scope="test2"] .p2-agent-footer .p2-input-text[data-p2-shiny-active="1"],
@@ -4022,11 +4080,11 @@
       font-weight: 600 !important;
       background-image: linear-gradient(
         120deg,
-        #FF9DDA 0%,
-        #FF9DDA 35%,
-        #E055AD 50%,
-        #FF9DDA 65%,
-        #FF9DDA 100%
+        var(--p2-test2-input-text-grad) 0%,
+        var(--p2-test2-input-text-grad) 35%,
+        var(--p2-test2-input-text-grad-sweep) 50%,
+        var(--p2-test2-input-text-grad) 65%,
+        var(--p2-test2-input-text-grad) 100%
       ) !important;
       background-size: 200% auto !important;
       background-position: 150% center !important;
