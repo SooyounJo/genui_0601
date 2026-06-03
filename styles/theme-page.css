@@ -3392,6 +3392,15 @@
     background-size: cover !important;
     background-position: center center !important;
     background-repeat: no-repeat !important;
+    position: relative !important;
+  }
+  #canvas[data-test-scope="test3"]::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: rgba(255, 255, 255, 0.4); /* Soften the background color/image */
+    pointer-events: none;
+    z-index: 0;
   }
 
   /* test3 — status bar always visible (overrides mlp-phone global hide; matches test1/test2 lock) */
