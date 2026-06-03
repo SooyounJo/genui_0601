@@ -2338,6 +2338,16 @@ function _isTest2Scope() {
   return !!(window.__mlpTestConfig && window.__mlpTestConfig.id === 'test2');
 }
 
+var TEST2_AGENT_INPUT_FILL_HTML =
+  '<div class="p2-agent-fill" aria-hidden="true">' +
+    '<canvas class="p2-agent-fill__gl"></canvas>' +
+    '<div class="p2-agent-fill__edge" aria-hidden="true"></div>' +
+    '<div class="p2-agent-fill__edge-inner" aria-hidden="true"></div>' +
+    '<div class="p2-agent-fill__bloom"></div>' +
+    '<div class="p2-agent-fill__mist"></div>' +
+    '<div class="p2-agent-fill__wave"></div>' +
+  '</div>';
+
 function _escP2Html(str) {
   return String(str || '')
     .replace(/&/g, '&amp;')
@@ -7184,7 +7194,10 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
                       '<div class="p2-result-loading__sub" aria-hidden="true"></div>' +
                     '</div>' +
                     '<div class="p2-result-loading__footer">' +
-                      '<div class="p2-result-loading__input"><span class="p2-input-text">놓친 보고서 요약해줘</span></div>' +
+                      '<div class="p2-result-loading__input">' +
+                        TEST2_AGENT_INPUT_FILL_HTML +
+                        '<span class="p2-input-text">놓친 보고서 요약해줘</span>' +
+                      '</div>' +
                       '<div class="p2-result-loading__icon" aria-hidden="true">' +
                         '<canvas class="p2-galaxy-star__canvas p2-galaxy-star__canvas--loading" width="112" height="112" aria-hidden="true"></canvas>' +
                       '</div>' +
@@ -10931,6 +10944,63 @@ function deriveTest2LoadingStatus(userText) {
   return core + ' 관련 내용을 정리중입니다.';
 }
 
+function _getTest2InputDisplayText(container) {
+  if (!container) return '';
+  var span = container.querySelector && container.querySelector('.p2-input-text');
+  if (span) return String(span.textContent || '').trim();
+  return String(container.textContent || '').trim();
+}
+
+function _ensureTest2InputTextSpan(container) {
+  if (!container) return null;
+  var span = container.querySelector('.p2-input-text');
+  if (span) return span;
+  span = document.createElement('span');
+  span.className = 'p2-input-text';
+  var plain = String(container.textContent || '').trim();
+  container.textContent = '';
+  container.appendChild(span);
+  if (plain) span.textContent = plain;
+  return span;
+}
+
+function _restoreTest2InputFill(inputEl) {
+  if (!inputEl || inputEl.querySelector('.p2-agent-fill')) return false;
+  var span = inputEl.querySelector('.p2-input-text');
+  var wrap = document.createElement('div');
+  wrap.innerHTML = TEST2_AGENT_INPUT_FILL_HTML;
+  var fill = wrap.firstChild;
+  if (!fill) return false;
+  if (span) inputEl.insertBefore(fill, span);
+  else inputEl.insertBefore(fill, inputEl.firstChild);
+  if (window.P2AgentFillGL && typeof window.P2AgentFillGL.ensureBound === 'function') {
+    window.P2AgentFillGL.ensureBound();
+  }
+  return true;
+}
+
+function _syncTest2LoadingFillGl() {
+  if (!_isTest2Scope() || !window.P2AgentFillGL) return;
+  var result = document.getElementById('p2-result');
+  if (!result || !result.classList.contains('is-loading') || result.classList.contains('has-swap')) return;
+  if (typeof window.P2AgentFillGL.ensureBound === 'function') {
+    window.P2AgentFillGL.ensureBound();
+  }
+}
+
+function setTest2InputDisplayText(container, text) {
+  if (!container) return;
+  var raw = String(text || '').trim();
+  if (container.classList &&
+      (container.classList.contains('p2-agent-input') ||
+       container.classList.contains('p2-result-loading__input'))) {
+    _restoreTest2InputFill(container);
+  }
+  var span = _ensureTest2InputTextSpan(container);
+  if (!span) return;
+  if (span.textContent !== raw) span.textContent = raw;
+}
+
 function setTest2AgentInputGlow(active) {
   if (!_isTest2Scope()) return;
   var agentInput = document.querySelector('.p2-agent-input');
@@ -10946,23 +11016,25 @@ function syncTest2LoadingPresentation(result) {
 
   var sub = loading.querySelector('.p2-result-loading__sub');
   var status = loading.querySelector('.p2-result-loading__status');
-  var input = loading.querySelector('.p2-result-loading__input');
+  var loadingInput = loading.querySelector('.p2-result-loading__input');
   var agentInput = document.querySelector('.p2-agent-input');
   var raw = '';
 
   if (sub && sub.textContent) {
     raw = sub.textContent.replace(/^[\s"“]+|[\s"”]+$/g, '');
   }
-  if (!raw && agentInput) raw = String(agentInput.textContent || '').trim();
+  if (!raw && agentInput) raw = _getTest2InputDisplayText(agentInput);
+  if (!raw && loadingInput) raw = _getTest2InputDisplayText(loadingInput);
   if (!raw) return;
 
-  if (input && input.textContent !== raw) input.textContent = raw;
-  if (agentInput && agentInput.textContent !== raw) agentInput.textContent = raw;
+  if (loadingInput) setTest2InputDisplayText(loadingInput, raw);
+  if (agentInput) setTest2InputDisplayText(agentInput, raw);
   if (status) {
     var nextStatus = deriveTest2LoadingStatus(raw);
     if (status.textContent !== nextStatus) status.textContent = nextStatus;
   }
   setTest2AgentInputGlow(true);
+  _syncTest2LoadingFillGl();
 }
 
 function beginTest2LoadingChromeExit(slot) {
@@ -11065,6 +11137,7 @@ window.applyTest2ContactListShellHeight = applyTest2ContactListShellHeight;
 window.beginTest2LoadingChromeExit = beginTest2LoadingChromeExit;
 window.activateTest2ContactListLayout = activateTest2ContactListLayout;
 window.syncTest2LoadingPresentation = syncTest2LoadingPresentation;
+window.setTest2InputDisplayText = setTest2InputDisplayText;
 window.setTest2AgentInputGlow = setTest2AgentInputGlow;
 
 function isTest2P2RevealStarted() {

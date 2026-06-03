@@ -795,8 +795,42 @@
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
     z-index: -1;
   }
-  #canvas[data-test-scope="test2"] #p2-result.is-loading .p2-result-loading__input::before {
+  #canvas[data-test-scope="test2"] #p2-result.is-loading .p2-result-loading__input::before,
+  #canvas[data-test-scope="test2"].p2-generating #p2-result:not(.has-swap) .p2-result-loading__input::before {
     animation: p2LoadingColorFlow 3.6s ease-in-out infinite;
+    will-change: background-position;
+    transition: opacity 0.42s cubic-bezier(0.22, 0.82, 0.24, 1);
+  }
+  #canvas[data-test-scope="test2"] .p2-result-loading__input .p2-agent-fill {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    overflow: hidden;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.55s cubic-bezier(0.22, 0.82, 0.24, 1);
+  }
+  #canvas[data-test-scope="test2"] .p2-result-loading__input .p2-agent-fill__gl {
+    position: absolute;
+    inset: 0;
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+  #canvas[data-test-scope="test2"] .p2-result-loading__input .p2-agent-fill--gl-ready.p2-agent-fill--gl-active {
+    opacity: 1 !important;
+  }
+  #canvas[data-test-scope="test2"] .p2-result-loading__input:has(.p2-agent-fill--gl-ready.p2-agent-fill--gl-active)::before,
+  #canvas[data-test-scope="test2"] .p2-result-loading__input:has(.p2-agent-fill--gl-ready.p2-agent-fill--gl-fading)::before {
+    opacity: 0 !important;
+    animation: none !important;
+  }
+  #canvas[data-test-scope="test2"]:is(.p2-listening, .p2-generating) .p2-result-loading__input .p2-agent-fill,
+  #canvas[data-test-scope="test2"] #p2-result.is-loading:not(.has-swap) .p2-result-loading__input .p2-agent-fill--gl-ready.p2-agent-fill--gl-active:not(.p2-agent-fill--gl-fading) {
+    opacity: 1 !important;
   }
   /* ShinyText-style sweep: 150% → -50% */
   @keyframes p2Test2ShinyTextSweep {

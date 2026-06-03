@@ -406,6 +406,15 @@
     return !!(window.__mlpTestConfig && window.__mlpTestConfig.id === 'test2');
   }
 
+  function pickTest2FillCanvas() {
+    var result = document.getElementById('p2-result');
+    if (result && result.classList.contains('is-loading') && !result.classList.contains('has-swap')) {
+      var loadingCanvas = document.querySelector('.p2-result-loading__input .p2-agent-fill__gl');
+      if (loadingCanvas) return loadingCanvas;
+    }
+    return document.querySelector('.p2-agent-input .p2-agent-fill__gl');
+  }
+
   function isTest3Scope() {
     var canvas = document.getElementById('canvas');
     if (canvas && canvas.getAttribute('data-test-scope') === 'test3') return true;
@@ -493,10 +502,15 @@
   AgentFillGL.prototype._getOrigin = function () {
     var fill = this._fillRect();
     if (!fill) return [0.92, 0.10];
-    var isInput = this.fillEl && this.fillEl.closest('.p2-agent-input');
+    var isLoadingInput = this.fillEl && this.fillEl.closest('.p2-result-loading__input');
+    var isInput = isLoadingInput || (this.fillEl && this.fillEl.closest('.p2-agent-input'));
     var star = document.getElementById('p2-star');
-    if (!star) return isInput ? [0.06, 0.50] : [0.92, 0.10];
-    var btn = star.getBoundingClientRect();
+    var loadIcon = isLoadingInput
+      ? (this.fillEl.closest('.p2-result-loading') || document).querySelector('.p2-result-loading__icon')
+      : null;
+    var anchor = loadIcon || star;
+    if (!anchor) return isInput ? [0.06, 0.50] : [0.92, 0.10];
+    var btn = anchor.getBoundingClientRect();
     var btnX = (btn.left + btn.width * 0.5 - fill.left) / fill.width;
     var btnY = 1 - (btn.top + btn.height * 0.5 - fill.top) / fill.height;
     if (isInput) {
@@ -543,14 +557,15 @@
       this.layout.radius = Math.min(22, rect.height * 0.5) / rect.height;
       cache.aspect = aspect;
     }
-    this.layout.compact = this.fillEl.closest('.p2-agent-input') ? 1 : 0;
+    this.layout.compact = (this.fillEl.closest('.p2-agent-input') ||
+      this.fillEl.closest('.p2-result-loading__input')) ? 1 : 0;
   };
 
   function getPhaseConfig(phaseName) {
     var next = PHASES[phaseName] || PHASES.idle;
     if (!isTest2Scope()) return next;
     if (phaseName === 'generating') {
-      return { spread: 1.42, intensity: 1.0, fill: 0.0, duration: 1780 };
+      return { spread: 1.42, intensity: 1.0, fill: 0.0, duration: 3200 };
     }
     if (phaseName === 'hollowReveal') {
       return { spread: 1.42, intensity: 0.86, fill: 0.74, duration: 780 };
@@ -605,6 +620,13 @@
       fill: next.fill
     };
     this.phaseDuration = next.duration;
+    if (
+      phaseName === 'generating' &&
+      isTest2Scope() &&
+      this.phaseFrom.spread < 0.12
+    ) {
+      this.phaseDuration = 5200;
+    }
     if (this.fillEl) {
       if (phaseName !== 'idle') {
         this.fillEl.classList.add('p2-agent-fill--gl-active');
@@ -728,7 +750,9 @@
       return;
     }
     if (this.phase === 'generating') {
-      eased = easeContinueSpread(t, this.phaseFrom.spread);
+      eased = isTest2Scope()
+        ? easeListeningSpread(t)
+        : easeContinueSpread(t, this.phaseFrom.spread);
     } else if (this.phase === 'hollowReveal') {
       eased = isTest2Scope() ? easeOutCubic(t) : easeOutQuint(t);
     } else if (this.phase === 'handoff') {
@@ -862,6 +886,20 @@
   };
 
   AgentFillGL.prototype.bind = function (canvas) {
+    var preserved = null;
+    if (this.ready && isTest2Scope() && this.canvas && canvas && this.canvas !== canvas) {
+      preserved = {
+        phase: this.phase,
+        values: {
+          spread: this.values.spread,
+          intensity: this.values.intensity,
+          fill: this.values.fill,
+          sweep: this.values.sweep
+        },
+        smoothAudio: this.smoothAudio,
+        startTime: this.startTime
+      };
+    }
     this.destroy();
     if (!canvas || prefersReducedMotion() || !isTest2Scope()) return false;
 
@@ -915,8 +953,19 @@
     };
 
     this.ready = true;
-    this.startTime = performance.now();
-    this._setPhaseTargets('idle');
+    if (preserved && preserved.phase && preserved.phase !== 'idle') {
+      this.values.spread = preserved.values.spread;
+      this.values.intensity = preserved.values.intensity;
+      this.values.fill = preserved.values.fill;
+      this.values.sweep = preserved.values.sweep;
+      this.smoothAudio = preserved.smoothAudio;
+      this.startTime = preserved.startTime;
+      this._setPhaseTargets(preserved.phase);
+      this._startLoop();
+    } else {
+      this.startTime = performance.now();
+      this._setPhaseTargets('idle');
+    }
     this.fillEl.classList.add('p2-agent-fill--gl-ready');
     this._resize(true);
 
@@ -943,7 +992,7 @@
 
   function ensureBound() {
     if (!isTest2Scope() || prefersReducedMotion()) return false;
-    var canvas = document.querySelector('.p2-agent-input .p2-agent-fill__gl');
+    var canvas = pickTest2FillCanvas();
     if (!canvas) return false;
     if (instance.canvas === canvas && instance.ready) return true;
     return instance.bind(canvas);
