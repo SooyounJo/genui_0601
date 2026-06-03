@@ -143,7 +143,7 @@ function TestScripts({ testId }) {
       <Script src="/app/design-doc.js?v=2" strategy="beforeInteractive" />
       <Script src="/app/interaction-state.js?v=2" strategy="beforeInteractive" />
       <Script src="/app/dot-pair-rain.js?v=1" strategy="beforeInteractive" />
-      <Script src="/app/surface-layout.js?v=mlp-test2-contact-freeze-fix-3" strategy="beforeInteractive" />
+      <Script src="/app/surface-layout.js?v=mlp-test2-shrink-flow-1" strategy="beforeInteractive" />
       <Script src="/app/settings.js?v=2" strategy="beforeInteractive" />
       <Script src="/app/canvas.js?v=2" strategy="beforeInteractive" />
       <Script src="/app/rules-renderer.js?v=2" strategy="beforeInteractive" />
@@ -154,7 +154,7 @@ function TestScripts({ testId }) {
       <Script src="/app/main.js?v=2" strategy="beforeInteractive" />
       <Script src="/app/p2-agent-fill-gl.js?v=36" strategy="beforeInteractive" />
       <Script src="/app/p2-galaxy-star.js?v=11" strategy="beforeInteractive" />
-      <Script src="/prototype-logic.js?v=mlp-test2-contact-freeze-fix-3" strategy="lazyOnload" />
+      <Script src="/prototype-logic.js?v=mlp-test2-loading-handoff-1" strategy="lazyOnload" />
     </>
   );
 }

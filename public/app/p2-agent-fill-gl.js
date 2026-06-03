@@ -409,6 +409,12 @@
   function pickTest2FillCanvas() {
     var result = document.getElementById('p2-result');
     var shell = document.getElementById('p2-area');
+    if (shell && shell.classList.contains('p2-contact-voice-renew')) {
+      var renewFooter = document.querySelector(
+        '.p2-agent-footer .p2-agent-input .p2-agent-fill__gl'
+      );
+      if (renewFooter) return renewFooter;
+    }
     if (result && result.classList.contains('is-loading') && !result.classList.contains('has-swap')) {
       var chromeHandoff =
         (shell && shell.classList.contains('p2-loading-chrome-exiting')) ||
@@ -654,6 +660,7 @@
       }
     }
     if (this.shellEl) {
+      var voiceRenew = this.shellEl.classList.contains('p2-contact-voice-renew');
       if (isTest2Scope() && (phaseName === 'fadeOut' || phaseName === 'settling')) {
         this.shellEl.classList.add('p2-agent-shell--glow-retire');
       } else if (
@@ -663,12 +670,13 @@
         this.shellEl.classList.remove('p2-agent-shell--glow-retire');
       }
       if (
-        phaseName === 'listening' || phaseName === 'generating' ||
+        !voiceRenew &&
+        (phaseName === 'listening' || phaseName === 'generating' ||
         phaseName === 'hollowReveal' || phaseName === 'handoff' ||
-        phaseName === 'settling' || phaseName === 'fadeOut'
+        phaseName === 'settling' || phaseName === 'fadeOut')
       ) {
         this.shellEl.classList.add('p2-agent-shell--gl-fill');
-      } else if (phaseName === 'idle') {
+      } else if (phaseName === 'idle' || voiceRenew) {
         this.shellEl.classList.remove('p2-agent-shell--gl-fill');
       }
     }

@@ -2413,11 +2413,11 @@ function resetTest2P2LayoutForNewUtterance(canvas) {
   var slot = document.getElementById('p2-slot');
   var result = document.getElementById('p2-result');
   var defaults = document.getElementById('p2-default-widgets');
-  var widgets = document.querySelector('.p2-widgets--compact');
-  var widgetsWrap = document.querySelector('[data-role="persona2-widgets"]');
   var footer = shell && shell.querySelector('.p2-agent-footer');
   var agentInput = footer && footer.querySelector('.p2-agent-input');
   var star = document.getElementById('p2-star');
+
+  clearTest2ContactExitFade();
 
   if (slot) {
     delete slot.dataset.p2LayoutReady;
@@ -2465,22 +2465,16 @@ function resetTest2P2LayoutForNewUtterance(canvas) {
     });
     shell.style.removeProperty('height');
     shell.style.removeProperty('min-height');
-    shell.style.removeProperty('--p2-shell-h');
+    shell.style.removeProperty('transition');
     var defaultShellH = 148;
-    shell.style.height = defaultShellH + 'px';
-    shell.style.minHeight = defaultShellH + 'px';
-    shell.style.setProperty('--p2-shell-h', defaultShellH + 'px');
+    var defaultShellHpx = defaultShellH + 'px';
+    shell.style.height = defaultShellHpx;
+    shell.style.minHeight = defaultShellHpx;
+    shell.style.setProperty('--p2-shell-h', defaultShellHpx);
+    _restoreTest2P2ShellAnchor(shell);
   }
 
-  if (widgets) {
-    widgets.style.removeProperty('height');
-    widgets.style.removeProperty('min-height');
-  }
-  if (widgetsWrap) {
-    widgetsWrap.style.removeProperty('height');
-    widgetsWrap.style.removeProperty('min-height');
-    widgetsWrap.style.removeProperty('overflow');
-  }
+  _resetTest2P2WidgetsFrame();
 
   if (defaults) {
     defaults.style.removeProperty('display');
@@ -2502,6 +2496,7 @@ function resetTest2P2LayoutForNewUtterance(canvas) {
   }
 
   if (footer) {
+    _restoreTest2ShellFooter(footer);
     footer.classList.remove('p2-agent-footer--settled', 'p2-contact-stagger-item');
     footer.style.removeProperty('position');
     footer.style.removeProperty('opacity');
@@ -2550,6 +2545,503 @@ function resetTest2P2LayoutForNewUtterance(canvas) {
   return true;
 }
 window.resetTest2P2LayoutForNewUtterance = resetTest2P2LayoutForNewUtterance;
+
+function hasTest2P2ContactListMounted() {
+  if (!_isTest2Scope()) return false;
+  var slot = document.getElementById('p2-slot');
+  return !!(slot && slot.querySelector('.p2-contact-list'));
+}
+
+function isTest2P2FinalContactLayout() {
+  if (!hasTest2P2ContactListMounted()) return false;
+  var shell = document.getElementById('p2-area');
+  var slot = document.getElementById('p2-slot');
+  if (!shell || !slot) return false;
+  return !!(
+    shell.classList.contains('p2-contact-layout-active') ||
+    slot.classList.contains('p2-seq-done') ||
+    slot.classList.contains('p2-contact-reveal-active') ||
+    shell.classList.contains('p2-seq-done')
+  );
+}
+
+function clearTest2ContactExitFade() {
+  var shell = document.getElementById('p2-area');
+  var slot = document.getElementById('p2-slot');
+  if (shell) {
+    shell.classList.remove('p2-contact-voice-exit');
+    shell.style.removeProperty('--p2-test2-shrink-fade-dur');
+  }
+  if (slot) {
+    slot.style.removeProperty('opacity');
+    slot.style.removeProperty('transition');
+    slot.style.removeProperty('pointer-events');
+    slot.style.removeProperty('animation');
+    var list = slot.querySelector('.p2-contact-list');
+    if (list) list.style.removeProperty('animation');
+    slot.querySelectorAll(
+      '.p2-contact-list__header, .p2-contact-list__item'
+    ).forEach(function (node) {
+      node.style.removeProperty('animation');
+    });
+  }
+}
+
+function endTest2VoiceRenewChrome() {
+  var canvas = document.getElementById('canvas');
+  var shell = document.getElementById('p2-area');
+  if (canvas) {
+    canvas.removeAttribute('data-p2-voice-renew');
+    canvas.removeAttribute('data-p2-final-handoff');
+  }
+  if (shell) {
+    shell.classList.remove(
+      'p2-contact-voice-renew',
+      'p2-loading-footer-handoff',
+      'p2-agent-shell--flow-handoff',
+      'p2-final-loading-compact'
+    );
+  }
+  var result = document.getElementById('p2-result');
+  if (result) {
+    var cardBody = result.querySelector('.p2-agent-card__body');
+    if (cardBody) {
+      cardBody.style.removeProperty('display');
+      cardBody.style.removeProperty('pointer-events');
+    }
+  }
+  clearTest2ContactExitFade();
+  disableTest2VoiceRenewInputShiny();
+  _restoreTest2ShellFooter();
+  if (shell) {
+    shell.classList.remove('p2-final-shrink-morph');
+    _restoreTest2P2ShellAnchor(shell);
+  }
+}
+
+var TEST2_FINAL_SHRINK_MS = 960;
+var TEST2_FINAL_LOADING_REVEAL_MS = 300;
+var TEST2_P2_WIDGETS_DEFAULT_H = 240;
+
+function _restoreTest2P2ShellAnchor(shell) {
+  shell = shell || document.getElementById('p2-area');
+  if (!shell) return;
+  shell.style.setProperty('position', 'absolute', 'important');
+  shell.style.setProperty('top', '0', 'important');
+  shell.style.setProperty('left', '24px', 'important');
+  shell.style.setProperty('right', '24px', 'important');
+  shell.style.removeProperty('width');
+}
+
+function _syncTest2P2ShellFrame(shellHpx, shell) {
+  shell = shell || document.getElementById('p2-area');
+  var widgets = document.querySelector('.p2-widgets--compact');
+  var widgetsWrap = document.querySelector('[data-role="persona2-widgets"]');
+  if (shell && shellHpx) {
+    shell.style.setProperty('--p2-shell-h', shellHpx);
+  }
+  if (widgets && shellHpx) {
+    widgets.style.setProperty('--p2-shell-h', shellHpx);
+    widgets.style.setProperty('height', shellHpx, 'important');
+    widgets.style.setProperty('min-height', shellHpx, 'important');
+  }
+  if (widgetsWrap && shellHpx) {
+    widgetsWrap.style.setProperty('--p2-shell-h', shellHpx);
+    widgetsWrap.style.setProperty('height', shellHpx, 'important');
+    widgetsWrap.style.setProperty('min-height', shellHpx, 'important');
+  }
+}
+
+function _resetTest2P2WidgetsFrame(defaultH) {
+  defaultH = defaultH || TEST2_P2_WIDGETS_DEFAULT_H;
+  var defaultHpx = defaultH + 'px';
+  var widgets = document.querySelector('.p2-widgets--compact');
+  var widgetsWrap = document.querySelector('[data-role="persona2-widgets"]');
+  if (widgets) {
+    widgets.style.removeProperty('--p2-shell-h');
+    widgets.style.removeProperty('height');
+    widgets.style.removeProperty('min-height');
+    widgets.style.removeProperty('transition');
+  }
+  if (widgetsWrap) {
+    widgetsWrap.style.removeProperty('--p2-shell-h');
+    widgetsWrap.style.removeProperty('overflow');
+    widgetsWrap.style.removeProperty('transition');
+    widgetsWrap.style.height = defaultHpx;
+    widgetsWrap.style.minHeight = defaultHpx;
+  }
+}
+
+function _hideTest2ShellFooterForCompact(footer) {
+  if (!footer) return;
+  footer.dataset.test2FooterSuppressed = '1';
+  footer.style.setProperty('display', 'none', 'important');
+  footer.style.setProperty('visibility', 'hidden', 'important');
+  footer.style.setProperty('height', '0', 'important');
+  footer.style.setProperty('min-height', '0', 'important');
+  footer.style.setProperty('margin', '0', 'important');
+  footer.style.setProperty('padding', '0', 'important');
+  footer.style.setProperty('overflow', 'hidden', 'important');
+  footer.style.setProperty('pointer-events', 'none', 'important');
+  footer.style.setProperty('opacity', '0', 'important');
+}
+
+function _restoreTest2ShellFooter(footer) {
+  footer = footer || document.querySelector('.p2-agent-footer');
+  if (!footer || footer.dataset.test2FooterSuppressed !== '1') return;
+  delete footer.dataset.test2FooterSuppressed;
+  footer.style.removeProperty('display');
+  footer.style.removeProperty('visibility');
+  footer.style.removeProperty('height');
+  footer.style.removeProperty('min-height');
+  footer.style.removeProperty('margin');
+  footer.style.removeProperty('padding');
+  footer.style.removeProperty('overflow');
+  footer.style.removeProperty('pointer-events');
+  footer.style.removeProperty('opacity');
+}
+
+function beginTest2LoadingHandoffFromFinal(userText, opts) {
+  if (!_isTest2Scope()) return false;
+  opts = opts || {};
+  var canvas = document.getElementById('canvas');
+  var shell = document.getElementById('p2-area');
+  var slot = document.getElementById('p2-slot');
+  var defaults = document.getElementById('p2-default-widgets');
+  var result = document.getElementById('p2-result');
+  var footer = shell && shell.querySelector('.p2-agent-footer');
+  var agentInput = footer && footer.querySelector('.p2-agent-input');
+  var raw = String(userText || '').trim();
+  if (!raw && agentInput) raw = _getTest2InputDisplayText(agentInput);
+  if (!shell || !result) return false;
+
+  _hideTest2ShellFooterForCompact(footer);
+
+  if (slot) {
+    TEST2_SLOT_PHASE_MIRROR.forEach(function (cls) {
+      slot.classList.remove(cls);
+    });
+    slot.style.pointerEvents = 'none';
+    slot.style.display = 'none';
+    slot.style.opacity = '0';
+    mirrorTest2SlotPhaseToShell(slot);
+  }
+  if (defaults) {
+    defaults.style.removeProperty('display');
+    defaults.style.opacity = '1';
+    defaults.style.pointerEvents = 'none';
+  }
+
+  shell.classList.remove(
+    'p2-contact-voice-renew',
+    'p2-contact-layout-active',
+    'p2-contact-expand-settled',
+    'p2-loading-chrome-exiting',
+    'p2-loading-footer-handoff',
+    'p2-agent-shell--flow-handoff'
+  );
+  shell.classList.add('p2-agent-shell--gl-fill', 'p2-final-loading-compact');
+  _restoreTest2P2ShellAnchor(shell);
+  shell.style.setProperty('height', '148px', 'important');
+  shell.style.setProperty('min-height', '148px', 'important');
+  _syncTest2P2ShellFrame('148px', shell);
+
+  resetTest2LoadingChromeState(result);
+  result.classList.remove(
+    'has-swap',
+    'p2-default-hiding',
+    'p2-result-expanded',
+    'p2-crossfade-out',
+    'p2-loading-ui-exiting'
+  );
+  result.classList.add('is-loading');
+
+  var cardBody = result.querySelector('.p2-agent-card__body');
+  if (cardBody) {
+    cardBody.style.display = 'none';
+    cardBody.style.pointerEvents = 'none';
+  }
+
+  var loading = result.querySelector('.p2-result-loading');
+  if (loading) {
+    var status = loading.querySelector('.p2-result-loading__status');
+    var sub = loading.querySelector('.p2-result-loading__sub');
+    var loadingInput = loading.querySelector('.p2-result-loading__input');
+    if (status && raw) status.textContent = deriveTest2LoadingStatus(raw);
+    if (sub && raw) sub.textContent = raw;
+    if (loadingInput && raw) {
+      setTest2InputDisplayText(loadingInput, raw);
+      loadingInput.classList.remove('p2-agent-input--settled');
+      loadingInput.classList.add('p2-agent-input--glow');
+    }
+  }
+
+  disableTest2VoiceRenewInputShiny(agentInput);
+
+  if (canvas) {
+    canvas.classList.add('p2-generating');
+    canvas.setAttribute('data-p2-final-handoff', '1');
+  }
+
+  void result.offsetWidth;
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      revealTest2LoadingTextCompact(result);
+    });
+  });
+
+  window.__test2FillGlBindSuspended = false;
+  if (window.P2AgentFillGL) {
+    window.P2AgentFillGL.ensureBound();
+    window.P2AgentFillGL.setPhase('generating');
+  }
+  if (typeof _syncTest2LoadingFillGl === 'function') {
+    _syncTest2LoadingFillGl();
+  }
+  if (canvas) syncTest2VoiceStarState(canvas);
+  return true;
+}
+
+function beginTest2MountShrinkFromFinal(done) {
+  if (!_isTest2Scope()) {
+    if (typeof done === 'function') done();
+    return Promise.resolve();
+  }
+  var canvas = document.getElementById('canvas');
+  var shell = document.getElementById('p2-area');
+  var slot = document.getElementById('p2-slot');
+  var footer = shell && shell.querySelector('.p2-agent-footer');
+  var widgets = document.querySelector('.p2-widgets--compact');
+  var widgetsWrap = document.querySelector('[data-role="persona2-widgets"]');
+  var targetH = 148;
+  var targetHpx = targetH + 'px';
+  var morph =
+    'height ' + TEST2_FINAL_SHRINK_MS + 'ms var(--p2-test2-morph-ease, cubic-bezier(0.16, 1, 0.3, 1)), ' +
+    'min-height ' + TEST2_FINAL_SHRINK_MS + 'ms var(--p2-test2-morph-ease, cubic-bezier(0.16, 1, 0.3, 1))';
+
+  if (!shell || !isTest2P2FinalContactLayout()) {
+    if (typeof done === 'function') done();
+    return Promise.resolve();
+  }
+
+  var handoffText = '';
+  var footerInput = footer && footer.querySelector('.p2-agent-input');
+  if (footerInput) handoffText = _getTest2InputDisplayText(footerInput);
+
+  if (canvas) canvas.classList.remove('p2-listening');
+
+  var fadeMs = Math.max(520, Math.round(TEST2_FINAL_SHRINK_MS * 0.88));
+  shell.style.setProperty('--p2-test2-shrink-fade-dur', fadeMs + 'ms');
+  shell.classList.add('p2-contact-voice-exit', 'p2-final-shrink-morph', 'p2-shell-js-height');
+  _restoreTest2P2ShellAnchor(shell);
+  _hideTest2ShellFooterForCompact(footer);
+
+  shell.classList.remove(
+    'p2-contact-layout-active',
+    'p2-contact-expand-settled',
+    'p2-contact-shell-expanding',
+    'p2-contact-reveal-flow',
+    'p2-contact-unified-reveal',
+    'p2-contact-unified-reveal-active'
+  );
+
+  if (slot) {
+    slot.style.removeProperty('opacity');
+    slot.style.removeProperty('transition');
+    slot.style.pointerEvents = 'none';
+  }
+
+  var startH = Math.max(targetH, Math.round(shell.getBoundingClientRect().height) || targetH);
+  var startHpx = startH + 'px';
+  shell.style.setProperty('height', startHpx, 'important');
+  shell.style.setProperty('min-height', startHpx, 'important');
+  _syncTest2P2ShellFrame(startHpx, shell);
+  void shell.offsetHeight;
+
+  function applyShrinkTargets() {
+    shell.style.setProperty('transition', morph, 'important');
+    shell.style.setProperty('height', targetHpx, 'important');
+    shell.style.setProperty('min-height', targetHpx, 'important');
+    _syncTest2P2ShellFrame(targetHpx, shell);
+    if (widgets) widgets.style.setProperty('transition', morph, 'important');
+    if (widgetsWrap) widgetsWrap.style.setProperty('transition', morph, 'important');
+  }
+
+  shell.style.setProperty('transition', morph, 'important');
+  if (widgets) widgets.style.setProperty('transition', morph, 'important');
+  if (widgetsWrap) widgetsWrap.style.setProperty('transition', morph, 'important');
+  void shell.offsetHeight;
+  requestAnimationFrame(function () {
+    requestAnimationFrame(applyShrinkTargets);
+  });
+
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      beginTest2LoadingHandoffFromFinal(handoffText);
+    });
+  });
+
+  window.__test2FillGlBindSuspended = false;
+  if (window.P2AgentFillGL) {
+    window.P2AgentFillGL.ensureBound();
+    window.P2AgentFillGL.setPhase('generating');
+  }
+
+  return new Promise(function (resolve) {
+    window.setTimeout(function () {
+      endTest2VoiceRenewChrome();
+      if (typeof done === 'function') done();
+      resolve();
+    }, TEST2_FINAL_SHRINK_MS);
+  });
+}
+
+function restartTest2InputShinyMotion(agentInput) {
+  if (!agentInput) return;
+  var span = agentInput.querySelector('.p2-input-text');
+  if (!span) return;
+  span.classList.add('p2-input-text--shiny-sweep');
+  span.style.animation = 'none';
+  void span.offsetWidth;
+  span.style.removeProperty('animation');
+}
+
+function enableTest2VoiceRenewInputShiny(agentInput) {
+  if (!agentInput) return;
+  _restoreTest2InputFill(agentInput);
+  agentInput.classList.remove('p2-agent-input--settled');
+  agentInput.classList.add('p2-agent-input--glow');
+  agentInput.setAttribute('data-p2-shiny-active', '1');
+  var span = _ensureTest2InputTextSpan(agentInput);
+  if (span) {
+    span.classList.add('p2-input-text--shiny-sweep');
+    span.setAttribute('data-p2-shiny-active', '1');
+  }
+  restartTest2InputShinyMotion(agentInput);
+}
+
+function disableTest2VoiceRenewInputShiny(agentInput) {
+  agentInput = agentInput || document.querySelector('.p2-agent-footer .p2-agent-input');
+  if (!agentInput) return;
+  agentInput.classList.remove('p2-agent-input--glow');
+  agentInput.removeAttribute('data-p2-shiny-active');
+  var span = agentInput.querySelector('.p2-input-text');
+  if (span) {
+    span.classList.remove('p2-input-text--shiny-sweep');
+    span.removeAttribute('data-p2-shiny-active');
+    span.style.removeProperty('animation');
+  }
+}
+
+function beginTest2VoiceRenewInputGlow() {
+  var agentInput = document.querySelector('.p2-agent-footer .p2-agent-input');
+  if (!agentInput) return;
+  enableTest2VoiceRenewInputShiny(agentInput);
+}
+
+function beginTest2VoiceFromFinalContact(canvas) {
+  if (!hasTest2P2ContactListMounted()) return false;
+  canvas = canvas || document.getElementById('canvas');
+  var shell = document.getElementById('p2-area');
+  window.__test2FillGlBindSuspended = false;
+  if (shell) {
+    shell.classList.add('p2-contact-voice-renew');
+    _restoreTest2P2ShellAnchor(shell);
+    var renewH = shell.style.getPropertyValue('--p2-shell-h') ||
+      shell.style.height ||
+      (shell.getBoundingClientRect().height + 'px');
+    if (renewH) _syncTest2P2ShellFrame(String(renewH).trim(), shell);
+  }
+  if (canvas) canvas.setAttribute('data-p2-voice-renew', '1');
+  beginTest2VoiceRenewInputGlow();
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      beginTest2VoiceRenewInputGlow();
+    });
+  });
+  if (window.P2AgentFillGL) {
+    window.P2AgentFillGL.ensureBound();
+    window.P2AgentFillGL.setPhase('listening');
+  }
+  if (canvas) syncTest2VoiceStarState(canvas);
+  return true;
+}
+
+function beginTest2GeneratingFromFinalContact(canvas, result, userText) {
+  canvas = canvas || document.getElementById('canvas');
+  var shell = document.getElementById('p2-area');
+  var voiceRenew =
+    !!(shell && shell.classList.contains('p2-contact-voice-renew')) ||
+    !!(canvas && canvas.getAttribute('data-p2-voice-renew') === '1');
+  if (!voiceRenew && !isTest2P2FinalContactLayout() && !hasTest2P2ContactListMounted()) {
+    return false;
+  }
+  result = result || document.getElementById('p2-result');
+  window.__test2FillGlBindSuspended = false;
+  if (shell) {
+    shell.classList.add('p2-contact-voice-renew');
+    _restoreTest2P2ShellAnchor(shell);
+    var genH = shell.style.getPropertyValue('--p2-shell-h') ||
+      shell.style.height ||
+      (shell.getBoundingClientRect().height + 'px');
+    if (genH) _syncTest2P2ShellFrame(String(genH).trim(), shell);
+  }
+  if (canvas) canvas.setAttribute('data-p2-voice-renew', '1');
+
+  syncTest2VoiceRenewInputText(userText, true);
+
+  if (result) {
+    result.classList.remove(
+      'is-loading',
+      'has-swap',
+      'p2-default-hiding',
+      'p2-result-expanded',
+      'p2-crossfade-out',
+      'p2-loading-ui-exiting',
+      'p2-loading-text-reveal'
+    );
+    resetTest2LoadingChromeState(result);
+  }
+  if (canvas) canvas.classList.add('p2-generating');
+  if (window.P2AgentFillGL) {
+    window.P2AgentFillGL.ensureBound();
+    window.P2AgentFillGL.setPhase('generating');
+  }
+  if (canvas) syncTest2VoiceStarState(canvas);
+  return true;
+}
+
+function syncTest2VoiceRenewInputText(text, withGlow) {
+  var renewShell = document.getElementById('p2-area');
+  var voiceRenew = !!(renewShell && renewShell.classList.contains('p2-contact-voice-renew'));
+  if (!isTest2P2FinalContactLayout() && !voiceRenew) return;
+  var agentInput = document.querySelector('.p2-agent-footer .p2-agent-input');
+  if (!agentInput) return;
+  var raw = String(text || '').trim();
+  if (raw) {
+    setTest2InputDisplayText(agentInput, raw);
+  }
+  if (withGlow) {
+    enableTest2VoiceRenewInputShiny(agentInput);
+  } else if (!raw) {
+    disableTest2VoiceRenewInputShiny(agentInput);
+  }
+}
+
+window.hasTest2P2ContactListMounted = hasTest2P2ContactListMounted;
+window.isTest2P2FinalContactLayout = isTest2P2FinalContactLayout;
+window.syncTest2VoiceRenewInputText = syncTest2VoiceRenewInputText;
+window.restartTest2InputShinyMotion = restartTest2InputShinyMotion;
+window.enableTest2VoiceRenewInputShiny = enableTest2VoiceRenewInputShiny;
+window.disableTest2VoiceRenewInputShiny = disableTest2VoiceRenewInputShiny;
+window.beginTest2VoiceRenewInputGlow = beginTest2VoiceRenewInputGlow;
+window.beginTest2VoiceFromFinalContact = beginTest2VoiceFromFinalContact;
+window.beginTest2GeneratingFromFinalContact = beginTest2GeneratingFromFinalContact;
+window.clearTest2ContactExitFade = clearTest2ContactExitFade;
+window.revealTest2LoadingTextCompact = revealTest2LoadingTextCompact;
+window.beginTest2LoadingHandoffFromFinal = beginTest2LoadingHandoffFromFinal;
+window.beginTest2MountShrinkFromFinal = beginTest2MountShrinkFromFinal;
+window.endTest2VoiceRenewChrome = endTest2VoiceRenewChrome;
 
 var TEST2_SLOT_PHASE_MIRROR = [
   'p2-reveal-waiting',
@@ -11043,17 +11535,10 @@ function applyTest2ContactListShellHeight(slot) {
     area.classList.add('p2-shell-js-height');
     area.style.height = shellHpx;
     area.style.minHeight = shellHpx;
-    area.style.setProperty('--p2-shell-h', shellHpx);
+    _restoreTest2P2ShellAnchor(area);
+    _syncTest2P2ShellFrame(shellHpx, area);
   }
-  if (widgets) {
-    widgets.style.height = shellHpx;
-    widgets.style.minHeight = shellHpx;
-  }
-  if (widgetsWrap) {
-    widgetsWrap.style.height = shellHpx;
-    widgetsWrap.style.minHeight = shellHpx;
-    widgetsWrap.style.overflow = 'visible';
-  }
+  if (widgetsWrap) widgetsWrap.style.overflow = 'visible';
   if (stage) {
     stage.style.removeProperty('height');
     stage.style.setProperty('--p2-reveal-h', contentHpx);
@@ -11125,10 +11610,9 @@ function activateTest2ContactListLayout(slot) {
     shell.classList.add('p2-contact-layout-active', 'p2-shell-js-height');
     shell.style.height = shellHpx;
     shell.style.minHeight = shellHpx;
-    shell.style.setProperty('--p2-shell-h', shellHpx);
+    _restoreTest2P2ShellAnchor(shell);
+    _syncTest2P2ShellFrame(shellHpx, shell);
   }
-  if (widgets) widgets.style.minHeight = shellHpx;
-  if (widgetsWrap) widgetsWrap.style.minHeight = shellHpx;
   if (main) {
     main.style.display = 'none';
     main.style.opacity = '0';
@@ -11227,17 +11711,10 @@ function patchTest2ContactListLayout(slot, opts) {
     if (area && area.style.height !== shellHpx) {
       area.style.height = shellHpx;
       area.style.minHeight = shellHpx;
-      area.style.setProperty('--p2-shell-h', shellHpx);
+      _restoreTest2P2ShellAnchor(area);
+      _syncTest2P2ShellFrame(shellHpx, area);
     }
-    if (widgets && widgets.style.height !== shellHpx) {
-      widgets.style.height = shellHpx;
-      widgets.style.minHeight = shellHpx;
-    }
-    if (widgetsWrap && widgetsWrap.style.height !== shellHpx) {
-      widgetsWrap.style.height = shellHpx;
-      widgetsWrap.style.minHeight = shellHpx;
-      widgetsWrap.style.overflow = 'visible';
-    }
+    if (widgetsWrap) widgetsWrap.style.overflow = 'visible';
 
     var contentHpx = contentH + 'px';
     if (slot.style.getPropertyValue('--p2-reveal-h') !== contentHpx) {
@@ -11319,6 +11796,22 @@ var _test2LoadingSyncLock = false;
 var _test2ContactSyncRaf = 0;
 var _test2ContactSyncRunning = false;
 
+function revealTest2LoadingTextCompact(result) {
+  if (!result || !_isTest2Scope()) return;
+  if (!result.classList.contains('is-loading') || result.classList.contains('has-swap')) return;
+
+  result.classList.remove('p2-loading-ui-exiting');
+  result.dataset.test2LoadingUiRevealed = '1';
+
+  var shell = document.getElementById('p2-area');
+  if (shell) {
+    shell.classList.remove('p2-loading-chrome-exiting', 'p2-loading-footer-handoff');
+  }
+
+  void result.offsetWidth;
+  result.classList.add('p2-loading-text-reveal');
+}
+
 function revealTest2LoadingText(result) {
   if (!result || !_isTest2Scope()) return;
   if (result.dataset.test2LoadingUiRevealed === '1') return;
@@ -11381,8 +11874,23 @@ function setTest2AgentInputGlow(active) {
   if (!_isTest2Scope()) return;
   var agentInput = document.querySelector('.p2-agent-footer .p2-agent-input');
   if (!agentInput) return;
+  var shell = document.getElementById('p2-area');
+  var canvas = document.getElementById('canvas');
+  var voiceRenew =
+    !!(shell && shell.classList.contains('p2-contact-voice-renew')) ||
+    !!(canvas && canvas.getAttribute('data-p2-voice-renew') === '1');
+  if (active && voiceRenew) {
+    enableTest2VoiceRenewInputShiny(agentInput);
+    return;
+  }
   if (active) agentInput.classList.add('p2-agent-input--glow');
-  else agentInput.classList.remove('p2-agent-input--glow');
+  else {
+    if (agentInput.getAttribute('data-p2-shiny-active') === '1') {
+      disableTest2VoiceRenewInputShiny(agentInput);
+    } else {
+      agentInput.classList.remove('p2-agent-input--glow');
+    }
+  }
 }
 
 function syncTest2LoadingPresentation(result) {
