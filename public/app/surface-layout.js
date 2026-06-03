@@ -2395,6 +2395,9 @@ function _renderTest2ContactIcon(appName) {
   return '<img class="p2-contact-list__icon-img" src="' + TEST2_ICONS_DIR + encodeURI(file).replace(/#/g, '%23') + '" alt="" />';
 }
 
+var TEST2_CONTACT_FOOTER_H = 56;
+var TEST2_CONTACT_CHROME_PAD_BOTTOM = 10;
+
 function _computeP2ContactListHeight(itemCount) {
   var count = Math.max(1, Math.min(itemCount || 3, 3));
   var padTop = 20;
@@ -2404,6 +2407,10 @@ function _computeP2ContactListHeight(itemCount) {
   var itemH = 68;
   var itemGap = 8;
   return padTop + headerBlock + headerGap + count * itemH + (count - 1) * itemGap + padBottom;
+}
+
+function _test2ContactShellHeight(contentH) {
+  return contentH + TEST2_CONTACT_FOOTER_H + TEST2_CONTACT_CHROME_PAD_BOTTOM;
 }
 
 function _renderP2ContactList(variant, rect) {
@@ -10754,7 +10761,7 @@ function applyTest2ContactListShellHeight(slot) {
   if (!list) return;
   var count = parseInt(list.getAttribute('data-item-count') || '3', 10) || 3;
   var contentH = _computeP2ContactListHeight(count);
-  var shellH = contentH + 56;
+  var shellH = _test2ContactShellHeight(contentH);
   var shellHpx = shellH + 'px';
   var contentHpx = contentH + 'px';
   var area = document.getElementById('p2-area');
@@ -10795,11 +10802,12 @@ function activateTest2ContactListLayout(slot) {
   var main = document.getElementById('p2-default-widgets');
   var footer = shell && shell.querySelector('.p2-agent-footer');
   var count = parseInt(list.getAttribute('data-item-count') || '3', 10) || 3;
-  var shellHpx = (_computeP2ContactListHeight(count) + 56) + 'px';
+  var shellHpx = _test2ContactShellHeight(_computeP2ContactListHeight(count)) + 'px';
   var widgets = document.querySelector('.p2-widgets--compact');
   var widgetsWrap = document.querySelector('[data-role="persona2-widgets"]');
 
   if (shell) {
+    shell.classList.remove('p2-loading-chrome-exiting', 'p2-loading-footer-handoff');
     shell.classList.add('p2-contact-layout-active');
     shell.style.height = shellHpx;
     shell.style.minHeight = shellHpx;
@@ -10872,7 +10880,7 @@ function patchTest2ContactListLayout(slot, opts) {
 
   function applyLayout(contentH) {
     if (patchToken !== _p2LayoutPatchToken) return;
-    var shellH = contentH + 56;
+    var shellH = _test2ContactShellHeight(contentH);
     var shellHpx = shellH + 'px';
     var area = document.getElementById('p2-area');
     var result = document.getElementById('p2-result');

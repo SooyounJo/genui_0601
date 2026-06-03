@@ -2658,9 +2658,9 @@
     overflow: hidden !important;
     pointer-events: none !important;
   }
-  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-loading-chrome-exiting:has(#p2-result.is-loading) .p2-agent-footer,
-  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-loading-footer-handoff:has(#p2-result.is-loading) .p2-agent-footer,
-  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-contact-shell-expanding:has(#p2-result.is-loading) .p2-agent-footer {
+  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-loading-chrome-exiting:has(#p2-result.is-loading):not(.p2-contact-layout-active) .p2-agent-footer,
+  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-loading-footer-handoff:has(#p2-result.is-loading):not(.p2-contact-layout-active) .p2-agent-footer,
+  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-contact-shell-expanding:has(#p2-result.is-loading):not(.p2-contact-layout-active) .p2-agent-footer {
     opacity: 1 !important;
     visibility: visible !important;
     pointer-events: none;
@@ -2941,8 +2941,7 @@
   }
   #canvas[data-test-scope="test2"] .p2-agent-shell.p2-agent-shell--contact-chrome:not(:has(#p2-slot.p2-contact-reveal-active)) #p2-slot.p2-seq-color-active,
   #canvas[data-test-scope="test2"] .p2-agent-shell:has(#p2-slot.p2-contact-reveal-active):not(.p2-contact-layout-active) #p2-slot,
-  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-contact-layout-active #p2-slot,
-  #canvas[data-test-scope="test2"] .p2-agent-shell:has(#p2-slot.p2-seq-done) #p2-slot {
+  #canvas[data-test-scope="test2"] .p2-agent-shell:has(#p2-slot.p2-seq-done):not(.p2-contact-layout-active) #p2-slot {
     position: absolute !important;
     top: 0 !important;
     left: 0 !important;
@@ -2965,12 +2964,30 @@
     opacity: 1 !important;
     transition: none !important;
   }
-  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-contact-layout-active #p2-slot,
-  #canvas[data-test-scope="test2"] .p2-agent-shell:has(#p2-slot.p2-seq-done) #p2-slot {
+  #canvas[data-test-scope="test2"] .p2-agent-shell:has(#p2-slot.p2-seq-done):not(.p2-contact-layout-active) #p2-slot {
     opacity: 1 !important;
     pointer-events: auto !important;
     z-index: 1 !important;
     bottom: calc(56px + var(--p2-chrome-pad-bottom, 10px)) !important;
+    overflow: visible !important;
+    transition: none !important;
+  }
+  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-contact-layout-active #p2-slot {
+    position: relative !important;
+    top: auto !important;
+    left: 0 !important;
+    right: auto !important;
+    bottom: auto !important;
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    order: 1 !important;
+    margin: 0 !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    z-index: 1 !important;
     overflow: visible !important;
     transition: none !important;
   }
@@ -3016,7 +3033,7 @@
     inset: auto !important;
     order: 2;
     flex-shrink: 0;
-    margin-top: auto !important;
+    margin-top: 0 !important;
     align-self: stretch !important;
     z-index: 2;
     opacity: 1 !important;
