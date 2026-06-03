@@ -18528,53 +18528,40 @@
     pointer-events: none;
   }
 
-  /* test1 — left/right shortcuts: fixed 57px circle, glyph centered (no stretch) */
+  /* test1 — left/right shortcuts: 57px PNG (circle + glyph baked in) */
+  #canvas[data-test-scope="test1"] {
+    --test1-lock-shortcut-icon-size: 57px;
+  }
   #canvas[data-test-scope="test1"] .test1-lock-shortcut-l,
   #canvas[data-test-scope="test1"] .test1-lock-shortcut-r {
     position: relative;
     width: 100%;
     height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     min-height: 0;
     isolation: isolate;
   }
   #canvas[data-test-scope="test1"] .test1-lock-shortcut-l__disc,
   #canvas[data-test-scope="test1"] .test1-lock-shortcut-r__disc {
-    width: 57px;
-    height: 57px;
-    min-width: 57px;
-    min-height: 57px;
-    max-width: 57px;
-    max-height: 57px;
-    aspect-ratio: 1 / 1;
-    border-radius: 50%;
-    background: #155E75;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    box-sizing: border-box;
-    position: relative;
-    transform: none;
-    pointer-events: none;
+    display: none !important;
   }
   #canvas[data-test-scope="test1"] .test1-lock-shortcut-l__glyph,
   #canvas[data-test-scope="test1"] .test1-lock-shortcut-r__glyph,
   #canvas[data-test-scope="test1"] .test1-lock-shortcut-l__icon,
   #canvas[data-test-scope="test1"] .test1-lock-shortcut-r__icon {
-    width: 22px !important;
-    height: 22px !important;
-    min-width: 22px;
-    min-height: 22px;
-    max-width: 22px !important;
-    max-height: 22px !important;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: var(--test1-lock-shortcut-icon-size) !important;
+    height: var(--test1-lock-shortcut-icon-size) !important;
+    min-width: var(--test1-lock-shortcut-icon-size);
+    min-height: var(--test1-lock-shortcut-icon-size);
+    max-width: var(--test1-lock-shortcut-icon-size) !important;
+    max-height: var(--test1-lock-shortcut-icon-size) !important;
+    transform: translate(-50%, -50%);
     display: block;
     flex-shrink: 0;
     object-fit: contain;
-    position: static;
-    transform: none;
+    object-position: center;
     pointer-events: none;
   }
 
@@ -19087,7 +19074,7 @@
     --test1-coda-pill-w: 215px;
     --test1-coda-pill-h: 57px;
     --test1-coda-shortcut-size: var(--test1-coda-pill-h);
-    --test1-coda-shortcut-icon: calc(var(--test1-coda-pill-h) * 30 / 59);
+    --test1-coda-shortcut-icon: var(--test1-coda-shortcut-size);
     --test1-coda-pill-left: calc((388px - var(--test1-coda-pill-w)) / 2 - 0.5px);
     --test1-coda-pill-top: 795px;
     --test1-home-glow-hold: 2s;
@@ -19154,9 +19141,11 @@
     min-height: 0;
   }
 
-  /* coda — shortcut circles match center pill height; intro 59px must not leak */
+  /* coda — shortcut PNG matches center pill height (57px) */
   #canvas[data-test-scope="test1"][data-test1-coda-run] .test1-lock-shortcut-l__disc,
-  #canvas[data-test-scope="test1"][data-test1-coda-run] .test1-lock-shortcut-r__disc {
+  #canvas[data-test-scope="test1"][data-test1-coda-run] .test1-lock-shortcut-r__disc,
+  #canvas[data-test-scope="test1"][data-test1-coda-run] .test1-lock-shortcut-l__icon,
+  #canvas[data-test-scope="test1"][data-test1-coda-run] .test1-lock-shortcut-r__icon {
     width: var(--test1-coda-shortcut-size) !important;
     height: var(--test1-coda-shortcut-size) !important;
     min-width: var(--test1-coda-shortcut-size) !important;
@@ -19235,7 +19224,9 @@
   }
 
   #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-done]:not([data-test1-reveal-all]) .test1-lock-shortcut-l__disc,
-  #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-done]:not([data-test1-reveal-all]) .test1-lock-shortcut-r__disc {
+  #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-done]:not([data-test1-reveal-all]) .test1-lock-shortcut-r__disc,
+  #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-done]:not([data-test1-reveal-all]) .test1-lock-shortcut-l__icon,
+  #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-done]:not([data-test1-reveal-all]) .test1-lock-shortcut-r__icon {
     width: var(--test1-coda-shortcut-size) !important;
     height: var(--test1-coda-shortcut-size) !important;
     min-width: var(--test1-coda-shortcut-size) !important;
@@ -19266,9 +19257,11 @@
     min-height: 0;
   }
 
-  /* coda — shortcut circles match center pill height; intro 59px must not leak */
+  /* coda — shortcut PNG matches center pill height (57px) */
   #canvas[data-test-scope="test1"][data-test1-coda-run] .test1-lock-shortcut-l__disc,
-  #canvas[data-test-scope="test1"][data-test1-coda-run] .test1-lock-shortcut-r__disc {
+  #canvas[data-test-scope="test1"][data-test1-coda-run] .test1-lock-shortcut-r__disc,
+  #canvas[data-test-scope="test1"][data-test1-coda-run] .test1-lock-shortcut-l__icon,
+  #canvas[data-test-scope="test1"][data-test1-coda-run] .test1-lock-shortcut-r__icon {
     width: var(--test1-coda-shortcut-size) !important;
     height: var(--test1-coda-shortcut-size) !important;
     min-width: var(--test1-coda-shortcut-size) !important;
@@ -19365,7 +19358,9 @@
   }
 
   #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-done]:not([data-test1-reveal-all]) .test1-lock-shortcut-l__disc,
-  #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-done]:not([data-test1-reveal-all]) .test1-lock-shortcut-r__disc {
+  #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-done]:not([data-test1-reveal-all]) .test1-lock-shortcut-r__disc,
+  #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-done]:not([data-test1-reveal-all]) .test1-lock-shortcut-l__icon,
+  #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-done]:not([data-test1-reveal-all]) .test1-lock-shortcut-r__icon {
     width: var(--test1-coda-shortcut-size) !important;
     height: var(--test1-coda-shortcut-size) !important;
     min-width: var(--test1-coda-shortcut-size) !important;
@@ -20572,14 +20567,15 @@
     border-radius: 999px;
     background: rgba(21, 94, 117, 0.5);
   }
-  #canvas[data-test-scope="test1"] .test1-home-map__fill {
+  #canvas[data-test-scope="test1"] #test1-home-map .test1-home-map__fill,
+  #canvas[data-test-scope="test1"] .test1-home-map .test1-home-map__fill {
     position: absolute;
     left: 0;
     top: 6px;
     width: 69%;
     height: 5px;
     border-radius: 999px;
-    background: #eecbff;
+    background-color: #E5F0C7 !important;
   }
   #canvas[data-test-scope="test1"] .test1-home-map__thumb {
     position: absolute;

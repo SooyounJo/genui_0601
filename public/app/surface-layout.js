@@ -6617,7 +6617,7 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
 
     case 'test1-transit-card': {
       return '<div class="test1-transit-card">' +
-        '<img class="test1-transit-card__svg" src="/test1-transit-card.svg?v=solid-green-1" alt="" draggable="false" aria-hidden="true" />' +
+        '<img class="test1-transit-card__svg" src="/test1-transit-card.svg?v=fill-e5f0c7-1" alt="" draggable="false" aria-hidden="true" />' +
       '</div>';
     }
 
@@ -6634,22 +6634,13 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
 
     case 'test1-lock-shortcut-l': {
       return '<div class="test1-lock-shortcut-l">' +
-        '<div class="test1-lock-shortcut-l__disc" aria-hidden="true">' +
-          '<svg class="test1-lock-shortcut-l__glyph" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
-            '<path d="M5 4h3l2 5-2.5 1.5a11 11 0 0 0 5 5L14 13l5 2v3a2 2 0 0 1-2 2 17 17 0 0 1-16-16 2 2 0 0 1 2-2z" fill="#FFFFFF"/>' +
-          '</svg>' +
-        '</div>' +
+        '<img class="test1-lock-shortcut-l__icon" src="/lock-shortcut-camera.png" alt="" draggable="false" />' +
       '</div>';
     }
 
     case 'test1-lock-shortcut-r': {
       return '<div class="test1-lock-shortcut-r">' +
-        '<div class="test1-lock-shortcut-r__disc" aria-hidden="true">' +
-          '<svg class="test1-lock-shortcut-r__glyph" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
-            '<path d="M4 7h3l2-2h6l2 2h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z" stroke="#FFFFFF" stroke-width="1.6" fill="none"/>' +
-            '<circle cx="12" cy="13" r="3.5" stroke="#FFFFFF" stroke-width="1.6" fill="none"/>' +
-          '</svg>' +
-        '</div>' +
+        '<img class="test1-lock-shortcut-r__icon" src="/lock-shortcut-phone.png" alt="" draggable="false" />' +
       '</div>';
     }
 
@@ -6766,7 +6757,7 @@ window.renderAtomicForRole = function renderAtomicForRole(comp, rect) {
             '<div class="test1-home-map__bottom">' +
               '<div class="test1-home-map__progress">' +
                 '<div class="test1-home-map__track"></div>' +
-                '<div class="test1-home-map__fill"></div>' +
+                '<div class="test1-home-map__fill" style="background-color:#E5F0C7"></div>' +
                 '<div class="test1-home-map__thumb"><img src="/assets/test1/home/send-arrow.png" alt="" draggable="false" /></div>' +
               '</div>' +
               '<p class="test1-home-widget__action">안내 종료</p>' +
