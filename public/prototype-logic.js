@@ -764,6 +764,10 @@
       if (!userText) return;
       var isTest2 = window.__mlpTestConfig && window.__mlpTestConfig.id === 'test2';
 
+      if (isTest2 && typeof window.resetTest2P2LayoutForNewUtterance === 'function') {
+        window.resetTest2P2LayoutForNewUtterance(canvas);
+      }
+
       if (isTest2) {
         var agentInput = document.querySelector('.p2-agent-input');
         if (agentInput) {
@@ -962,6 +966,15 @@
       function startListening() {
         console.log('startListening called');
         if (listening) return;
+        var isTest2Scope = window.__mlpTestConfig && window.__mlpTestConfig.id === 'test2';
+        if (
+          isTest2Scope &&
+          typeof window.resetTest2P2LayoutForNewUtterance === 'function' &&
+          typeof window.isTest2P2RevealStarted === 'function' &&
+          window.isTest2P2RevealStarted()
+        ) {
+          window.resetTest2P2LayoutForNewUtterance(canvas);
+        }
         listening = true;
         canvas.classList.add('p2-listening');
         chordTime = 0;

@@ -2402,6 +2402,155 @@ function resetTest2P2Runtime(canvas) {
 }
 window.resetTest2P2Runtime = resetTest2P2Runtime;
 
+/** Clear contact-list / reveal layout before a new test2 voice turn (keeps GL + motion). */
+function resetTest2P2LayoutForNewUtterance(canvas) {
+  if (!_isTest2Scope()) return false;
+  canvas = canvas || document.getElementById('canvas');
+  _bumpTest2RunId();
+  window.__test2FillGlBindSuspended = false;
+
+  var shell = document.getElementById('p2-area');
+  var slot = document.getElementById('p2-slot');
+  var result = document.getElementById('p2-result');
+  var defaults = document.getElementById('p2-default-widgets');
+  var widgets = document.querySelector('.p2-widgets--compact');
+  var widgetsWrap = document.querySelector('[data-role="persona2-widgets"]');
+  var footer = shell && shell.querySelector('.p2-agent-footer');
+  var agentInput = footer && footer.querySelector('.p2-agent-input');
+  var star = document.getElementById('p2-star');
+
+  if (slot) {
+    delete slot.dataset.p2LayoutReady;
+    delete slot.dataset.test2ContactRevealLock;
+    delete slot.dataset.test2ContactStagger;
+    delete slot.dataset.test2FillFadeBound;
+    slot.removeAttribute('data-current-role');
+    slot.classList.remove(
+      'p2-reveal-waiting',
+      'p2-reveal-swap',
+      'p2-reveal-visible',
+      'p2-seq-color',
+      'p2-seq-color-active',
+      'p2-seq-title',
+      'p2-seq-done',
+      'p2-contact-reveal-active'
+    );
+    slot.style.removeProperty('--p2-reveal-h');
+    slot.style.removeProperty('clip-path');
+    slot.style.pointerEvents = 'none';
+    slot.style.opacity = '0';
+    slot.style.display = 'none';
+    slot.innerHTML = '';
+    _clearTest2ContactRevealSeqClasses(slot);
+    _clearTest2ContactRevealStagger(slot);
+    mirrorTest2SlotPhaseToShell(slot);
+  }
+
+  if (shell) {
+    shell.classList.remove(
+      'p2-contact-shell-expanding',
+      'p2-contact-layout-active',
+      'p2-contact-expand-settled',
+      'p2-contact-reveal-flow',
+      'p2-contact-unified-reveal',
+      'p2-contact-unified-reveal-active',
+      'p2-contact-footer-settling',
+      'p2-shell-js-height',
+      'p2-agent-shell--flow-handoff',
+      'p2-loading-chrome-exiting',
+      'p2-loading-footer-handoff'
+    );
+    TEST2_SLOT_PHASE_MIRROR.forEach(function (cls) {
+      shell.classList.remove(cls);
+    });
+    shell.style.removeProperty('height');
+    shell.style.removeProperty('min-height');
+    shell.style.removeProperty('--p2-shell-h');
+    var defaultShellH = 148;
+    shell.style.height = defaultShellH + 'px';
+    shell.style.minHeight = defaultShellH + 'px';
+    shell.style.setProperty('--p2-shell-h', defaultShellH + 'px');
+  }
+
+  if (widgets) {
+    widgets.style.removeProperty('height');
+    widgets.style.removeProperty('min-height');
+  }
+  if (widgetsWrap) {
+    widgetsWrap.style.removeProperty('height');
+    widgetsWrap.style.removeProperty('min-height');
+    widgetsWrap.style.removeProperty('overflow');
+  }
+
+  if (defaults) {
+    defaults.style.removeProperty('display');
+    defaults.style.removeProperty('opacity');
+    defaults.style.removeProperty('pointer-events');
+  }
+
+  if (result) {
+    result.classList.remove(
+      'has-swap',
+      'p2-result-expanded',
+      'p2-crossfade-out',
+      'p2-default-hiding',
+      'p2-loading-ui-exiting',
+      'p2-loading-text-reveal'
+    );
+    result.style.removeProperty('--p2-reveal-h');
+    resetTest2LoadingChromeState(result);
+  }
+
+  if (footer) {
+    footer.classList.remove('p2-agent-footer--settled', 'p2-contact-stagger-item');
+    footer.style.removeProperty('position');
+    footer.style.removeProperty('opacity');
+    footer.style.removeProperty('transform');
+    footer.style.removeProperty('filter');
+    footer.style.removeProperty('pointer-events');
+    footer.style.removeProperty('height');
+    footer.style.removeProperty('--p2-stagger-delay');
+    footer.style.removeProperty('animation');
+    footer.style.removeProperty('animation-delay');
+  }
+
+  if (agentInput) {
+    agentInput.classList.remove(
+      'p2-agent-input--settled',
+      'p2-seq-text-hidden',
+      'p2-seq-text-visible',
+      'p2-contact-stagger-item'
+    );
+    agentInput.style.removeProperty('--p2-stagger-delay');
+    agentInput.style.removeProperty('animation');
+    agentInput.style.removeProperty('animation-delay');
+  }
+
+  if (star) {
+    star.classList.remove(
+      'p2-agent-star--settled',
+      'p2-default-hiding',
+      'p2-seq-text-hidden',
+      'p2-seq-text-visible',
+      'p2-contact-stagger-item'
+    );
+    star.style.removeProperty('--p2-stagger-delay');
+    star.style.removeProperty('animation');
+    star.style.removeProperty('animation-delay');
+  }
+
+  ['p2-msg14', 'p2-star', 'p2-result'].forEach(function (id) {
+    var node = document.getElementById(id);
+    if (!node) return;
+    node.classList.remove('p2-default-hiding', 'p2-result-expanded', 'p2-crossfade-out');
+    node.style.removeProperty('--p2-reveal-h');
+  });
+
+  if (canvas) syncTest2VoiceStarState(canvas);
+  return true;
+}
+window.resetTest2P2LayoutForNewUtterance = resetTest2P2LayoutForNewUtterance;
+
 var TEST2_SLOT_PHASE_MIRROR = [
   'p2-reveal-waiting',
   'p2-reveal-swap',
