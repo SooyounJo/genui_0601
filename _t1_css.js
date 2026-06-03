@@ -1,4 +1,4 @@
-﻿image.png  :root {
+image.png  :root {
     --pg-bg:     #0a0a0c;
     --panel:     rgba(23, 23, 26, 0.6);
     --panel-2:   rgba(35, 35, 40, 0.7);
@@ -4253,7 +4253,7 @@
     57%, 100% { opacity: 1; pointer-events: none; visibility: visible; }
   }
   @keyframes test3MusicPlayerCopyIn {
-    0%, 56% { opacity: 0; transform: translateY(4px); visibility: hidden; }
+    0%, 56% { opacity: 0; transform: translateY(0); visibility: hidden; }
     57%, 100% { opacity: 1; transform: translateY(0); visibility: visible; }
   }
   @keyframes test3MusicPlayDiscIn {
@@ -4306,74 +4306,37 @@
     22%, 100% { opacity: 0; visibility: hidden; }
   }
   @keyframes test3MusicOrbMotion {
-    0%, 14% {
-      width: var(--test3-orb-size, 56px);
-      height: var(--test3-orb-size, 56px);
-      left: 13px;
-      top: 13px;
-      margin: 0;
-      border-radius: 50%;
-      opacity: 1;
-    }
-    14% {
-      animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    24%, 56% {
-      width: var(--test3-orb-size, 56px);
-      height: var(--test3-orb-size, 56px);
-      left: var(--test3-orb-x, 12px);
-      top: 13px;
-      margin: 0;
-      border-radius: 50%;
-      opacity: 1;
-    }
-    56% {
-      animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    57% {
-      width: var(--test3-orb-size, 56px);
-      height: var(--test3-orb-size, 56px);
-      left: var(--test3-orb-x, 12px);
-      top: 13px;
-      margin: 0;
-      border-radius: 50%;
-      opacity: 1;
-    }
-    62% {
-      width: 58px;
-      height: 58px;
+    0%, 57% {
+      width: 54px;
+      height: 54px;
       left: 14px;
-      top: 16px;
+      top: 14px;
       margin: 0;
       border-radius: 50%;
       opacity: 1;
     }
+    57% { animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
     68%, 100% {
-      width: var(--test3-orb-size, 56px);
-      height: var(--test3-orb-size, 56px);
-      left: var(--test3-orb-x, 12px);
-      top: 13px;
+      width: 54px;
+      height: 54px;
+      left: 14px;
+      top: 14px;
       margin: 0;
       border-radius: 50%;
-      opacity: 1;
+      opacity: 0;
     }
   }
-  /* Orb body ??bottom-right linear gradient breathe (independent of 14s shell motion). */
+  /* Orb body shrinks and disappears as the background turns white (57% -> 68%). */
   @keyframes test3MusicOrbShrinkTimeline {
-    0%, 56% {
+    0%, 57% {
       opacity: 1;
       transform: scale(1);
       visibility: visible;
     }
-    57% {
-      opacity: 1;
-      transform: scale(1);
-      visibility: visible;
-      animation-timing-function: cubic-bezier(0.22, 0.82, 0.24, 1);
-    }
+    57% { animation-timing-function: cubic-bezier(0.22, 0.82, 0.24, 1); }
     68%, 100% {
       opacity: 0;
-      transform: scale(0.05);
+      transform: scale(0);
       visibility: hidden;
     }
   }
@@ -4575,8 +4538,9 @@
     animation: none !important;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music {
-    --test3-orb-size: 56px;
-    --test3-orb-x: 12px;
+    --test3-orb-size: 52px;
+    --test3-orb-x: 15px;
+    --test3-orb-y: 15px;
     --test3-disc-size: 64px;
     --test3-disc-x: 16px;
     --test3-disc-y: 20px;
@@ -4589,6 +4553,9 @@
     animation:
       test3MusicSpawnIn 14s cubic-bezier(0.16, 1, 0.3, 1) both,
       test3MusicWrapperHeight 14s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  }
+  #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-loading="1"]:not([data-test3-music-resolved="1"]) {
+    /* Base variables for the loading phase; size growth handled via keyframes. */
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music[data-test3-music-phase="playing"] {
     opacity: 1 !important;
@@ -4628,8 +4595,8 @@
       rgba(255, 255, 255, 1) 0deg,
       rgba(255, 255, 255, 1) 30deg,
       #FF9030 31deg,
-      #FF7F24 36deg,
-      #FF7F24 323deg,
+      #ED610F 36deg,
+      #ED610F 323deg,
       #FF9030 324deg,
       rgba(255, 255, 255, 1) 325deg,
       rgba(255, 255, 255, 1) 360deg
@@ -4655,7 +4622,7 @@
     border-radius: inherit;
     z-index: 0;
     pointer-events: none;
-    background-color: #FF7F24 !important;
+    background-color: #ED610F !important;
     background-image: none !important;
     mix-blend-mode: normal !important;
     opacity: 1 !important;
@@ -5119,13 +5086,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 12px 0 calc(var(--test3-orb-x, 0px) + var(--test3-orb-size, 48px) + 12px);
+    padding: 0 12px 0 calc(var(--test3-orb-x, 0px) + var(--test3-orb-size, 56px) + 12px);
     pointer-events: none;
     text-align: center;
   }
   #canvas[data-test-scope="test3"][data-test3-music-shift="1"] #test3-music .dot-music1__searchLine {
     position: absolute;
-    left: calc(var(--test3-orb-x, 0px) + var(--test3-orb-size, 48px) + 12px);
+    left: calc(var(--test3-orb-x, 0px) + var(--test3-orb-size, 56px) + 12px);
     right: 12px;
     top: 50%;
     transform: translateY(-50%);
@@ -12116,6 +12083,10 @@
   .dot-icon11--orange {
     background: #FF7F24;
     --dot-mask-bg: #FF7F24;
+  }
+  #canvas[data-test-scope="test3"] .dot-icon11--orange {
+    background: #ED610F;
+    --dot-mask-bg: #ED610F;
   }
   .dot-icon11__layer {
     width: 82px;

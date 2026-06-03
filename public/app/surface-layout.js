@@ -180,7 +180,7 @@ function renderTest2OrangeOrbHtml(sparkleSrc) {
 }
 
 /** test3 disc loader — p2 breathing-chord style (sparse dots, vertical bounce; image-1 reference). */
-var TEST3_DISC_LOADER_PX = 112;
+var TEST3_DISC_LOADER_PX = 88;
 var TEST3_DISC_LOADER_N = 5;
 var TEST3_DISC_LOADER_TEMPO = 2.1;
 var TEST3_DISC_LOADER_BLEND = 0.38;
@@ -359,7 +359,7 @@ function _syncTest3MusicDiscLoaderAfterRender() {
 }
 
 /** test3 disc star phase — reuses test1 Galaxy AI logo motion (white-only). */
-var TEST3_DISC_SPARKLE_PX = 112;
+var TEST3_DISC_SPARKLE_PX = 88;
 
 function renderTest3MusicDiscSparkleHtml() {
   return '<canvas class="test3-music-disc__sparkleCanvas" width="' + TEST3_DISC_SPARKLE_PX +
