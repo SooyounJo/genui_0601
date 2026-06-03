@@ -18147,6 +18147,15 @@
 
   /* test1-assist-pill-motion-ver1:lifecycle-start */
   /* test1 intro — stack 1.5s 후 bottom pillar coda (surface-layout.js) */
+  #canvas[data-test-scope="test1"][data-test1-lock-stack-out]:not([data-test1-reveal-all]) .canvas-item[data-role="test1-now-bar-b"],
+  #canvas[data-test-scope="test1"][data-test1-lock-stack-out]:not([data-test1-reveal-all]) #test1-now-bar-b,
+  #canvas[data-test-scope="test1"][data-test1-lock-stack-out]:not([data-test1-reveal-all]) .canvas-item[data-role="test1-now-bar"],
+  #canvas[data-test-scope="test1"][data-test1-lock-stack-out]:not([data-test1-reveal-all]) #test1-now-bar,
+  #canvas[data-test-scope="test1"][data-test1-lock-stack-out]:not([data-test1-reveal-all]) .canvas-item[data-role="test1-transit-card"],
+  #canvas[data-test-scope="test1"][data-test1-lock-stack-out]:not([data-test1-reveal-all]) #test1-transit-card {
+    animation: none !important;
+  }
+
   #canvas[data-test-scope="test1"] {
     --test1-pill-out-dur: 1.25s;
   }
@@ -18783,17 +18792,22 @@
     animation: none !important;
   }
 
-  #canvas[data-test-scope="test1"][data-test1-pill-text-b]:not([data-test1-pill-text-b="done"]) .test1-bottom-pill__text-b-stage {
+  #canvas[data-test-scope="test1"][data-test1-pill-text-b]:not([data-test1-pill-text-b="done"]):not([data-test1-reveal-all]) .test1-bottom-pill__text-b-stage {
+    opacity: 0;
+    visibility: visible;
+    will-change: opacity, transform;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
-    animation: test1PillTextBIn var(--test1-pill-text-b-dur) var(--test1-pill-text-ease) 0s forwards;
+    animation: test1PillTextBIn var(--test1-pill-text-b-dur) var(--test1-pill-content-ease) 0s forwards;
   }
 
   #canvas[data-test-scope="test1"][data-test1-pill-text-b="done"] .test1-bottom-pill__text-b-stage,
   #canvas[data-test-scope="test1"][data-test1-reveal-all] .test1-bottom-pill__text-b-stage {
-    opacity: 1;
-    visibility: visible;
-    transform: none;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+    animation: none !important;
+    pointer-events: none;
   }
 
   #canvas[data-test-scope="test1"] .test1-bottom-pill__text--b {
@@ -18802,8 +18816,7 @@
 
   #canvas[data-test-scope="test1"] .test1-bottom-pill__icon {
     fill: #155E75;
-    stroke: #FFFFFF;
-    stroke-width: 0.93px;
+    stroke: none;
   }
 
   #canvas[data-test-scope="test1"] .test1-bottom-pill__text-a-fo {
@@ -18836,7 +18849,7 @@
     line-height: 16px;
     color: #155E75;
     white-space: nowrap;
-    background-image: linear-gradient(120deg, #155E75 0%, #155E75 35%, #ffffff 50%, #155E75 65%, #155E75 100%);
+    background-image: linear-gradient(120deg, #155E75 0%, #155E75 35%, #EEF0DF 50%, #155E75 65%, #155E75 100%);
     background-size: 200% auto;
     background-position: 150% center;
     -webkit-background-clip: text;
@@ -18862,8 +18875,8 @@
     pointer-events: none;
   }
 
-  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run]:not([data-test1-reveal-all]) .test1-bottom-pill__text-a-shiny-line {
-    animation: test1PillTextAShinyLine var(--test1-pill-text-a-shiny-speed) linear var(--test1-pill-text-a-shimmer-start) infinite;
+  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run][data-test1-pill-text-a-run]:not([data-test1-reveal-all]) .test1-bottom-pill__text-a-shiny-line {
+    animation: test1PillTextAShinyLine var(--test1-pill-text-a-shiny-speed) linear calc(var(--test1-pill-text-a-shimmer-start) - var(--test1-pill-icon-text-delay)) infinite;
   }
 
   #canvas[data-test-scope="test1"] .test1-bottom-pill__text-b-fo {
@@ -18905,9 +18918,11 @@
     -webkit-text-fill-color: transparent;
   }
 
-  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run]:not([data-test1-reveal-all]) .test1-bottom-pill__text-b-shiny-line,
   #canvas[data-test-scope="test1"][data-test1-pill-text-b]:not([data-test1-pill-text-b="done"]):not([data-test1-reveal-all]) .test1-bottom-pill__text-b-shiny-line {
-    animation: test1PillTextAShinyLine var(--test1-pill-text-a-shiny-speed) linear infinite;
+    color: #155E75;
+    -webkit-text-fill-color: #155E75;
+    background-image: none;
+    animation: none;
   }
 
   #canvas[data-test-scope="test1"][data-test1-pill-text-b="done"] .test1-bottom-pill__text-b-shiny-line,
@@ -19123,9 +19138,9 @@
     --test1-pill-pre-pink-flow-dur: var(--test1-top-gradient-total);
     --test1-pill-pre-pink-sweep-end: calc(var(--test1-pill-pre-pink-start) + var(--test1-pill-pre-pink-flow-dur));
     --test1-pill-pink-sweep-end: calc(var(--test1-pill-pink-sweep-start) + var(--test1-pill-pink-flow-dur));
-    --test1-pill-text-b-gap-after-pink: 0.08s;
+    --test1-pill-text-b-gap-after-pink: 0s;
     --test1-pill-cover-hold-dur: calc(var(--test1-pill-pink-flow-delay) - var(--test1-pill-bg-delay));
-    --test1-pill-text-b-dur: 1.4s;
+    --test1-pill-text-b-dur: 0.88s;
     --test1-pill-text-b-delay: calc(var(--test1-pill-pink-sweep-end) + var(--test1-pill-text-b-gap-after-pink));
   }
 
@@ -19191,9 +19206,19 @@
     transform: none !important;
   }
 
-  #canvas[data-test-scope="test1"][data-test1-coda-run]:not([data-test1-coda-animate]):not([data-test1-coda-done]):not([data-test1-reveal-all]) .test1-bottom-pill {
-    opacity: 0;
-    transform: translate3d(0, 8px, 0);
+  /* coda — shortcuts stay stable (no fade/rise; avoids flicker with pillar entrance) */
+  #canvas[data-test-scope="test1"][data-test1-coda-run] .test1-lock-shortcut-l,
+  #canvas[data-test-scope="test1"][data-test1-coda-run] .test1-lock-shortcut-r {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
+  }
+
+  #canvas[data-test-scope="test1"][data-test1-coda-run]:not([data-test1-coda-animate]):not([data-test1-coda-done]):not([data-test1-reveal-all]) .test1-lock-shortcut-l,
+  #canvas[data-test-scope="test1"][data-test1-coda-run]:not([data-test1-coda-animate]):not([data-test1-coda-done]):not([data-test1-reveal-all]) .test1-lock-shortcut-r {
+    opacity: 1 !important;
+    transform: none !important;
   }
 
   #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-done]:not([data-test1-reveal-all]) .test1-bottom-pill {
@@ -19290,26 +19315,38 @@
     filter: none !important;
   }
 
-  /* Bottom chrome — rise together when coda starts (no vertical veil) */
-  #canvas[data-test-scope="test1"][data-test1-coda-run]:not([data-test1-coda-inner-rise]):not([data-test1-coda-done]):not([data-test1-reveal-all]) .test1-lock-shortcut-l,
-  #canvas[data-test-scope="test1"][data-test1-coda-run]:not([data-test1-coda-inner-rise]):not([data-test1-coda-done]):not([data-test1-reveal-all]) .test1-lock-shortcut-r,
-  #canvas[data-test-scope="test1"][data-test1-coda-run]:not([data-test1-coda-inner-rise]):not([data-test1-coda-done]):not([data-test1-reveal-all]) .test1-bottom-pill {
-    opacity: 0 !important;
-    transform: translate3d(0, 18px, 0);
-    transition: none !important;
-    animation: none !important;
+  /* bottom pill — WAAPI owns rise opacity; only defer text/grad layers */
+  #canvas[data-test-scope="test1"][data-test1-coda-run] .test1-bottom-pill {
+    overflow: hidden;
   }
 
-  #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-animate][data-test1-coda-inner-rise]:not([data-test1-coda-done]):not([data-test1-reveal-all]) .test1-lock-shortcut-l,
-  #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-animate][data-test1-coda-inner-rise]:not([data-test1-coda-done]):not([data-test1-reveal-all]) .test1-lock-shortcut-r,
-  #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-animate][data-test1-coda-inner-rise]:not([data-test1-coda-done]):not([data-test1-reveal-all]) .test1-bottom-pill {
-    opacity: 1 !important;
-    transform: translate3d(0, 0, 0);
-    transition:
-      opacity var(--test1-coda-in-dur) var(--test1-coda-ease),
-      transform var(--test1-coda-in-dur) var(--test1-coda-ease),
-      visibility 0s linear 0s;
-    transition-delay: 0ms;
+  /* coda rise — hide pillar slot until WAAPI starts (prevents pre-rise flash) */
+  #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-inner-rise]:not([data-test1-coda-animate]):not([data-test1-pill-rise-run]):not([data-test1-reveal-all]) #test1-bottom-pill,
+  #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-inner-rise]:not([data-test1-coda-animate]):not([data-test1-pill-rise-run]):not([data-test1-reveal-all]) .canvas-item[data-role="test1-bottom-pill"] {
+    visibility: hidden !important;
+  }
+
+  #canvas[data-test-scope="test1"][data-test1-coda-run]:not([data-test1-pill-text-a-run]):not([data-test1-reveal-all]) .test1-bottom-pill__text-stage,
+  #canvas[data-test-scope="test1"][data-test1-coda-run]:not([data-test1-reveal-all]) .test1-bottom-pill__text-sweep,
+  #canvas[data-test-scope="test1"][data-test1-coda-run]:not([data-test1-pill-grad-run]):not([data-test1-reveal-all]) .test1-bottom-pill__grad-sweep {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    animation: none !important;
+    pointer-events: none !important;
+  }
+
+  #canvas[data-test-scope="test1"][data-test1-coda-run] .test1-bottom-pill__bg,
+  #canvas[data-test-scope="test1"][data-test1-coda-run] .test1-bottom-pill__svg {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  #canvas[data-test-scope="test1"][data-test1-coda-run] .test1-bottom-pill__icon-wrap,
+  #canvas[data-test-scope="test1"][data-test1-coda-run] .test1-bottom-pill__icon,
+  #canvas[data-test-scope="test1"][data-test1-coda-run] .test1-bottom-pill__icon-ring {
+    opacity: 1;
+    transform: none;
+    visibility: visible;
   }
 
   #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-done]:not([data-test1-reveal-all]):not([data-test1-home-exit]):not([data-test1-home-run]) .test1-lock-shortcut-l,
@@ -19338,8 +19375,7 @@
   }
 
   #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run]:not([data-test1-reveal-all]) .test1-lock-shortcut-l,
-  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run]:not([data-test1-reveal-all]) .test1-lock-shortcut-r,
-  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run]:not([data-test1-reveal-all]) .test1-bottom-pill {
+  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run]:not([data-test1-reveal-all]) .test1-lock-shortcut-r {
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
     will-change: opacity, transform;
@@ -19356,7 +19392,7 @@
   }
 
   #canvas[data-test-scope="test1"][data-test1-coda-run] .test1-bottom-pill__bg-base {
-    opacity: 0;
+    opacity: 1;
   }
 
   #canvas[data-test-scope="test1"][data-test1-coda-run] .test1-bottom-pill__bg-blue {
@@ -19367,7 +19403,6 @@
     opacity: 0;
   }
 
-  #canvas[data-test-scope="test1"][data-test1-coda-run] .test1-bottom-pill__icon,
   #canvas[data-test-scope="test1"][data-test1-coda-run] .test1-bottom-pill__text-a-stage {
     opacity: 0;
     transform: translate3d(0, 12px, 0);
@@ -19380,89 +19415,66 @@
     visibility: hidden;
   }
 
-  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run]:not([data-test1-reveal-all]) .test1-bottom-pill__bg-base {
-    opacity: 1;
-  }
-
   #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run]:not([data-test1-reveal-all]) .test1-bottom-pill__bg-blue-cover {
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-    opacity: 0;
-    animation: test1PillBgBlueCoverIn 0.01s linear var(--test1-pill-bg-delay) forwards,
-      test1PillBgBlueCoverHide var(--test1-pill-pink-fade-dur) var(--test1-pill-pink-fade-ease) var(--test1-pill-pink-sweep-start) forwards;
+    opacity: 0 !important;
+    animation: none !important;
   }
 
-  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run]:not([data-test1-reveal-all]) .test1-bottom-pill__icon {
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-    will-change: opacity, transform;
-    animation: test1PillIconIn var(--test1-pill-icon-in-dur) var(--test1-pill-content-ease) var(--test1-pill-icon-text-delay) forwards;
-  }
-
-  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run]:not([data-test1-reveal-all]) .test1-bottom-pill__text--a {
+  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run][data-test1-pill-text-a-run]:not([data-test1-reveal-all]) .test1-bottom-pill__text--a {
     fill: none !important;
     opacity: 0 !important;
     visibility: hidden !important;
     animation: none !important;
   }
 
-  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run]:not([data-test1-reveal-all]) .test1-bottom-pill__text-a-stage {
+  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run][data-test1-pill-text-a-run]:not([data-test1-reveal-all]) .test1-bottom-pill__text-a-stage {
     opacity: 0;
     visibility: visible;
     will-change: opacity, transform;
-    animation: test1PillTextAIn var(--test1-pill-text-a-in-dur) var(--test1-pill-content-ease) var(--test1-pill-icon-text-delay) forwards,
-      test1PillTextAOut var(--test1-pill-text-a-out-dur) var(--test1-pill-text-a-out-ease) var(--test1-pill-text-fadeout-delay) forwards;
+    animation: test1PillTextAIn var(--test1-pill-text-a-in-dur) var(--test1-pill-content-ease) 0s forwards,
+      test1PillTextAOut var(--test1-pill-text-a-out-dur) var(--test1-pill-text-a-out-ease) calc(var(--test1-pill-text-fadeout-delay) - var(--test1-pill-icon-text-delay)) forwards;
   }
 
-  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run]:not([data-test1-reveal-all]) .test1-bottom-pill__text-a-highlight {
-    animation: test1PillTextAHighlightOn 0.01s linear var(--test1-pill-text-a-shimmer-start) forwards;
+  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run][data-test1-pill-text-a-run]:not([data-test1-reveal-all]) .test1-bottom-pill__text-a-highlight {
+    animation: test1PillTextAHighlightOn 0.01s linear calc(var(--test1-pill-text-a-shimmer-start) - var(--test1-pill-icon-text-delay)) forwards;
   }
 
-  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run]:not([data-test1-reveal-all]) .test1-bottom-pill__text-a-highlight-track--1 {
-    animation: test1PillTextAHighlightPass var(--test1-pill-text-a-highlight-pass-dur) linear var(--test1-pill-text-a-shimmer-start) infinite;
+  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run][data-test1-pill-text-a-run]:not([data-test1-reveal-all]) .test1-bottom-pill__text-a-highlight-track--1 {
+    animation: test1PillTextAHighlightPass var(--test1-pill-text-a-highlight-pass-dur) linear calc(var(--test1-pill-text-a-shimmer-start) - var(--test1-pill-icon-text-delay)) infinite;
   }
 
-  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run]:not([data-test1-reveal-all]) .test1-bottom-pill__text-a-highlight-track--2 {
-    animation: test1PillTextAHighlightPass var(--test1-pill-text-a-highlight-pass-dur) linear calc(var(--test1-pill-text-a-shimmer-start) + var(--test1-pill-text-a-highlight-pass-step)) infinite;
+  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run][data-test1-pill-text-a-run]:not([data-test1-reveal-all]) .test1-bottom-pill__text-a-highlight-track--2 {
+    animation: test1PillTextAHighlightPass var(--test1-pill-text-a-highlight-pass-dur) linear calc(var(--test1-pill-text-a-shimmer-start) - var(--test1-pill-icon-text-delay) + var(--test1-pill-text-a-highlight-pass-step)) infinite;
   }
 
-  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run]:not([data-test1-reveal-all]) .test1-bottom-pill__text-a-highlight-track--3 {
-    animation: test1PillTextAHighlightPass var(--test1-pill-text-a-highlight-pass-dur) linear calc(var(--test1-pill-text-a-shimmer-start) + var(--test1-pill-text-a-highlight-pass-step) * 2) infinite;
+  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run][data-test1-pill-text-a-run]:not([data-test1-reveal-all]) .test1-bottom-pill__text-a-highlight-track--3 {
+    animation: test1PillTextAHighlightPass var(--test1-pill-text-a-highlight-pass-dur) linear calc(var(--test1-pill-text-a-shimmer-start) - var(--test1-pill-icon-text-delay) + var(--test1-pill-text-a-highlight-pass-step) * 2) infinite;
   }
 
   #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run]:not([data-test1-reveal-all]) .test1-bottom-pill__text-sweep {
     display: none;
   }
 
-  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run]:not([data-test1-reveal-all]) .test1-bottom-pill__grad-sweep {
+  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run][data-test1-pill-grad-run]:not([data-test1-reveal-all]) .test1-bottom-pill__grad-sweep {
     opacity: 0;
     pointer-events: none;
-    animation: test1PillGradSweepShow var(--test1-pill-pink-fade-dur) var(--test1-pill-pink-fade-ease) var(--test1-pill-pink-sweep-start) forwards,
-      test1PillGradSweepHide 0.5s ease var(--test1-pill-pink-sweep-end) forwards;
+    animation: test1PillGradSweepShow var(--test1-pill-pink-fade-dur) var(--test1-pill-pink-fade-ease) 0s forwards,
+      test1PillGradSweepHide 0.5s ease var(--test1-pill-pink-flow-dur) forwards;
   }
 
-  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run]:not([data-test1-reveal-all]) .test1-bottom-pill__grad-sweep-track--1 {
+  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run][data-test1-pill-grad-run]:not([data-test1-reveal-all]) .test1-bottom-pill__grad-sweep-track--1 {
     opacity: 1;
-    animation: test1PillGradFillPass var(--test1-pass-dur) linear var(--test1-pill-pink-sweep-start) forwards;
+    animation: test1PillGradFillPass var(--test1-pass-dur) linear 0s forwards;
   }
 
-  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run]:not([data-test1-reveal-all]) .test1-bottom-pill__grad-sweep-track--2 {
+  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run][data-test1-pill-grad-run]:not([data-test1-reveal-all]) .test1-bottom-pill__grad-sweep-track--2 {
     opacity: 1;
-    animation: test1PillGradFillPass var(--test1-pass-dur) linear calc(var(--test1-pill-pink-sweep-start) + var(--test1-pill-grad-pass-step)) forwards;
+    animation: test1PillGradFillPass var(--test1-pass-dur) linear var(--test1-pill-grad-pass-step) forwards;
   }
 
-  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run]:not([data-test1-reveal-all]) .test1-bottom-pill__grad-sweep-track--3 {
+  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run][data-test1-pill-grad-run]:not([data-test1-reveal-all]) .test1-bottom-pill__grad-sweep-track--3 {
     opacity: 1;
-    animation: test1PillGradFillPass var(--test1-pass-dur) linear calc(var(--test1-pill-pink-sweep-start) + var(--test1-pill-grad-pass-step) * 2) forwards;
-  }
-
-  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run]:not([data-test1-reveal-all]) .test1-bottom-pill__text-b-stage,
-  #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run]:not([data-test1-reveal-all]) .test1-bottom-pill__text--b {
-    opacity: 0;
-    visibility: visible;
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-    animation: test1PillTextBIn var(--test1-pill-text-b-dur) var(--test1-pill-text-ease) var(--test1-pill-text-b-delay) forwards;
+    animation: test1PillGradFillPass var(--test1-pass-dur) linear calc(var(--test1-pill-grad-pass-step) * 2) forwards;
   }
 
   #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-done]:not([data-test1-reveal-all]) .test1-bottom-pill__bg-base,
@@ -19507,9 +19519,10 @@
   }
 
   #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-done]:not([data-test1-reveal-all]) .test1-bottom-pill__text-b-stage {
-    opacity: 1;
-    visibility: visible;
-    transform: none;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+    animation: none !important;
   }
 
   #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-done]:not([data-test1-reveal-all]):not([data-test1-home-exit]):not([data-test1-home-run]) .canvas-item[data-role="test1-lock-shortcut-l"],
@@ -19683,16 +19696,11 @@
   @keyframes test1PillTextBIn {
     0% {
       opacity: 0;
-      visibility: hidden;
-      transform: translate3d(0, 10px, 0);
-    }
-    1% {
-      visibility: visible;
+      transform: translate3d(0, 8px, 0);
     }
     100% {
       opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
+      transform: translate3d(0, 0, 0);
     }
   }
 
@@ -19738,9 +19746,10 @@
   }
 
   #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-done]:not([data-test1-reveal-all]) .test1-bottom-pill__text-b-stage {
-    opacity: 1;
-    visibility: visible;
-    transform: none;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+    animation: none !important;
   }
 
   #canvas[data-test-scope="test1"][data-test1-coda-run][data-test1-coda-done]:not([data-test1-reveal-all]):not([data-test1-home-exit]):not([data-test1-home-run]) .canvas-item[data-role="test1-lock-shortcut-l"],
@@ -19763,14 +19772,13 @@
 
 
 
-  /* pillar — shell + left circle together, then star motion */
+  /* pillar — WAAPI owns shell rise; hold settled state once coda-animate starts */
   #canvas[data-test-scope="test1"][data-test1-coda-animate][data-test1-coda-run]:not([data-test1-reveal-all]) .test1-bottom-pill {
-    opacity: 0;
-    transform: translate3d(0, 8px, 0);
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-    will-change: transform, opacity;
-    animation: test1PillShellIn var(--test1-pill-bg-in-dur) var(--test1-pill-content-ease) var(--test1-pill-bg-delay) forwards;
+    opacity: 1 !important;
+    transform: translate3d(0, 0, 0) !important;
+    animation: none !important;
+    transition: none !important;
+    will-change: auto;
   }
 
   /* test1 — home widgets hidden until swipe → home-run */
