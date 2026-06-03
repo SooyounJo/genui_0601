@@ -2510,10 +2510,10 @@ function _renderTest2ContactIcon(appName) {
 var TEST2_CONTACT_FOOTER_H = 56;
 var TEST2_CONTACT_CHROME_PAD_BOTTOM = 10;
 var TEST2_CONTACT_FOOTER_SETTLE_MS = 580;
-var TEST2_CONTACT_REVEAL_BASE_MS = 360;
-var TEST2_CONTACT_REVEAL_STEP_MS = 230;
-var TEST2_CONTACT_REVEAL_TAIL_MS = 1020;
-var TEST2_CONTACT_FILL_FADEOUT_MS = 960;
+var TEST2_CONTACT_REVEAL_BASE_MS = 140;
+var TEST2_CONTACT_REVEAL_STEP_MS = 520;
+var TEST2_CONTACT_REVEAL_TAIL_MS = 960;
+var TEST2_CONTACT_FILL_FADEOUT_MS = 1080;
 
 function _computeP2ContactListHeight(itemCount) {
   var count = Math.max(1, Math.min(itemCount || 3, 3));
@@ -11309,6 +11309,52 @@ function _clearTest2ContactRevealSeqClasses(slot) {
   });
 }
 
+function _applyTest2ContactRevealStagger(slot) {
+  if (!slot) return;
+  var list = slot.querySelector('.p2-contact-list');
+  if (!list) return;
+  var shell = document.getElementById('p2-area');
+  var footer = shell && shell.querySelector('.p2-agent-footer');
+  var header = list.querySelector('.p2-contact-list__header');
+  var rows = list.querySelectorAll('.p2-contact-list__items .p2-contact-list__item');
+  var sequence = [];
+
+  if (header) sequence.push(header);
+  rows.forEach(function (row) {
+    sequence.push(row);
+  });
+  if (footer) sequence.push(footer);
+
+  sequence.forEach(function (el, index) {
+    var delayMs = TEST2_CONTACT_REVEAL_BASE_MS + TEST2_CONTACT_REVEAL_STEP_MS * index;
+    el.classList.add('p2-contact-stagger-item');
+    el.style.setProperty('--p2-stagger-delay', delayMs + 'ms');
+    el.style.animationDelay = delayMs + 'ms';
+  });
+}
+
+function _clearTest2ContactRevealStagger(slot) {
+  var nodes = [];
+  if (slot) {
+    slot.querySelectorAll('.p2-contact-stagger-item').forEach(function (el) {
+      nodes.push(el);
+    });
+  }
+  var shell = document.getElementById('p2-area');
+  if (shell) {
+    shell.querySelectorAll('.p2-contact-stagger-item').forEach(function (el) {
+      if (nodes.indexOf(el) === -1) nodes.push(el);
+    });
+  }
+  nodes.forEach(function (el) {
+    el.classList.remove('p2-contact-stagger-item');
+    el.style.removeProperty('--p2-reveal-order');
+    el.style.removeProperty('--p2-stagger-delay');
+    el.style.removeProperty('animation');
+    el.style.removeProperty('animation-delay');
+  });
+}
+
 function finishTest2ContactRevealFlow(slot) {
   if (!_isTest2Scope()) return;
   var shell = document.getElementById('p2-area');
@@ -11329,6 +11375,7 @@ function finishTest2ContactRevealFlow(slot) {
     }
   }
   _clearTest2ContactRevealSeqClasses(slot);
+  _clearTest2ContactRevealStagger(slot);
   if (slot) patchTest2ContactListLayout(slot, { force: true });
 }
 
@@ -11343,6 +11390,8 @@ function staggerTest2ContactListRows(slot) {
   slot.dataset.test2ContactRevealLock = '1';
   installTest2FillFadeOutBridge(slot);
   _clearTest2ContactRevealSeqClasses(slot);
+  _clearTest2ContactRevealStagger(slot);
+  _applyTest2ContactRevealStagger(slot);
 
   var shell = document.getElementById('p2-area');
   var runId = _test2RunId;
@@ -11367,10 +11416,8 @@ function staggerTest2ContactListRows(slot) {
 
   if (shell) void shell.offsetHeight;
   requestAnimationFrame(function () {
-    requestAnimationFrame(function () {
-      if (!_isTest2RunCurrent(runId)) return;
-      if (shell) shell.classList.add('p2-contact-unified-reveal-active');
-    });
+    if (!_isTest2RunCurrent(runId)) return;
+    if (shell) shell.classList.add('p2-contact-unified-reveal-active');
   });
 
   setTimeout(function () {

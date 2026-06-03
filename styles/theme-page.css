@@ -553,11 +553,11 @@
     --p2-test2-morph-dur: 5s;
     --p2-test2-shell-expand-dur: 1.45s;
     --p2-test2-shell-expand-ease: cubic-bezier(0.16, 1, 0.3, 1);
-    --p2-test2-contact-reveal-dur: 1.65s;
-    --p2-test2-contact-reveal-ease: cubic-bezier(0.16, 1, 0.3, 1);
-    --p2-test2-contact-item-dur: 0.92s;
-    --p2-test2-contact-reveal-base-ms: 360ms;
-    --p2-test2-contact-reveal-step-ms: 230ms;
+    --p2-test2-contact-reveal-dur: 1.9s;
+    --p2-test2-contact-reveal-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --p2-test2-contact-item-dur: 0.96s;
+    --p2-test2-contact-reveal-base-ms: 140ms;
+    --p2-test2-contact-reveal-step-ms: 520ms;
     --p2-test2-contact-chrome-dur: 0.58s;
     --p2-test2-contact-chrome-ease: cubic-bezier(0.22, 0.82, 0.24, 1);
     --p2-test2-footer-settle-dur: 0.58s;
@@ -574,46 +574,31 @@
     0% {
       opacity: 0;
       transform: translate3d(0, 12px, 0);
-      filter: blur(1.5px);
     }
     100% {
       opacity: 1;
       transform: translate3d(0, 0, 0);
-      filter: blur(0);
     }
   }
-  /* test2 Needs: one shell motion — header → rows → footer share timing */
-  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-contact-unified-reveal:not(.p2-contact-unified-reveal-active) .p2-contact-list__header,
-  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-contact-unified-reveal:not(.p2-contact-unified-reveal-active) .p2-contact-list__item,
-  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-contact-unified-reveal:not(.p2-contact-unified-reveal-active) .p2-agent-footer {
+  /* test2 Needs: strict top → bottom stagger (delay set in JS per element) */
+  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-contact-unified-reveal:not(.p2-contact-unified-reveal-active) .p2-contact-stagger-item {
     opacity: 0 !important;
     transform: translate3d(0, 12px, 0) !important;
-    filter: blur(1.5px) !important;
+    filter: none !important;
     pointer-events: none !important;
     animation: none !important;
     transition: none !important;
   }
-  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-contact-unified-reveal-active .p2-contact-list__header,
-  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-contact-unified-reveal-active .p2-contact-list__items .p2-contact-list__item,
-  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-contact-unified-reveal-active .p2-agent-footer {
-    animation: p2Test2ContactRevealFlow var(--p2-test2-contact-item-dur) var(--p2-test2-contact-reveal-ease) both;
-    will-change: opacity, transform, filter;
-  }
-  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-contact-unified-reveal-active .p2-contact-list__header {
-    animation-delay: var(--p2-test2-contact-reveal-base-ms);
-  }
-  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-contact-unified-reveal-active .p2-contact-list__items .p2-contact-list__item:nth-child(1) {
-    animation-delay: calc(var(--p2-test2-contact-reveal-base-ms) + var(--p2-test2-contact-reveal-step-ms));
-  }
-  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-contact-unified-reveal-active .p2-contact-list__items .p2-contact-list__item:nth-child(2) {
-    animation-delay: calc(var(--p2-test2-contact-reveal-base-ms) + var(--p2-test2-contact-reveal-step-ms) * 2);
-  }
-  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-contact-unified-reveal-active .p2-contact-list__items .p2-contact-list__item:nth-child(3) {
-    animation-delay: calc(var(--p2-test2-contact-reveal-base-ms) + var(--p2-test2-contact-reveal-step-ms) * 3);
-  }
-  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-contact-unified-reveal-active .p2-agent-footer {
-    animation-delay: calc(var(--p2-test2-contact-reveal-base-ms) + var(--p2-test2-contact-reveal-step-ms) * 4);
+  #canvas[data-test-scope="test2"] .p2-agent-shell.p2-contact-unified-reveal-active .p2-contact-stagger-item {
+    animation-name: p2Test2ContactRevealFlow !important;
+    animation-duration: var(--p2-test2-contact-item-dur) !important;
+    animation-timing-function: var(--p2-test2-contact-reveal-ease) !important;
+    animation-fill-mode: both !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: var(--p2-stagger-delay, 0ms) !important;
+    will-change: opacity, transform;
     transform-origin: center top;
+    filter: none !important;
   }
   #canvas[data-test-scope="test2"] .p2-agent-shell.p2-contact-unified-reveal-active .p2-agent-footer .p2-agent-input,
   #canvas[data-test-scope="test2"] .p2-agent-shell.p2-contact-unified-reveal-active .p2-agent-footer #p2-star {
@@ -3436,18 +3421,18 @@
       transform var(--p2-test2-contact-item-dur) var(--p2-test2-contact-reveal-ease),
       filter calc(var(--p2-test2-contact-item-dur) * 0.82) var(--p2-test2-contact-reveal-ease) !important;
   }
-  /* settled contact list: never collapse rows after reveal completes */
-  #canvas[data-test-scope="test2"] #p2-slot.p2-seq-done .p2-contact-list__header:not(.p2-seq-text-hidden),
-  #canvas[data-test-scope="test2"] #p2-slot.p2-seq-done .p2-contact-list__item:not(.p2-seq-text-hidden),
-  #canvas[data-test-scope="test2"] #p2-slot.p2-contact-reveal-active.p2-seq-done .p2-contact-list__header:not(.p2-seq-text-hidden),
-  #canvas[data-test-scope="test2"] #p2-slot.p2-contact-reveal-active.p2-seq-done .p2-contact-list__item:not(.p2-seq-text-hidden) {
+  /* settled contact list: keep stagger animation until unified reveal finishes */
+  #canvas[data-test-scope="test2"] .p2-agent-shell:not(.p2-contact-unified-reveal-active) #p2-slot.p2-seq-done .p2-contact-list__header:not(.p2-seq-text-hidden),
+  #canvas[data-test-scope="test2"] .p2-agent-shell:not(.p2-contact-unified-reveal-active) #p2-slot.p2-seq-done .p2-contact-list__item:not(.p2-seq-text-hidden),
+  #canvas[data-test-scope="test2"] .p2-agent-shell:not(.p2-contact-unified-reveal-active) #p2-slot.p2-contact-reveal-active.p2-seq-done .p2-contact-list__header:not(.p2-seq-text-hidden),
+  #canvas[data-test-scope="test2"] .p2-agent-shell:not(.p2-contact-unified-reveal-active) #p2-slot.p2-contact-reveal-active.p2-seq-done .p2-contact-list__item:not(.p2-seq-text-hidden) {
     opacity: 1 !important;
     transform: none !important;
     filter: none !important;
     pointer-events: auto !important;
   }
-  #canvas[data-test-scope="test2"] .p2-agent-shell:has(#p2-slot.p2-seq-done) .p2-agent-footer.p2-seq-text-visible,
-  #canvas[data-test-scope="test2"] .p2-agent-shell:has(#p2-slot.p2-seq-done) .p2-agent-footer:not(.p2-seq-text-hidden) {
+  #canvas[data-test-scope="test2"] .p2-agent-shell:not(.p2-contact-unified-reveal-active):has(#p2-slot.p2-seq-done) .p2-agent-footer.p2-seq-text-visible,
+  #canvas[data-test-scope="test2"] .p2-agent-shell:not(.p2-contact-unified-reveal-active):has(#p2-slot.p2-seq-done) .p2-agent-footer:not(.p2-seq-text-hidden) {
     opacity: 1 !important;
     transform: none !important;
     filter: none !important;
